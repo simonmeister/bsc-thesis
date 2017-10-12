@@ -1,4 +1,4 @@
-# B.Sc. Thesis
+# Simon Meister's Bachelor's Thesis
 
-Bachelor's Thesis of Simon Meister.
-Completed under the supervision of Stefan Roth and Junhwa Hur.
+Completed under the supervision of Stefan Roth and Junhwa Hur at the
+[Visual Inference Group] (http://www.visinf.tu-darmstadt.de/visinf/news/index.en.jsp).
