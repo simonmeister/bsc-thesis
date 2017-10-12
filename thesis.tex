@@ -1,0 +1,166 @@
+\documentclass[
+  paper=a4, % DIN-A4-Format
+  11pt, % Schriftgröße
+  bibliography=totoc, % Bibliografie automatisch im Inhaltsverzeichnis generieren
+  parskip=off, % Absatzabstand: off, half, full
+  oneside, % einseitiges Layout
+%  twoside, % zweiseitiges Layout
+  article, % verwendet KOMA-Klasse scrartcl
+%  longdoc=true,
+  accentcolor=tud2b,
+%  colorbacktitle, % Hintergrund des Titels einfärben
+  colorback, % Hintergrund unter dem Titel einfärben
+  type=bsc, % für Bachelorarbeit
+]{tudthesis}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} % korrekte Darstellung von Umlauten u. Sonderzeichen
+\usepackage[stable]{footmisc} % mehr Optionen für Fußnoten
+\usepackage{booktabs} % hübschere Tabellen als der LaTeX-Standard
+\usepackage{multirow} % Create tabular cells spanning multiple rows
+\usepackage{longtable} % große Tabellen, die sich über mehrere Seiten erstrecken
+\usepackage{listings} % bietet Umgebung, um Programmiercode zu setzen inkl. Syntaxhighlighting
+\usepackage{amsmath} % Setzen mathematischer Formeln
+\usepackage{ellipsis} % korrigiert Aussehen von „…“
+\usepackage{enumitem} % mehr Optionen für Aufzählungen
+\usepackage[shortcuts]{extdash} % mehr Optionen für Worttrennung
+\usepackage{setspace} % Zeilenabstände verändern: \singlespacing, \onehalfspacing oder \doublespacing
+\usepackage{lipsum} % zur Erzeugung von Lorem-Ipsum-Blindtext
+\usepackage[math]{blindtext} % zur Erzeugung von deutschem Blindtext
+\usepackage{hyperref} % Verlinkungen im Dokument
+
+% INFO %
+% Das hyperref-Paket sollte möglichst als letztes geladen werden, darum steht es weiter hinten in der Präambel.
+% Leider funktioniert hyperref nicht 100%-ig einwandfrei mit tudstyle; bei Problemen damit lieber aus dem Dokument entfernen!
+% Einstellungen für hyperref
+\hypersetup{%
+    pdftitle=Motion R-CNN,
+    pdfauthor=Simon Meister,
+    pdfsubject=B.Sc. Thesis,
+    unicode=true, % benötigt, damit Umlaute im pdftitle richtig dargestellt werden
+    breaklinks=true
+    %% colorlinks=true
+    %% linkcolor=NavyBlue,
+    %% urlcolor=NavyBlue,%Green4,
+    %% citecolor=NavyBlue%DeepPink3
+}
+
+\usepackage[
+    backend=biber, % biber ist das Standard-Backend für Biblatex. Für die Abwärtskompatibilität kann hier auch bibtex oder bibtex8 gewählt werden (siehe biblatex-Dokumentation)
+    style=authortitle, %numeric, authortitle, alphabetic etc.
+    autocite=footnote, % Stil, der mit \autocite verwendet wird
+    sorting=nty, % Sortierung: nty = name title year, nyt = name year title u.a.
+    sortcase=false,
+    url=false,
+    hyperref=auto,
+]{biblatex}
+
+\renewbibmacro*{cite:seenote}{} % um zu verhindern, dass in Fußnoten automatisch "(wie Anm. xy)" eingefügt wird
+\DeclareFieldFormat*{citetitle}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
+\DeclareFieldFormat*{title}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
+
+\addbibresource{clean.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
+\nocite{*} % Alle Einträge in der .bib-Datei im Literaturverzeichnis ausgeben, auch wenn sie nicht im Text zitiert werden. Gut zum Testen der .bib-Datei, sollte aber nicht generell verwendet werden. Stattdessen lieber gezielt Einträge mit Keywords ausgeben lassen (siehe \printbibliography in Zeile 224).
+
+
+% INFO %
+% Hier kannst du deine persönlichen Daten hineinschreiben und diese Variablen verwenden, damit du es nicht jedes Mal neu schreiben musst.
+\newcommand*{\myname}{Simon Meister}
+\newcommand*{\mytitlede}{Motion R-CNN: 3D-Bewegungsschätzung auf Instanzebene mit Regionsbasierten CNNs}
+\newcommand*{\mytitleen}{Motion R-CNN: Instance-level 3D Motion Estimation with Region-based CNNs}
+\newcommand*{\mymail}{\href{mailto:simon.meister@stud.tu-darmstadt.de}{simon.meister@stud.tu-darmstadt.de}}
+\newcommand*{\myprof}{Prof. Stefan Roth, Ph.D.}
+\newcommand*{\myinstitute}{Visual Inference Group}
+\newcommand*{\myfaculty}{Fachbereich Informatik}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\parindent 0em % Erstzeileneinzug
+
+
+% Titelei
+\author{\myname}
+\thesistitle{\mytitleen}{\mytitlede}
+\birthplace{Erbach}
+\date{23.11.2017}
+\referee{\myprof}{M.Sc. Junhwa Hur}
+\department{\myinstitute}
+\group{\myfaculty}
+\dateofexam{23.11.2017}{23.11.2017}
+\makethesistitle
+
+% Eigenständigkeitserklärung: muss nach \makethesistitle erscheinen, sonst wird sie als erste Seite des Dokuments gesetzt.
+\affidavit[23.11.2017]{\myname}
+%\affidavit{\myname}
+
+\pagestyle{myheadings} % Seitenstil umschalten
+\mymarkright{Version: \today} % Inhalt der Fußzeile
+
+
+\input{abstract}
+\clearpage
+
+%\pagenumbering{Roman} % Seitennummerierung auf römische Zahlen ändern
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+\tableofcontents % Inhaltsverzeichnis
+\setcounter{page}{1}
+\clearpage
+
+% Aktuelle Seitenzahl speichern, da Wechsel auf arabische Zahlen die Zählung zurücksetzt
+%% \newcounter{savedromanpagenumber}
+%% \setcounter{savedromanpagenumber}{\value{page}}
+%\pagenumbering{arabic} % Arabische Seitenzahlen
+
+\section{Introduction}
+\parindent 2em
+\onehalfspacing
+
+\input{introduction}
+
+\section{Background}
+\parindent 2em
+\onehalfspacing
+
+\input{background}
+
+\section{Motion R-CNN}
+\parindent 2em
+\onehalfspacing
+
+\input{approach}
+
+\section{Experiments}
+\parindent 2em
+\onehalfspacing
+
+\input{experiments}
+
+\section{Conclusion}
+\parindent 2em
+\onehalfspacing
+
+\input{conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliografie mit BibLaTeX
+%
+% Verwende keyword=meinbegriff, um nur die Einträge aus deiner .bib-Datei ausgeben zu lassen, die mit meinbegriff getaggt sind.
+% Darf ein bestimmtes Keyword nicht enthalten sein, verwende notkeyword=meinbegriff.
+\singlespacing
+\printbibliography[title=Literaturverzeichnis, heading=bibliography]
+%\printbibliography[title=Literaturverzeichnis, heading=bibliography, keyword=meinbegriff]
+
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beginn des Anhangs
+\appendix
+
+%% \pagenumbering{Roman}
+%% \setcounter{page}{\value{savedromanpagenumber}+1} % gespeicherte Seitenzahl vom Beginn des Dokuments aufrufen und damit weiterzählen
+
+\clearpage
+
+\end{document}
