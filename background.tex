@@ -1,7 +1,71 @@
 
 \subsection{Problem formulation}
+\subsection{Object detection, semantic segmentation and instance segmentation}
+
 \subsection{Optical flow, scene flow and structure from motion}
+Let $I_1,I_2 : P \to \mathbb{R}^3$ be two temporally consecutive frames in a sequence of images.
+The optical flow $\mathbf{w} = (u, v)^T$ from $I_1$ to $I_2$ maps pixel coordinates in the first
+frame $I_1$ to pixel coordinates of the visually corresponding pixel in the second frame $I_2$, thus
+representing the apparent movement of brigthness patterns between the two frames.
+Optical flow can be regarded as two-dimensional motion estimation.
+
+Scene flow is the generalization of optical flow to 3-dimensional space.
+
 \subsection{Rigid scene model}
-\subsection{Pixel-wise generic CNNs}
-\subsection{Faster R-CNN}
-\subsection{Mask R-CNN}
+\subsection{Convolutional neural networks for dense estimation tasks}
+Deep convolutional neural network (CNN) architectures \cite{} became widely popular
+through numerous successes in classification and recognition tasks.
+The general structure of a CNN consists of a convolutional encoder, which
+learns a spatially compressed, wide (in the number of channels) representation of the input image,
+and a fully connected prediction network on top of the encoder.
+
+The compressed representations learned by CNNs of these categories do not, however, allow
+for prediction of high-resolution output, as spatial detail is lost through sequential applications
+of pooling or strides.
+Thus, networks for dense prediction introduced a convolutional decoder in addition to the representation encoder,
+performing upsampling of the compressed features and resulting in a encoder-decoder pyramid.
+The most popular deep architecture of this kind for end-to-end optical flow prediction
+is the FlowNet family of networs \cite{}, which was recently extended to scene flow estimation \cite{}.
+
+% The conclusion should be an understanding of the generic nature of the popular dense prediction networks
+% for flow and depth, which primarily stems from the fact that they are quick re-purposing of recognition CNNs.
+
+% The reader should understand the limitations of the generic dense-estimator approach!
+
+% Also, it should be emphasized that FlowNet learns to match images with a generic encoder,
+% thus motivating the introduction of our motion head, which should integrate (and regularize) matching information learned
+% in the resnet backbone.
+
+\subsection{Region-based convolutional networks}
+In the following, we re-view region-based convolutional networks, which are the now classical deep networks for
+object detection and recognition.
+
+\paragraph{R-CNN}
+Region-based convolutional networks (R-CNNs) use a non-learned algorithm external to a standard encoder CNN
+for computing \emph{region proposals} in the shape of 2D bounding boxes, which represent regions that may contain an object.
+Then, for each of the region proposals, the image is cropped at the proposed region and the crop is
+passed through a CNN, which performs classification of the object (or non-object, if the region shows background).
+
+\paragraph{Fast R-CNN}
+The original R-CNN involved computing on forward pass of the CNN for each of the region proposals,
+which can be costly, as there may be a large amount of proposals.
+Fast R-CNN significantly reduces processing time by performing only a single forward pass with the whole image
+as input to the CNN (compared to the input of crops in the case of R-CNN).
+Then, crops are taken from the compressed feature map of the image, collected into a batch and passed into a small Fast R-CNN
+\emph{head} network.
+Thus, the per-region computation is heavily reduced, speeding up the system by orders of magnitude. % TODO verify that
+This technique is called \emph{RoI pooling}.
+
+\paragraph{Faster R-CNN: End-to-end deep object detection with }
+The Faster-RCNN object detection system combines the generation of region proposals and subsequent box refinement and
+classification into a single deep network, leading to faster processing when compared to Fast R-CNN
+and again, improved accuracy.
+
+
+\paragraph{Mask R-CNN}
+
+Combining object detection and semantic segmentation, Mask R-CNN extends the Faster R-CNN system to predict
+high resolution instance masks within the bounding boxes of each detected object.
+This can be done by simply extending the Faster R-CNN head with multiple convolutions, which
+compute a pixel-precise mask for each instance.
+In addition, Mask R-CNN
