@@ -1,9 +1,71 @@
 
 \subsection{Motion R-CNN architecture}
 
-Building on Mask R-CNN, we enable per-object motion estimation by predicting the 3d motion of each detected object.
-Specifically, 
+Building on Mask R-CNN, we enable per-object motion estimation by predicting the 3d motion of each detected object
+in camera space.
+
+\paragraph{Backbone Network}
+Like Faster R-CNN and Mask R-CNN, we use a ResNet variant as backbone network to compute feature maps from input imagery.
+Inspired by FlowNetS, we make one modification to enable image matching within the backbone network,
+laying the foundation of our motion estimator. Instead of taking a single image as input to the backbone,
+we simply depth-concatenate two temporally consecutive frames, yielding a input image with six channels.
+We do not introduce a separate network for computing region proposals and use our modified backbone network
+as both RPN and feature extractor for region cropping.
+
+\paragraph{Per-RoI head}
+We use a rigid motion parametrization similar to the one used by SfM-Net \cite{Byravan:2017:SNL}.
+For the $k$-th object, we predict the rigid transformation $\{R_t^k, t_t^k\}\in SE3$
+of the object between the two frames $I_t$ and $I_{t+1}$ as well as the object pivot $p_t^k \in \mathbb{R}^3$ at time $t$ .
+We parametrize ${R_t^k}$ using an Euler angle representation,
+
+\begin{equation}
+R_t^k = R_t^{k,z}(\gamma) \cdot R_t^{k,x}(\alpha) \cdot R_t^{k,y}(\beta),
+\end{equation}
+
+where
+\begin{equation}
+R_t^{k,x}(\alpha) =
+\begin{bmatrix}
+  1 & 0 & 0 \\
+  0 & cos(\alpha) & -sin(\alpha) \\
+  0 & sin(\alpha) & cos(\alpha)
+\end{bmatrix},
+\end{equation}
+
+\begin{equation}
+R_t^{k,y}(\alpha) =
+\begin{bmatrix}
+  cos(\beta) & 0 & sin(\beta) \\
+  0 & 1 & 0 \\
+  -sin(\beta) & 0 & cos(\beta)
+\end{bmatrix},
+\end{equation}
+
+\begin{equation}
+R_t^{k,z}(\alpha) =
+\begin{bmatrix}
+  cos(\gamma) & -sin(\gamma) & 0 \\
+  sin(\gamma) & cos(\gamma) & 0 \\
+  0 & 0 & 1
+\end{bmatrix},
+\end{equation}
+
+and $\alpha, \beta, \gamma$ are the rotation angles about the $x,y,z$-axis, respectively.
+
+
+Figure \ref{fig:motion_rcnn_head} shows our extended per-RoI head network.
+We extend the Faster R-CNN head by adding a fully-connected layer in parallel to the final fully-connected layers for
+predicting refined boxes and classes.
+This new layer outputs one value for each of the nine scalar motion parameters,
+$sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$, $t_t^k \in \mathbb{R}^3$ and $p_t^k \in \mathbb{R}^3$.
+Note that we predict angle sines instead of the angles in radians to % TODO
+.
 
 \subsection{Supervision}
+
+\paragraph{Per-RoI motion loss}
 %\subsection{Per-RoI motion loss}
 \subsection{Dense flow from instance-level prediction}
+To allow evaluation of our motion estimates on standard optical flow datasets,
+we compose dense optical flow from the outputs of our Motion R-CNN network.
+Given the predicted
