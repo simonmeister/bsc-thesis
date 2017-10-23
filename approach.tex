@@ -1,20 +1,21 @@
 
 \subsection{Motion R-CNN architecture}
 
-Building on Mask R-CNN, we enable per-object motion estimation by predicting the 3d motion of each detected object
+Building on Mask R-CNN, we enable per-object motion estimation by predicting the 3D motion of each detected object
 in camera space.
 
 \paragraph{Backbone Network}
 Like Faster R-CNN and Mask R-CNN, we use a ResNet variant as backbone network to compute feature maps from input imagery.
-Inspired by FlowNetS, we make one modification to enable image matching within the backbone network,
-laying the foundation of our motion estimator. Instead of taking a single image as input to the backbone,
-we simply depth-concatenate two temporally consecutive frames, yielding a input image with six channels.
-We do not introduce a separate network for computing region proposals and use our modified backbone network
-as both RPN and feature extractor for region cropping.
 
-\paragraph{Per-RoI head}
+Inspired by FlowNetS, we make one modification to enable image matching within the backbone network,
+laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
+we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
+We do not introduce a separate network for computing region proposals and use our modified backbone network
+as both first stage RPN and second stage feature extractor for region cropping.
+
+\paragraph{Per-RoI motion prediction}
 We use a rigid motion parametrization similar to the one used by SfM-Net \cite{Byravan:2017:SNL}.
-For the $k$-th object, we predict the rigid transformation $\{R_t^k, t_t^k\}\in SE3$
+For the $k$-th object proposal, we predict the rigid transformation $\{R_t^k, t_t^k\}\in SE3$
 of the object between the two frames $I_t$ and $I_{t+1}$ as well as the object pivot $p_t^k \in \mathbb{R}^3$ at time $t$ .
 We parametrize ${R_t^k}$ using an Euler angle representation,
 
@@ -25,47 +26,114 @@ R_t^k = R_t^{k,z}(\gamma) \cdot R_t^{k,x}(\alpha) \cdot R_t^{k,y}(\beta),
 where
 \begin{equation}
 R_t^{k,x}(\alpha) =
-\begin{bmatrix}
+\begin{pmatrix}
   1 & 0 & 0 \\
   0 & cos(\alpha) & -sin(\alpha) \\
   0 & sin(\alpha) & cos(\alpha)
-\end{bmatrix},
+\end{pmatrix},
 \end{equation}
 
 \begin{equation}
-R_t^{k,y}(\alpha) =
-\begin{bmatrix}
+R_t^{k,y}(\beta) =
+\begin{pmatrix}
   cos(\beta) & 0 & sin(\beta) \\
   0 & 1 & 0 \\
   -sin(\beta) & 0 & cos(\beta)
-\end{bmatrix},
+\end{pmatrix},
 \end{equation}
 
 \begin{equation}
-R_t^{k,z}(\alpha) =
-\begin{bmatrix}
+R_t^{k,z}(\gamma) =
+\begin{pmatrix}
   cos(\gamma) & -sin(\gamma) & 0 \\
   sin(\gamma) & cos(\gamma) & 0 \\
   0 & 0 & 1
-\end{bmatrix},
+\end{pmatrix},
 \end{equation}
 
 and $\alpha, \beta, \gamma$ are the rotation angles about the $x,y,z$-axis, respectively.
 
 
 Figure \ref{fig:motion_rcnn_head} shows our extended per-RoI head network.
-We extend the Faster R-CNN head by adding a fully-connected layer in parallel to the final fully-connected layers for
+We then extend the Faster R-CNN head by adding a fully-connected layer in parallel to the final fully-connected layers for
 predicting refined boxes and classes.
-This new layer outputs one value for each of the nine scalar motion parameters,
-$sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$, $t_t^k \in \mathbb{R}^3$ and $p_t^k \in \mathbb{R}^3$.
-Note that we predict angle sines instead of the angles in radians to % TODO
-.
+Like for refined boxes and masks, we make one separate motion prediction for each class.
+Each motion is predicted as a set of nine scalar motion parameters, $\alpha$, $\beta$, $\gamma$, $t_t^k$ and $p_t^k$.
+
 
 \subsection{Supervision}
 
 \paragraph{Per-RoI motion loss}
-%\subsection{Per-RoI motion loss}
-\subsection{Dense flow from instance-level prediction}
-To allow evaluation of our motion estimates on standard optical flow datasets,
-we compose dense optical flow from the outputs of our Motion R-CNN network.
-Given the predicted
+For each positive RoI, we
+
+
+
+\subsection{Dense flow from motion}
+We compose a dense optical flow map from the outputs of our Motion R-CNN network.
+Given the depth map $d_t$ for frame $I_t$, we first create a 3D point cloud in camera space at time $t$,
+where
+\begin{equation}
+P_t =
+\begin{pmatrix}
+X_t \\ Y_t \\ Z_t
+\end{pmatrix}
+=
+\frac{d_t}{f}
+\begin{pmatrix}
+x_t - c_0 \\ y_t - c_1 \\ f
+\end{pmatrix},
+\end{equation}
+is the 3D coordinate at $t$ corresponding to the point with pixel coordinates $x_t, y_t$,
+which range over all coordinates in $I_t$.
+
+Given $k$ detections with predicted motions as above, we transform all points within the bounding
+box of a detected object according to the predicted motion of the object.
+
+We first define the \emph{full image} mask $m_t^k$ for object k,
+which can be computed from the predicted box mask $m_k^b$ by bilinearly resizing
+$m_k^b$ to the width and height of the predicted bounding box and then copying the values
+of the resized mask into a full image map starting at the top-right coordinate of the predicted bounding box.
+Then,
+\begin{equation}
+P'_{t+1} =
+P_t + \sum_1^{k} m_t^k\left\{ R_t^k \cdot (P_t - p_t^k) + p_t^k + t_t^k - P_t \right\}
+\end{equation}
+
+Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} \in SE3$, % TODO introduce!
+
+\begin{equation}
+\begin{pmatrix}
+X_{t+1} \\ Y_{t+1} \\ Z_{t+1}
+\end{pmatrix}
+= P_{t+1} = R_t^c \cdot P'_{t+1} + t_t^k
+\end{equation}.
+
+Finally, we project the transformed 3D points at time $t+1$ to pixel coordinates again,
+\begin{equation}
+\begin{pmatrix}
+x_{t+1} \\ y_{t+1}
+\end{pmatrix}
+=
+\frac{f}{Z_{t+1}}
+\begin{pmatrix}
+X_{t+1} \\ Y_{t+1}
+\end{pmatrix}
++
+\begin{pmatrix}
+c_0 \\ c_1
+\end{pmatrix}.
+\end{equation}
+We can now obtain the optical flow between $I_t$ and $I_{t+1}$ at each point as
+\begin{equation}
+\begin{pmatrix}
+u \\ v
+\end{pmatrix}
+=
+\begin{pmatrix}
+x_{t+1} - x_{t} \\ y_{t+1} - y_{t}
+\end{pmatrix}.
+\end{equation}
+
+
+%Given the predicted motion as above, a depth map $d_t$ for frame $I_t$ and
+%the predicted or ground truth camera motion $\{R_c^k, t_c^k\}\in SE3$.

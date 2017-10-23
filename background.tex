@@ -41,9 +41,9 @@ In the following, we will quickly re-view region-based convolutional networks, w
 object detection, object recognition and instance segmentation.
 
 \paragraph{R-CNN}
-Region-based convolutional networks (R-CNNs) use a non-learned algorithm external to a standard encoder CNN
+The original region-based convolutional network (R-CNN) uses a non-learned algorithm external to a standard encoder CNN
 for computing \emph{region proposals} in the shape of 2D bounding boxes, which represent regions that may contain an object.
-Then, for each of the region proposals, the image is cropped at the proposed region and the crop is
+For each of the region proposals, the input image is cropped at the proposed region and the crop is
 passed through a CNN, which performs classification of the object (or non-object, if the region shows background).
 
 \paragraph{Fast R-CNN}
@@ -53,13 +53,28 @@ Fast R-CNN significantly reduces processing time by performing only a single for
 as input to the CNN (compared to the input of crops in the case of R-CNN).
 Then, crops are taken from the compressed feature map of the image, collected into a batch and passed into a small Fast R-CNN
 \emph{head} network.
-Thus, the per-region computation is heavily reduced, speeding up the system by orders of magnitude. % TODO verify that
-This technique is called \emph{RoI pooling}.
+This technique is called \emph{RoI pooling}. % TODO explain how RoI pooling converts full image box coords to crop ranges
+Thus, the per-region computation is reduced to a single network pass,
+speeding up the system by orders of magnitude. % TODO verify that
 
-\paragraph{Faster R-CNN: End-to-end deep object detection with }
-The Faster-RCNN object detection system combines the generation of region proposals and subsequent box refinement and
+\paragraph{Faster R-CNN}
+The Faster R-CNN object detection system unifies the generation of region proposals and subsequent box refinement and
 classification into a single deep network, leading to faster processing when compared to Fast R-CNN
 and again, improved accuracy.
+This unified network operates in two stages.
+In the \emph{first stage}, one forward pass is performed on the \emph{backbone} network,
+which is a deep feature encoder CNN with the original image as input.
+Next, the \emph{backbone} features are passed into a small, fully convolutional \emph{Region Proposal Network (RPN)} head, which
+predicts objectness scores and regresses bounding boxes at each of its output positions.
+At any position, bounding boxes are predicted as offsets relative to a fixed set of \emph{anchors} with different
+aspect ratios.
+% TODO more about striding & computing the anchors?
+For each anchor at a given position, the objectness score tells us how likely this anchors is to corresponds to a detection.
+The region proposals are now obtained as the N highest scoring anchor boxes.
+
+The \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
+and bounding box refinement for each region proposal.
+As in Fast R-CNN, RoI pooling is used to crop one fixed size feature map for each of the region proposals.
 
 
 \paragraph{Mask R-CNN}
