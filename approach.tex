@@ -55,15 +55,21 @@ and $\alpha, \beta, \gamma$ are the rotation angles about the $x,y,z$-axis, resp
 
 
 Figure \ref{fig:motion_rcnn_head} shows our extended per-RoI head network.
-We then extend the Faster R-CNN head by adding a fully-connected layer in parallel to the final fully-connected layers for
+We then extend the Faster R-CNN head by adding a fully connected layer in parallel to the final fully connected layers for
 predicting refined boxes and classes.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
 Each motion is predicted as a set of nine scalar motion parameters,
 $sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$, $t_t^k$ and $p_t^k$,
 where $sin(\alpha)$, $sin(\beta)$ and $sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
-and objects rotate no more than 90 degree in either direction.
+and that objects rotate at most 90 degrees in either direction along any axis.
 
+\paragraph{Camera motion prediction}
+In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in SE3$
+between the two frames $I_t$ and $I_{t+1}$.
+For this, we flatten the full output of the backbone and pass it through a fully connected layer.
+We again represent $R_t^{cam}$ using a Euler angle representation and
+predict $sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
 
 \subsection{Supervision}
 
