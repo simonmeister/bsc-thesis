@@ -1,5 +1,4 @@
 
-\subsection{Problem formulation}
 \subsection{Object detection, semantic segmentation and instance segmentation}
 
 \subsection{Optical flow, scene flow and structure from motion}
@@ -12,7 +11,7 @@ Optical flow can be regarded as two-dimensional motion estimation.
 Scene flow is the generalization of optical flow to 3-dimensional space.
 
 \subsection{Rigid scene model}
-\subsection{Convolutional neural networks for dense estimation tasks}
+\subsection{Convolutional neural networks for dense motion estimation}
 Deep convolutional neural network (CNN) architectures \cite{} became widely popular
 through numerous successes in classification and recognition tasks.
 The general structure of a CNN consists of a convolutional encoder, which
@@ -22,10 +21,19 @@ and a fully connected prediction network on top of the encoder.
 The compressed representations learned by CNNs of these categories do not, however, allow
 for prediction of high-resolution output, as spatial detail is lost through sequential applications
 of pooling or strides.
-Thus, networks for dense prediction introduced a convolutional decoder in addition to the representation encoder,
+Thus, networks for dense prediction introduce a convolutional decoder on top of the representation encoder,
 performing upsampling of the compressed features and resulting in a encoder-decoder pyramid.
-The most popular deep architecture of this kind for end-to-end optical flow prediction
-is the FlowNet family of networs \cite{}, which was recently extended to scene flow estimation \cite{}.
+The most popular deep networks of this kind for end-to-end optical flow prediction
+are variants of the FlowNet family \cite{}, which was recently extended to scene flow estimation \cite{}.
+Figure \ref{} shows the classical FlowNetS architecture for optical fow prediction.
+Note that the network itself is rather generic and is specialized for optical flow only through being trained
+with a dense optical flow groundtruth loss. The same network could also be used for semantic segmentation if
+the number of output channels was adapted from two to the number of classes. % TODO verify
+FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to estimate optical flow quite well,
+given just two consecutive frames as input and a large enough receptive field at the outputs to cover the displacements.
+Note that the maximum displacement that can be correctly estimated only depends on the number of 2D strides or pooling
+operations in the encoder.
+Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{}. % TODO dense nets for dense flow
 
 % The conclusion should be an understanding of the generic nature of the popular dense prediction networks
 % for flow and depth, which primarily stems from the fact that they are quick re-purposing of recognition CNNs.
@@ -37,8 +45,8 @@ is the FlowNet family of networs \cite{}, which was recently extended to scene f
 % in the resnet backbone.
 
 \subsection{Region-based convolutional networks}
-In the following, we will quickly re-view region-based convolutional networks, which are now the standard deep architecture for
-object detection, object recognition and instance segmentation.
+In the following, we give a short review of region-based convolutional networks, which are currently by far the
+most popular deep networks for object detection, and have recently also been applied to instance segmentation.
 
 \paragraph{R-CNN}
 The original region-based convolutional network (R-CNN) uses a non-learned algorithm external to a standard encoder CNN
@@ -47,17 +55,21 @@ For each of the region proposals, the input image is cropped at the proposed reg
 passed through a CNN, which performs classification of the object (or non-object, if the region shows background).
 
 \paragraph{Fast R-CNN}
-The original R-CNN involved computing on forward pass of the CNN for each of the region proposals,
-which can be costly, as there may be a large amount of proposals.
-Fast R-CNN significantly reduces processing time by performing only a single forward pass with the whole image
-as input to the CNN (compared to the input of crops in the case of R-CNN).
-Then, crops are taken from the compressed feature map of the image, collected into a batch and passed into a small Fast R-CNN
-\emph{head} network.
+The original R-CNN involved computing on forward pass of the deep CNN for each of the region proposals,
+which is costly, as there is generally a large amount of proposals.
+Fast R-CNN significantly reduces computation by performing only a single forward pass with the whole image
+as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
+Then, fixed size crops are taken from the compressed feature map of the image,
+collected into a batch and passed into a small Fast R-CNN
+\emph{head} network, which performs classification and prediction of refined boxes for all regions in one forward pass.
 This technique is called \emph{RoI pooling}. % TODO explain how RoI pooling converts full image box coords to crop ranges
-Thus, the per-region computation is reduced to a single network pass,
+Thus, given region proposals, the per-region computation is reduced to a single pass through the complete network,
 speeding up the system by orders of magnitude. % TODO verify that
 
 \paragraph{Faster R-CNN}
+After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
+algorith, which has to be run prior to the network passes and makes up a large portion of the total
+processing time.
 The Faster R-CNN object detection system unifies the generation of region proposals and subsequent box refinement and
 classification into a single deep network, leading to faster processing when compared to Fast R-CNN
 and again, improved accuracy.
@@ -70,7 +82,7 @@ At any position, bounding boxes are predicted as offsets relative to a fixed set
 aspect ratios.
 % TODO more about striding & computing the anchors?
 For each anchor at a given position, the objectness score tells us how likely this anchors is to corresponds to a detection.
-The region proposals are now obtained as the N highest scoring anchor boxes.
+The region proposals can then be obtained as the N highest scoring anchor boxes.
 
 The \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
 and bounding box refinement for each region proposal.
@@ -84,3 +96,6 @@ high resolution instance masks within the bounding boxes of each detected object
 This can be done by simply extending the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise mask for each instance.
 In addition, Mask R-CNN
+
+\paragraph{Supervision of the RPN}
+\paragraph{Supervision of the RoI head}

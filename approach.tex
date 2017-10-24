@@ -58,14 +58,37 @@ Figure \ref{fig:motion_rcnn_head} shows our extended per-RoI head network.
 We then extend the Faster R-CNN head by adding a fully-connected layer in parallel to the final fully-connected layers for
 predicting refined boxes and classes.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
-Each motion is predicted as a set of nine scalar motion parameters, $\alpha$, $\beta$, $\gamma$, $t_t^k$ and $p_t^k$.
+Each motion is predicted as a set of nine scalar motion parameters,
+$sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$, $t_t^k$ and $p_t^k$,
+where $sin(\alpha)$, $sin(\beta)$ and $sin(\gamma)$ are clipped to $[-1, 1]$.
+Here, we assume that motions between frames are relatively small
+and objects rotate no more than 90 degree in either direction.
 
 
 \subsection{Supervision}
 
-\paragraph{Per-RoI motion loss}
-For each positive RoI, we
+\paragraph{Per-RoI supervision with motion ground truth}
+Given a positive RoI, let $i_k$ be the index of the matched ground truth example with class $c_k$,
+let $R_{c_k}^k, t_{c_k}^k, p_{c_k}^k$ be the predicted motion for class $c_k$
+and $R_{gt}^{i_k}, t_{gt}^{i_k}, p_{gt}^{i_k}$ the ground truth motion for the example $i_k$.
+We compute the motion loss $L_{motion}^k$ for each RoI as
 
+\begin{equation}
+L_{motion}^k =l_{R}^k + l_{t}^k + l_{p}^k,
+\end{equation}
+where
+\begin{equation}
+l_{R}^k = arccos\left(\frac{tr(inv(R_{c_k}^k) \cdot R_{gt}^{i_k}) - 1}{2} \right)
+\end{equation}
+measures the angle of the error rotation between predicted and ground truth rotation,
+\begin{equation}
+l_{t}^k = \lVert inv(R_{c_k}^k) \cdot (t_{gt}^{i_k} - t_{c_k}^k) \rVert,
+\end{equation}
+is the euclidean norm between predicted and ground truth translation, and
+\begin{equation}
+l_{p}^k = \lVert p_{gt}^{i_k} - p_{c_k}^k \rVert
+\end{equation}
+is the euclidean norm between predicted and ground truth pivot.
 
 
 \subsection{Dense flow from motion}
