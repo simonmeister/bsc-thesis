@@ -1,8 +1,28 @@
 
 \subsection{Datasets}
 
+\paragraph{Virtual KITTI}
+The synthetic Virtual KITTI dataset is a re-creation of the KITTI driving scenario,
+rendered from virtual 3D street scenes.
+The dataset is made up of a total of 2126 frames from five different monocular sequences recorded from a camera mounted on
+a virtual car.
+Each sequence is rendered with varying lighting and weather conditions and from different viewing angles, resulting
+in a total of 10 variants per sequence.
+In addition to the RGB frames, a variety of ground truth is supplied.
+For each frame, we are given a dense depth and optical flow map,
+2D and 3D object bounding boxes, instance masks and 3D poses of all cars and vans in the scene,
+the camera extrinsics matrix, and various other labels.
+
+This makes the Virtual KITTI dataset ideally suited for developing our joint instance segmentation
+and motion estimation system, as it allows us to test different components in isolation and
+progress to more and more complete predictions.
+
 \subsection{Training Setup}
+Our training schedule is similar to the Mask R-CNN Cityscapes schedule.
+We train on a single Titan X (Pascal) for a total of 192K iterations.
+As learning rate we use $0.25 \cdot 10^{-2}$ for the first 144K iterations and $0.25 \cdot 10^{-3}$
+for all remaining iterations.
 
-\subsection{TODO}
+\subsection{Experiments on Virtual KITTI}
 
-\subsection{Results on KITTI}
+\subsection{Evaluation on KITTI 2015}

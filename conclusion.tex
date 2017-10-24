@@ -1,3 +1,15 @@
-
+We have introduced a extension on top of region-based convolutional networks to enable object motion estimation
+in parallel to instance segmentation.
 
 \subsection{Future Work}
+Due to the amount of supervision required by the different components of the network
+and the complexity of the optimization problem,
+we trained Motion R-CNN on the simple synthetic Virtual KITTI dataset.
+A next step would be the training on
+For example, we can first pre-train the RPN on a object detection dataset like
+Cityscapes. As soon as the RPN works reliably, we could then do alternating
+steps of training on, for example, Cityscapes and the KITTI stereo and optical flow datasets.
+On KITTI stereo and flow, we could run the instance segmentation component in testing mode and only penalize
+the motion losses and depth prediction, as no instance segmentation ground truth exists. % TODO depth prediction ?!
+On Cityscapes, we could continue train the full instance segmentation Mask R-CNN to
+improve detection and masks and avoid any forgetting effects.
