@@ -28,25 +28,25 @@ where
 R_t^{k,x}(\alpha) =
 \begin{pmatrix}
   1 & 0 & 0 \\
-  0 & cos(\alpha) & -sin(\alpha) \\
-  0 & sin(\alpha) & cos(\alpha)
+  0 & \cos(\alpha) & -\sin(\alpha) \\
+  0 & \sin(\alpha) & \cos(\alpha)
 \end{pmatrix},
 \end{equation}
 
 \begin{equation}
 R_t^{k,y}(\beta) =
 \begin{pmatrix}
-  cos(\beta) & 0 & sin(\beta) \\
+  \cos(\beta) & 0 & \sin(\beta) \\
   0 & 1 & 0 \\
-  -sin(\beta) & 0 & cos(\beta)
+  -\sin(\beta) & 0 & \cos(\beta)
 \end{pmatrix},
 \end{equation}
 
 \begin{equation}
 R_t^{k,z}(\gamma) =
 \begin{pmatrix}
-  cos(\gamma) & -sin(\gamma) & 0 \\
-  sin(\gamma) & cos(\gamma) & 0 \\
+  \cos(\gamma) & -\sin(\gamma) & 0 \\
+  \sin(\gamma) & \cos(\gamma) & 0 \\
   0 & 0 & 1
 \end{pmatrix},
 \end{equation}
@@ -59,8 +59,8 @@ We then extend the Faster R-CNN head by adding a fully connected layer in parall
 predicting refined boxes and classes.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
 Each motion is predicted as a set of nine scalar motion parameters,
-$sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$, $t_t^k$ and $p_t^k$,
-where $sin(\alpha)$, $sin(\beta)$ and $sin(\gamma)$ are clipped to $[-1, 1]$.
+$\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_t^k$ and $p_t^k$,
+where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
 and that objects rotate at most 90 degrees in either direction along any axis.
 
@@ -69,7 +69,7 @@ In addition to the object transformations, we optionally predict the camera moti
 between the two frames $I_t$ and $I_{t+1}$.
 For this, we flatten the full output of the backbone and pass it through a fully connected layer.
 We again represent $R_t^{cam}$ using a Euler angle representation and
-predict $sin(\alpha)$, $sin(\beta)$, $sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
+predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
 
 \subsection{Supervision}
 
@@ -84,7 +84,7 @@ L_{motion}^k =l_{R}^k + l_{t}^k + l_{p}^k,
 \end{equation}
 where
 \begin{equation}
-l_{R}^k = arccos\left(\frac{tr(inv(R_{c_k}^k) \cdot R_{gt}^{i_k}) - 1}{2} \right)
+l_{R}^k = \arccos\left( \min\left\{1, \max\left\{-1, \frac{tr(inv(R_{c_k}^k) \cdot R_{gt}^{i_k}) - 1}{2} \right\}\right\} \right)
 \end{equation}
 measures the angle of the error rotation between predicted and ground truth rotation,
 \begin{equation}

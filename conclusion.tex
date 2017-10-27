@@ -2,14 +2,26 @@ We have introduced a extension on top of region-based convolutional networks to 
 in parallel to instance segmentation.
 
 \subsection{Future Work}
+\paragraph{Predicting depth}
+In most cases, we want to work with RGB frames without depth available.
+To do so, we could integrate depth prediction into our network by branching off a
+depth network from the backbone in parallel to the RPN, as in Figure \ref{}.
+Although single-frame monocular depth prediction with deep networks was already done
+to some level of success,
+our two-frame input should allow the network to make use of epipolar
+geometry for making a more reliable depth estimate.
+
+\paragraph{Training on real world data}
 Due to the amount of supervision required by the different components of the network
 and the complexity of the optimization problem,
-we trained Motion R-CNN on the simple synthetic Virtual KITTI dataset.
-A next step would be the training on
-For example, we can first pre-train the RPN on a object detection dataset like
-Cityscapes. As soon as the RPN works reliably, we could then do alternating
+we trained Motion R-CNN on the simple synthetic Virtual KITTI dataset for now.
+A next step would be training on a more realistic dataset.
+For example, we can first pre-train the RPN on an object detection dataset like
+Cityscapes. As soon as the RPN works reliably, we could execute alternating
 steps of training on, for example, Cityscapes and the KITTI stereo and optical flow datasets.
 On KITTI stereo and flow, we could run the instance segmentation component in testing mode and only penalize
-the motion losses and depth prediction, as no instance segmentation ground truth exists. % TODO depth prediction ?!
+the motion losses (and depth prediction), as no instance segmentation ground truth exists.
 On Cityscapes, we could continue train the full instance segmentation Mask R-CNN to
 improve detection and masks and avoid any forgetting effects.
+As an alternative to this training scheme, we could investigate training on a pure
+instance segmentation dataset with unsupervised warping-based proxy losses for the motion (and depth) prediction.

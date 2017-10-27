@@ -1,6 +1,34 @@
 \subsection{Motivation \& Goals}
 
+% introduce problem to sovle
+% mention classical non deep-learning works, then say it would be nice to go end-to-end deep
 
-% Explain benefits of learning (why deep-nize rigid scene model??)
+Recently, SfM-Net \cite{} introduced an end-to-end deep learning approach for predicting depth
+and dense optical flow in monocular image sequences based on estimating the 3D motion of individual objects and the camera.
+SfM-Net predicts a batch of binary full image masks specyfing the object memberships of individual pixels with a standard encoder-decoder
+network for pixel-wise prediction. A fully connected network branching off the encoder predicts a 3D motion for each object.
+However, due to the fixed number of objects masks, it can only predict a small number of motions and
+often fails to properly segment the pixels into the correct masks or assigns background pixels to object motions.
+
+Thus, their approach is very unlikely to scale to dynamic scenes with a potentially
+large number of diverse objects due to the inflexible nature of their instance segmentation technique.
+
+A scalable approach to instance segmentation based on region-based convolutional networks
+was recently introduced with Mask R-CNN \cite{}, which inherits the ability to detect
+a large number of objects from a large number of classes at once from Faster R-CNN
+and predicts pixel-precise segmentation masks for each detected object.
+
+We propose \emph{Motion R-CNN}, which combines the scalable instance segmentation capabilities of
+Mask R-CNN with the end-to-end 3D motion estimation approach introduced with SfM-Net.
+For this, we naturally integrate 3D motion prediction for individual objects into the per-RoI R-CNN head
+in parallel to classification and bounding box refinement.
 
 \subsection{Related Work}
+
+\paragraph{Deep optical flow estimation}
+\paragraph{Deep scene flow estimation}
+\paragraph{Structure from motion}
+SfM-Net, SE3 Nets,
+
+
+Behl2017ICCV
