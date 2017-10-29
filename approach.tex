@@ -14,8 +14,10 @@ We do not introduce a separate network for computing region proposals and use ou
 as both first stage RPN and second stage feature extractor for region cropping.
 
 \paragraph{Per-RoI motion prediction}
-We use a rigid motion parametrization similar to the one used by SfM-Net \cite{Byravan:2017:SNL}.
-For the $k$-th object proposal, we predict the rigid transformation $\{R_t^k, t_t^k\}\in SE3$
+We use a rigid 3D motion parametrization similar to the one used by SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
+For the $k$-th object proposal, we predict the rigid transformation $\{R_t^k, t_t^k\}\in \mathbf{SE}(3)$
+\footnote{$\mathbf{SE}(3)$ refers to the Special Euclidean Group representing 3D rotations
+and translations: $\{R, t|R \in \mathbf{SO}(3), t \in \mathbb{R}^3\}$}
 of the object between the two frames $I_t$ and $I_{t+1}$ as well as the object pivot $p_t^k \in \mathbb{R}^3$ at time $t$ .
 We parametrize ${R_t^k}$ using an Euler angle representation,
 
@@ -65,7 +67,7 @@ Here, we assume that motions between frames are relatively small
 and that objects rotate at most 90 degrees in either direction along any axis.
 
 \paragraph{Camera motion prediction}
-In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in SE3$
+In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in \mathbf{SE}(3)$
 between the two frames $I_t$ and $I_{t+1}$.
 For this, we flatten the full output of the backbone and pass it through a fully connected layer.
 We again represent $R_t^{cam}$ using a Euler angle representation and

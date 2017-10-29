@@ -8,7 +8,7 @@ Optical flow can be regarded as two-dimensional motion estimation.
 Scene flow is the generalization of optical flow to 3-dimensional space.
 
 \subsection{Convolutional neural networks for dense motion estimation}
-Deep convolutional neural network (CNN) architectures \cite{} became widely popular
+Deep convolutional neural network (CNN) architectures \cite{ImageNetCNN, VGGNet, ResNet} became widely popular
 through numerous successes in classification and recognition tasks.
 The general structure of a CNN consists of a convolutional encoder, which
 learns a spatially compressed, wide (in the number of channels) representation of the input image,
@@ -20,17 +20,18 @@ of pooling or strides.
 Thus, networks for dense prediction introduce a convolutional decoder on top of the representation encoder,
 performing upsampling of the compressed features and resulting in a encoder-decoder pyramid.
 The most popular deep networks of this kind for end-to-end optical flow prediction
-are variants of the FlowNet family \cite{}, which was recently extended to scene flow estimation \cite{}.
+are variants of the FlowNet family \cite{FlowNet, FlowNet2},
+which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
 Figure \ref{} shows the classical FlowNetS architecture for optical fow prediction.
 Note that the network itself is rather generic and is specialized for optical flow only through being trained
-with a dense optical flow groundtruth loss.
-Note that the same network could also be used for semantic segmentation if
+with supervision from dense optical flow ground truth.
+Potentially, the same network could also be used for semantic segmentation if
 the number of output channels was adapted from two to the number of classes. % TODO verify
-FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to estimate optical flow arguably well,
+FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to perform image matching arguably well,
 given just two consecutive frames as input and a large enough receptive field at the outputs to cover the displacements.
 Note that the maximum displacement that can be correctly estimated only depends on the number of 2D strides or pooling
 operations in the encoder.
-Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{}. % TODO dense nets for dense flow
+Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
 % The conclusion should be an understanding of the generic nature of the popular dense prediction networks
 % for flow and depth, which primarily stems from the fact that they are quick re-purposing of recognition CNNs.
@@ -46,7 +47,7 @@ In the following, we give a short review of region-based convolutional networks,
 most popular deep networks for object detection, and have recently also been applied to instance segmentation.
 
 \paragraph{R-CNN}
-The original region-based convolutional network (R-CNN) uses a non-learned algorithm external to a standard encoder CNN
+The original region-based convolutional network (R-CNN) \cite{RCNN} uses a non-learned algorithm external to a standard encoder CNN
 for computing \emph{region proposals} in the shape of 2D bounding boxes, which represent regions that may contain an object.
 For each of the region proposals, the input image is cropped at the proposed region and the crop is
 passed through a CNN, which performs classification of the object (or non-object, if the region shows background). % and box refinement!
@@ -54,7 +55,7 @@ passed through a CNN, which performs classification of the object (or non-object
 \paragraph{Fast R-CNN}
 The original R-CNN involved computing on forward pass of the deep CNN for each of the region proposals,
 which is costly, as there is generally a large amount of proposals.
-Fast R-CNN significantly reduces computation by performing only a single forward pass with the whole image
+Fast R-CNN \cite{FastRCNN} significantly reduces computation by performing only a single forward pass with the whole image
 as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
 Then, fixed size crops are taken from the compressed feature map of the image,
 collected into a batch and passed into a small Fast R-CNN
@@ -67,7 +68,7 @@ speeding up the system by orders of magnitude. % TODO verify that
 After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
 algorith, which has to be run prior to the network passes and makes up a large portion of the total
 processing time.
-The Faster R-CNN object detection system unifies the generation of region proposals and subsequent box refinement and
+The Faster R-CNN object detection system \cite{FasterRCNN} unifies the generation of region proposals and subsequent box refinement and
 classification into a single deep network, leading to faster processing when compared to Fast R-CNN
 and again, improved accuracy.
 This unified network operates in two stages.
@@ -91,7 +92,7 @@ Faster R-CNN and the earlier systems detect and classify objects at bounding box
 However, it can be helpful to know class and object (instance) membership of all individual pixels,
 which generally involves computing a binary mask for each object instance specifying which pixels belong
 to that object. This problem is called \emph{instance segmentation}.
-Mask R-CNN extends the Faster R-CNN system to instance segmentation by predicting
+Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentation by predicting
 fixed resolution instance masks within the bounding boxes of each detected object.
 This can be done by simply extending the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise mask for each instance.

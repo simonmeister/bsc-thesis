@@ -47,19 +47,21 @@
 
 \usepackage[
     backend=biber, % biber ist das Standard-Backend für Biblatex. Für die Abwärtskompatibilität kann hier auch bibtex oder bibtex8 gewählt werden (siehe biblatex-Dokumentation)
-    style=authortitle, %numeric, authortitle, alphabetic etc.
+    style=numeric, %numeric, authortitle, alphabetic etc.
     autocite=footnote, % Stil, der mit \autocite verwendet wird
-    sorting=nty, % Sortierung: nty = name title year, nyt = name year title u.a.
+    sorting=ynt, % Sortierung: nty = name title year, nyt = name year title u.a.
     sortcase=false,
     url=false,
     hyperref=auto,
+    giveninits=true,
+    maxbibnames=10
 ]{biblatex}
 
 \renewbibmacro*{cite:seenote}{} % um zu verhindern, dass in Fußnoten automatisch "(wie Anm. xy)" eingefügt wird
 \DeclareFieldFormat*{citetitle}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
 \DeclareFieldFormat*{title}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
 
-\addbibresource{clean.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
+\addbibresource{bib.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
 \nocite{*} % Alle Einträge in der .bib-Datei im Literaturverzeichnis ausgeben, auch wenn sie nicht im Text zitiert werden. Gut zum Testen der .bib-Datei, sollte aber nicht generell verwendet werden. Stattdessen lieber gezielt Einträge mit Keywords ausgeben lassen (siehe \printbibliography in Zeile 224).
 
 
@@ -151,6 +153,7 @@
 \singlespacing
 \printbibliography[title=Literaturverzeichnis, heading=bibliography]
 %\printbibliography[title=Literaturverzeichnis, heading=bibliography, keyword=meinbegriff]
+
 
 \clearpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
