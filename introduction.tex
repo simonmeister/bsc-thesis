@@ -1,7 +1,23 @@
-\subsection{Motivation \& Goals}
+\subsection{Motivation}
 
 % introduce problem to sovle
 % mention classical non deep-learning works, then say it would be nice to go end-to-end deep
+
+% Steal intro from behl2017 & FlowLayers
+
+Deep learning research is moving towards videos.
+Motion estimation is an inherently ambigous problem and
+A recent trend is towards end-to-end deep learning systems, away from energy-minimization.
+Often however, this leads to a compromise in modelling as it is more difficult to
+formulate a end-to-end deep network architecture for a given problem than it is
+to state a fesable energy-minimization problem.
+For this reason, we see lots of generic models applied to domains which previously
+employed intricate physical models to simplify optimization.
+On the on hand, end-to-end deep learning may bringe unique benefits due do the ability
+of a learned system to deal with ambiguity.
+On the other hand,
+%Thus, there is an emerging trend to unify geometry with deep learning by
+% THE ABOVE IS VERY DRAFT_LIKE
 
 Recently, SfM-Net \cite{SfmNet} introduced an end-to-end deep learning approach for predicting depth
 and dense optical flow in monocular image sequences based on estimating the 3D motion of individual objects and the camera.
@@ -23,24 +39,42 @@ Mask R-CNN with the end-to-end 3D motion estimation approach introduced with SfM
 For this, we naturally integrate 3D motion prediction for individual objects into the per-RoI R-CNN head
 in parallel to classification and bounding box refinement.
 
-\subsection{Related Work}
+\subsection{Related work}
 
-\paragraph{Deep networks for optical flow and scene flow}
+\paragraph{Deep networks in optical flow and scene flow}
 
-\paragraph{Deep networks for 3D motion estimation}
+\cite{FlowLayers}
+\cite{ESI}
+
+\paragraph{Slanted plane methods for 3D scene flow}
+The slanted plane model for scene flow \cite{PRSF, PRSM} models a 3D scene as being
+composed of planar segments. Pixels are assigned to one of the planar segments,
+each of which undergoes a rigid motion.
+
+In contrast to \cite{PRSF, PRSM}, the Object Scene Flow method \cite{KITTI2015}
+assigns each slanted plane to one rigidly moving object instance, thus
+reducing the number of independently moving segments by allowing multiple
+segments to share the motion of the object they belong to.
+
+In a recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
+a CNN is used to compute 2D bounding boxes and instance masks, which are then combined
+with depth obtained from a non-learned stereo algorithm to be used as pre-computed
+inputs to the object scene flow model from \cite{KITTI2015}.
+
+Interestingly, these slanted plane methods achieve the current state-of-the-art
+in scene flow \emph{and} optical flow estimation on the KITTI benchmarks \cite{KITTI2012, KITTI2015},
+outperforming end-to-end deep networks like \cite{FlowNet2, SceneFlowDataset}.
+
+%
+In other contexts, the move from
+% talk about performance issues with energy-minimization components, draw parallels to evolution of R-CNNs in terms of speed and accuracy when moving towards full end-to-end learning
+
+\paragraph{End-to-end deep networks for 3D rigid motion estimation}
 End-to-end deep learning for predicting rigid 3D object motions was first introduced with
 SE3-Nets \cite{SE3Nets}, which take raw 3D point clouds as input and produce a segmentation
 of the points into objects together with the 3D motion of each object.
 Bringing this idea to the context of image sequences, SfM-Net \cite{SfmNet} takes two consecutive frames and
 estimates a segmentation of pixels into objects together with their 3D motions between the frames.
 In addition, SfM-Net predicts dense depth and camera motion to obtain full 3D scene flow from end-to-end deep learning.
-For supervision, SfM-Net penalizes the dense optical flow composed from the 3D motions and depth estimate
+For supervision, SfM-Net penalizes the dense optical flow composed from all 3D motions and the depth estimate
 with a brightness constancy proxy loss.
-
-
-
-Recently, deep CNN-based recognition was combined with energy-based 3D scene flow estimation \cite{Behl2017ICCV}.
-
-
-\cite{FlowLayers}
-\cite{ESI}

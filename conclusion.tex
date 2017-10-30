@@ -22,6 +22,6 @@ steps of training on, for example, Cityscapes and the KITTI stereo and optical f
 On KITTI stereo and flow, we could run the instance segmentation component in testing mode and only penalize
 the motion losses (and depth prediction), as no instance segmentation ground truth exists.
 On Cityscapes, we could continue train the full instance segmentation Mask R-CNN to
-improve detection and masks and avoid any forgetting effects.
+improve detection and masks and avoid forgetting instance segmentation.
 As an alternative to this training scheme, we could investigate training on a pure
 instance segmentation dataset with unsupervised warping-based proxy losses for the motion (and depth) prediction.

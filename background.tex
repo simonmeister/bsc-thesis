@@ -1,15 +1,19 @@
 \subsection{Optical flow, scene flow and structure from motion}
-Let $I_1,I_2 : P \to \mathbb{R}^3$ be two temporally consecutive frames in a sequence of images.
-The optical flow $\mathbf{w} = (u, v)^T$ from $I_1$ to $I_2$ maps pixel coordinates in the first
-frame $I_1$ to pixel coordinates of the visually corresponding pixel in the second frame $I_2$, thus
-representing the apparent movement of brigthness patterns between the two frames.
+Let $I_1,I_2 : P \to \mathbb{R}^3$ be two temporally consecutive frames in a
+sequence of images.
+The optical flow
+$\mathbf{w} = (u, v)^T$ from $I_1$ to $I_2$
+maps pixel coordinates in the first frame $I_1$ to pixel coordinates of the
+visually corresponding pixel in the second frame $I_2$,
+thus representing the apparent movement of brigthness patterns between the two frames.
 Optical flow can be regarded as two-dimensional motion estimation.
 
 Scene flow is the generalization of optical flow to 3-dimensional space.
 
 \subsection{Convolutional neural networks for dense motion estimation}
-Deep convolutional neural network (CNN) architectures \cite{ImageNetCNN, VGGNet, ResNet} became widely popular
-through numerous successes in classification and recognition tasks.
+Deep convolutional neural network (CNN) architectures
+\cite{ImageNetCNN, VGGNet, ResNet}
+became widely popular through numerous successes in classification and recognition tasks.
 The general structure of a CNN consists of a convolutional encoder, which
 learns a spatially compressed, wide (in the number of channels) representation of the input image,
 and a fully connected prediction network on top of the encoder.
@@ -47,13 +51,13 @@ In the following, we give a short review of region-based convolutional networks,
 most popular deep networks for object detection, and have recently also been applied to instance segmentation.
 
 \paragraph{R-CNN}
-The original region-based convolutional network (R-CNN) \cite{RCNN} uses a non-learned algorithm external to a standard encoder CNN
+Region-based convolutional networks (R-CNNs) \cite{RCNN} use a non-learned algorithm external to a standard encoder CNN
 for computing \emph{region proposals} in the shape of 2D bounding boxes, which represent regions that may contain an object.
 For each of the region proposals, the input image is cropped at the proposed region and the crop is
 passed through a CNN, which performs classification of the object (or non-object, if the region shows background). % and box refinement!
 
 \paragraph{Fast R-CNN}
-The original R-CNN involved computing on forward pass of the deep CNN for each of the region proposals,
+The original R-CNN involves computing one forward pass of the CNN for each of the region proposals,
 which is costly, as there is generally a large amount of proposals.
 Fast R-CNN \cite{FastRCNN} significantly reduces computation by performing only a single forward pass with the whole image
 as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
@@ -66,7 +70,7 @@ speeding up the system by orders of magnitude. % TODO verify that
 
 \paragraph{Faster R-CNN}
 After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
-algorith, which has to be run prior to the network passes and makes up a large portion of the total
+algorithm, which has to be run prior to the network passes and makes up a large portion of the total
 processing time.
 The Faster R-CNN object detection system \cite{FasterRCNN} unifies the generation of region proposals and subsequent box refinement and
 classification into a single deep network, leading to faster processing when compared to Fast R-CNN
