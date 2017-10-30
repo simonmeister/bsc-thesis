@@ -8,7 +8,10 @@ visually corresponding pixel in the second frame $I_2$,
 thus representing the apparent movement of brigthness patterns between the two frames.
 Optical flow can be regarded as two-dimensional motion estimation.
 
-Scene flow is the generalization of optical flow to 3-dimensional space.
+Scene flow is the generalization of optical flow to 3-dimensional space and
+requires estimating dense depth. Generally, stereo input is used for scene flow
+to estimate disparity-based depth, however monocular depth estimation can in
+principle be used.
 
 \subsection{Convolutional neural networks for dense motion estimation}
 Deep convolutional neural network (CNN) architectures

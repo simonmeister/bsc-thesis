@@ -41,10 +41,15 @@ in parallel to classification and bounding box refinement.
 
 \subsection{Related work}
 
-\paragraph{Deep networks in optical flow and scene flow}
+\paragraph{Deep networks in optical flow}
 
-\cite{FlowLayers}
-\cite{ESI}
+End-to-end deep networks for optical flow were recently introduced
+based on encoder-decoder networks or CNN pyramids \cite{FlowNet, FlowNet2, SPyNet},
+which pose optical flow as generic pixel-wise estimation problem without making any assumptions
+about the regularity and structure of the estimated flow.
+Other works \cite{FlowLayers, ESI, MRFlow} make use of semantic segmentation to structure
+the optical flow estimation, but still require expensive energy minimization for each
+new input, as CNNs are only used for some of the components.
 
 \paragraph{Slanted plane methods for 3D scene flow}
 The slanted plane model for scene flow \cite{PRSF, PRSM} models a 3D scene as being
@@ -57,17 +62,35 @@ reducing the number of independently moving segments by allowing multiple
 segments to share the motion of the object they belong to.
 
 In a recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
-a CNN is used to compute 2D bounding boxes and instance masks, which are then combined
+a CNN is used to compute 2D bounding boxes and instance masks for all objects in the scene, which are then combined
 with depth obtained from a non-learned stereo algorithm to be used as pre-computed
-inputs to the object scene flow model from \cite{KITTI2015}.
+inputs to their slanted plane scene flow model based on \cite{KITTI2015}.
 
 Interestingly, these slanted plane methods achieve the current state-of-the-art
 in scene flow \emph{and} optical flow estimation on the KITTI benchmarks \cite{KITTI2012, KITTI2015},
 outperforming end-to-end deep networks like \cite{FlowNet2, SceneFlowDataset}.
+However, the end-to-end deep networks are significantly faster than energy-minimization based slanted plane models,
+generally taking a fraction of a second instead of minutes to compute and can often be modified to run in realtime.
+These concerns restrict the applicability of the current slanted plane models in practical applications,
+which often require estimations to be done in realtime and for which an end-to-end
+approach based on learning would be preferable.
 
-%
-In other contexts, the move from
-% talk about performance issues with energy-minimization components, draw parallels to evolution of R-CNNs in terms of speed and accuracy when moving towards full end-to-end learning
+Futhermore, in other contexts, the move towards end-to-end deep learning has often lead
+to significant benefits in terms of accuracy and speed.
+As an example, consider the evolution of region-based convolutional networks, which started
+out as prohibitively slow with a CNN as a single component and
+became very fast and much more accurate over the course of their development into
+end-to-end deep networks.
+
+Thus, in the context of motion estimation, one could expect end-to-end deep learning to not only bring large improvements
+in speed, but also in accuracy, especially considering the inherent ambiguity of motion estimation
+and the ability of deep networks to learn to handle ambiguity from experience. % TODO instead of experience, talk about compressing large datasets / generalization
+However, we think that the current end-to-end deep learning approaches to motion
+estimation are limited by a lack of spatial structure and regularity in their estimates,
+which stems from the generic nature of the employed networks.
+To this end, we aim to combine the modelling benefits of rigid scene decompositions
+with the promise of end-to-end deep learning.
+
 
 \paragraph{End-to-end deep networks for 3D rigid motion estimation}
 End-to-end deep learning for predicting rigid 3D object motions was first introduced with
