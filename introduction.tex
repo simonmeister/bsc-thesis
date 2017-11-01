@@ -6,7 +6,7 @@
 % Steal intro from behl2017 & FlowLayers
 
 Deep learning research is moving towards videos.
-Motion estimation is an inherently ambigous problem and
+Motion estimation is an inherently ambigous problem and.
 A recent trend is towards end-to-end deep learning systems, away from energy-minimization.
 Often however, this leads to a compromise in modelling as it is more difficult to
 formulate a end-to-end deep network architecture for a given problem than it is
@@ -38,6 +38,14 @@ We propose \emph{Motion R-CNN}, which combines the scalable instance segmentatio
 Mask R-CNN with the end-to-end 3D motion estimation approach introduced with SfM-Net.
 For this, we naturally integrate 3D motion prediction for individual objects into the per-RoI R-CNN head
 in parallel to classification and bounding box refinement.
+For each RoI, we predict a single 3D rigid object motion together with the object
+pivot in camera space.
+As a foundation for image matching, we extend the ResNet \cite{ResNet} backbone to take
+two concatenated images as input, similar to FlowNetS \cite{FlowNet}.
+This gives us a fully integrated end-to-end network architecture for segmenting pixels into instances
+and estimating the motion of all detected instances without any limitations
+as to the number or variety of object instances.
+
 
 \subsection{Related work}
 
