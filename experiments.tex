@@ -97,6 +97,8 @@ is the mean euclidean norm between predicted and ground truth translation, and
 E_{p} = \frac{1}{N}\sum_k \lVert p^{gt,i_k} - p^{k,c_k} \rVert
 \end{equation}
 is the mean euclidean norm between predicted and ground truth pivot.
+Analogously, we define error metrics $E_{R}^{cam}$ and $E_{t}^{cam}$ for
+predicted camera motion.
 
 \subsection{Training Setup}
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
@@ -108,8 +110,46 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 \todo{add this}
 
 \subsection{Experiments on Virtual KITTI}
-\todo{add this}
+\todo{complete this}
 
+{
+\begin{table}[t]
+\centering
+\begin{tabular}{@{}*{10}{c}@{}}
+\toprule
+\multicolumn{3}{c}{Network} & \multicolumn{3}{c}{Instance Motion Error} & \multicolumn{2}{c}{Camera Motion Error} &\multicolumn{2}{c}{Optical Flow Error} \\
+\cmidrule(lr){1-3}\cmidrule(lr){4-6}\cmidrule(l){7-8}\cmidrule(l){9-10}
+  FPN        & cam.       & sup.  & $E_{R}$ & $E_{t}$ & $E_{p}$ & $E_{R}^{cam}$ & $E_{t}^{cam}$ & AEE & Fl-all \\\midrule
+  $\times$   & $\times$   & 3D   & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
+  \checkmark & $\times$   & 3D   & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
+  $\times$   & \checkmark & 3D   & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
+  \checkmark & \checkmark & 3D   & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
+  $\times$   & $\times$   & flow & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
+  \checkmark & $\times$   & flow & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
+  $\times$   & \checkmark & flow & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
+  \checkmark & \checkmark & flow & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
+\bottomrule
+\end{tabular}
+
+\caption {
+Comparison of network variants on our Virtual KITTI validation set.
+AEE: Average Endpoint Error; Fl-all: Ratio of pixels where flow estimate is
+wrong by both $\geq 3$ pixels and $\geq 5\%$.
+We optionally train camera motion prediction (cam.)
+or replace the ResNet50 backbone with ResNet50-FPN (FPN).
+We either supervise
+object motions (sup.) with 3D motion ground truth (3D) or
+with a 2D re-projection loss based on flow ground truth (flow).
+Note that for variants where no camera motion is trained and predicted, the optical flow
+is composed using the ground truth camera motion and thus the flow error is
+only impacted by the predicted 3D object motions.
+}
+\label{table:vkitti}
+\end{table}
+}
+
+Table \ref{table:vkitti} compares the performance of different network variants on the Virtual KITTI validation
+set.
 
 \subsection{Evaluation on KITTI 2015}
-\todo{add this}
+\todo{add this if there is enough time}
