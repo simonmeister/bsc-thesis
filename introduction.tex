@@ -12,7 +12,7 @@ of each obstacle, but to also know if and where the obstacle is moving,
 and to use sensors that will not make the system too expensive for widespread use.
 There are many other applications.. %TODO(make motivation wider)
 
-A promising approach for 3D scene understanding in these situations may be deep neural
+A promising approach for 3D scene understanding in these situations are deep neural
 networks, which have recently achieved breakthroughs in object detection, instance segmentation and classification
 in still images and are more and more often being applied to video data.
 A key benefit of end-to-end deep networks is that they can, in principle,
@@ -20,7 +20,7 @@ enable very fast inference on real time video data and generalize
 over many training examples to resolve ambiguities inherent in image understanding
 and motion estimation.
 
-Thus, in this work, we aim to develop a end-to-end deep network which can, given
+Thus, in this work, we aim to develop end-to-end deep networks which can, given
 sequences of images, segment the image pixels into object instances and estimate
 the location and 3D motion of each object instance relative to the camera.
 
@@ -44,19 +44,21 @@ and predicts pixel-precise segmentation masks for each detected object.
 We propose \emph{Motion R-CNN}, which combines the scalable instance segmentation capabilities of
 Mask R-CNN with the end-to-end 3D motion estimation approach introduced with SfM-Net.
 For this, we naturally integrate 3D motion prediction for individual objects into the per-RoI R-CNN head
-in parallel to classification and bounding box refinement.
+in parallel to classification, bounding box refinement and mask prediction.
 For each RoI, we predict a single 3D rigid object motion together with the object
-pivot in camera space.
-As a foundation for image matching, we extend the ResNet \cite{ResNet} backbone to take
+pivot in camera space in this way.
+As a foundation for image matching, we extend the ResNet \cite{ResNet} backbone of Mask R-CNN to take
 two concatenated images as input, similar to FlowNetS \cite{FlowNet}.
-This gives us a fully integrated end-to-end network architecture for segmenting pixels into instances
+This results in a fully integrated end-to-end network architecture for segmenting pixels into instances
 and estimating the motion of all detected instances without any limitations
 as to the number or variety of object instances.
+Figure \ref{} gives an overview of our network.
 
-Eventually, we want to extend our method to include end-to-end depth prediction,
+Eventually, we want to extend our method to include depth prediction,
 yielding the first end-to-end deep network to perform 3D scene flow estimation
 in a principled way from considering individual objects.
-For now, we will work with RGB-D frames to break down the problem into manageable pieces.
+For now, we will work with RGB-D frames to break down the problem into
+manageable pieces.
 
 \subsection{Related work}
 
@@ -75,12 +77,12 @@ image depending on the semantics of each region or pixel, which include whether 
 pixel belongs to the background, to which object instance it belongs if it is not background,
 and the class of the object it belongs to.
 Often, failure cases of these methods include motion boundaries or regions with little texture,
-where semantics become more important. % TODO make sure this is a grounded statement
+where semantics become more important. \todo{elaborate}% TODO make sure this is a grounded statement
 Extensions of these approaches to scene flow estimate flow and depth
 with similarly generic networks \cite{SceneFlowDataset} and similar limitations.
 
 Other works \cite{FlowLayers, ESI, MRFlow} make use of semantic segmentation to structure % TODO cite jun's paper?
-the optical flow estimation problem and introduce semantics,
+the optical flow estimation problem and introduce reasoning at the object level,
 but still require expensive energy minimization for each
 new input, as CNNs are only used for some of the components.
 
@@ -94,7 +96,7 @@ reducing the number of independently moving segments by allowing multiple
 segments to share the motion of the object they belong to.
 In these methods, pixel assignment and motion estimation are formulated
 as energy-minimization problem and optimized for each input data point,
-without any learning. % TODO make sure it's ok to say there's no learning
+without the use of (deep) learning. % TODO make sure it's ok to say there's no learning
 
 In a more recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
 a CNN is used to compute 2D bounding boxes and instance masks for all objects in the scene, which are then combined
@@ -126,8 +128,8 @@ in speed, but also in accuracy, especially considering the inherent ambiguity of
 and the ability of deep networks to learn to handle ambiguity from a large variety of training examples.
 
 However, we think that the current end-to-end deep learning approaches to motion
-estimation are limited by a lack of spatial structure and regularity in their estimates,
-which stems from the generic nature of the employed networks. % TODO move to end-to-end deep nets section
+estimation are likely limited by a lack of spatial structure and regularity in their estimates
+as explained above, which stems from the generic nature of the employed networks.
 To this end, we aim to combine the modelling benefits of rigid scene decompositions
 with the promise of end-to-end deep learning.
 

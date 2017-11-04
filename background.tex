@@ -1,17 +1,20 @@
-\subsection{Optical flow, scene flow and structure from motion}
+Here, we will give a more detailed description of previous works
+we directly build on and other prerequisites.
+
+\subsection{Optical flow and scene flow}
 Let $I_1,I_2 : P \to \mathbb{R}^3$ be two temporally consecutive frames in a
 sequence of images.
 The optical flow
 $\mathbf{w} = (u, v)^T$ from $I_1$ to $I_2$
 maps pixel coordinates in the first frame $I_1$ to pixel coordinates of the
 visually corresponding pixel in the second frame $I_2$,
-thus representing the apparent movement of brigthness patterns between the two frames.
+and can be interpreted as the apparent movement of brigthness patterns between the two frames.
 Optical flow can be regarded as two-dimensional motion estimation.
 
 Scene flow is the generalization of optical flow to 3-dimensional space and
-requires estimating dense depth. Generally, stereo input is used for scene flow
-to estimate disparity-based depth, however monocular depth estimation can in
-principle be used.
+requires estimating depth for each pixel. Generally, stereo input is used for scene flow
+to estimate disparity-based depth, however monocular depth estimation with deep networks is becoming
+popular \cite{DeeperDepth}.
 
 \subsection{Convolutional neural networks for dense motion estimation}
 Deep convolutional neural network (CNN) architectures
@@ -30,27 +33,18 @@ The most popular deep networks of this kind for end-to-end optical flow predicti
 are variants of the FlowNet family \cite{FlowNet, FlowNet2},
 which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
 Figure \ref{} shows the classical FlowNetS architecture for optical fow prediction.
-Note that the network itself is rather generic and is specialized for optical flow only through being trained
+Note that the network itself is a rather generic autoencoder and is specialized for optical flow only through being trained
 with supervision from dense optical flow ground truth.
 Potentially, the same network could also be used for semantic segmentation if
 the number of output channels was adapted from two to the number of classes. % TODO verify
-FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to perform image matching arguably well,
+Still, FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to perform image matching arguably well,
 given just two consecutive frames as input and a large enough receptive field at the outputs to cover the displacements.
 Note that the maximum displacement that can be correctly estimated only depends on the number of 2D strides or pooling
 operations in the encoder.
 Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
-% The conclusion should be an understanding of the generic nature of the popular dense prediction networks
-% for flow and depth, which primarily stems from the fact that they are quick re-purposing of recognition CNNs.
-
-% The reader should understand the limitations of the generic dense-estimator approach!
-
-% Also, it should be emphasized that FlowNet learns to match images with a generic encoder,
-% thus motivating the introduction of our motion head, which should integrate (and regularize) matching information learned
-% in the resnet backbone.
-
 \subsection{Region-based convolutional networks}
-In the following, we give a short review of region-based convolutional networks, which are currently by far the
+We now give a short review of region-based convolutional networks, which are currently by far the
 most popular deep networks for object detection, and have recently also been applied to instance segmentation.
 
 \paragraph{R-CNN}
@@ -101,10 +95,11 @@ which generally involves computing a binary mask for each object instance specif
 to that object. This problem is called \emph{instance segmentation}.
 Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentation by predicting
 fixed resolution instance masks within the bounding boxes of each detected object.
-This can be done by simply extending the Faster R-CNN head with multiple convolutions, which
+This is done by simply extending the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise mask for each instance.
-In addition, Mask R-CNN
-Figure \ref{} compares the two Mask R-CNN network variants.
+In addition to extending the original Faster R-CNN head, Mask R-CNN also introduced a network
+variant based on Feature Pyramid Networks \cite{FPN}.
+Figure \ref{} compares the two Mask R-CNN head variants.
 
 \paragraph{Supervision of the RPN}
 \paragraph{Supervision of the RoI head}

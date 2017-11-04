@@ -17,7 +17,15 @@ laying the foundation for our motion estimation. Instead of taking a single imag
 we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both first stage RPN and second stage feature extractor for region cropping.
-% TODO figures; introduce XYZ inputs
+Technically, our feature encoder network will have to learn a motion representation similar to
+that learned by the FlowNet encoder, but the output will be computed in the
+object-centric framework of a region based convolutional network head with a 3D parametrization.
+Thus, in contrast to the dense FlowNet decoder, the estimated dense motion information
+from the encoder is integrated for specific objects via RoI cropping and
+processed by the RoI head for each object.
+\todo{figure of backbone}
+
+\todo{introduce optional XYZ input}
 
 \paragraph{Per-RoI motion prediction}
 We use a rigid 3D motion parametrization similar to the one used in SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
@@ -70,6 +78,7 @@ where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
 and that objects rotate at most 90 degrees in either direction along any axis.
 All predictions are made in camera space, and translation and pivot predictions are in meters.
+\todo{figure of head}
 
 \paragraph{Camera motion prediction}
 In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in \mathbf{SE}(3)$
@@ -111,23 +120,53 @@ l_{p}^k = \lVert p^{gt,i_k} - p^{k,c_k} \rVert_1.
 \end{equation}
 
 \paragraph{Camera motion supervision}
-We supervise the camera motion with ground truth in the same way as the
-object motions.
+We supervise the camera motion with ground truth analogously to the
+object motions, with the only difference being that we only have
+a rotation and translation, but no pivot term for the camera motion.
 
 \paragraph{Per-RoI supervision \emph{without} motion ground truth}
 A more general way to supervise the object motions is a re-projection
-loss applied to coordinates within the object bounding box,
-as used in SfM-Net \cite{SfmNet}. Let
+loss similar to the unsupervised loss in SfM-Net \cite{SfmNet},
+which we can apply to coordinates within the object bounding boxes,
+and which does not require ground truth 3D object motions.
 
+For any RoI, we generate a uniform 2D grid of points inside the RPN proposal bounding box
+with the same resolution as the predicted mask. We use the same bounding box
+to crop the corresponding region from the dense, full image depth map
+and bilinearly resize the depth crop to the same resolution as the mask and point
+grid.
+We then compute the optical flow at each of the grid points by creating
+a 3D point cloud from the point grid and depth crop. To this point cloud, we
+apply the RoI's predicted motion, masked by the predicted mask.
+Then, we apply the camera motion to the points, project them back to 2D
+and finally compute the optical flow at each point as the difference of the initial and re-projected 2D grids.
+Note that we batch this computation over all RoIs, so that we only perform
+it once per forward pass. The mathematical details are analogous to the
+dense, full image flow computation in the following subsection and will not
+be repeated here. \todo{add diagram to make it easier to understand}
 
+For each RoI, we can now penalize the optical flow grid to supervise the object motion.
+If there is optical flow ground truth available, we can use the RoI bounding box to
+crop and resize a region from the ground truth optical flow to match the RoI's
+optical flow grid and penalize the difference between the flow grids with an $\ell_1$-loss.
+
+However, we can also use the re-projection loss without optical flow ground truth
+to train the motion prediction in an unsupervised manner, similar to \cite{SfmNet}.
+In this case, we use the bounding box to crop and resize a corresponding region
+from the first image $I_t$ and bilinearly sample a region from the second image $I_{t+1}$
+using the 2D grid displaced with the predicted flow grid. Then, we can penalize the difference
+between the resulting image crops, for example, with a census loss \cite{CensusTerm,UnFlow}.
+For more details on differentiable bilinear sampling for deep learning, we refer the reader to
+\cite{STN}.
 
 When compared to supervision with motion ground truth, a re-projection
 loss could benefit motion regression by removing any loss balancing issues between the
-rotation, translation and pivot terms \cite{PoseNet2}.
+rotation, translation and pivot terms \cite{PoseNet2},
+which can make it interesting even when 3D motion ground truth is available.
 
 
 \subsection{Dense flow from motion}
-We compose a dense optical flow map from the outputs of our Motion R-CNN network.
+As a postprocessing, we compose a dense optical flow map from the outputs of our Motion R-CNN network.
 Given the depth map $d_t$ for frame $I_t$, we first create a 3D point cloud in camera space at time $t$,
 where
 \begin{equation}
@@ -143,6 +182,7 @@ x_t - c_0 \\ y_t - c_1 \\ f
 \end{equation}
 is the 3D coordinate at $t$ corresponding to the point with pixel coordinates $x_t, y_t$,
 which range over all coordinates in $I_t$.
+For now, the depth map is always assumed to come from ground truth.
 
 Given $k$ detections with predicted motions as above, we transform all points within the bounding
 box of a detected object according to the predicted motion of the object.
@@ -165,6 +205,10 @@ X_{t+1} \\ Y_{t+1} \\ Z_{t+1}
 \end{pmatrix}
 = P_{t+1} = R_t^c \cdot P'_{t+1} + t_t^k
 \end{equation}.
+
+Note that in our experiments, we either use the ground truth camera motion to focus
+on the object motion predictions or the predicted camera motion to predict complete
+motion. We will always state which variant we use in the experimental section.
 
 Finally, we project the transformed 3D points at time $t+1$ to pixel coordinates again,
 \begin{equation}
@@ -191,7 +235,3 @@ u \\ v
 x_{t+1} - x_{t} \\ y_{t+1} - y_{t}
 \end{pmatrix}.
 \end{equation}
-
-
-%Given the predicted motion as above, a depth map $d_t$ for frame $I_t$ and
-%the predicted or ground truth camera motion $\{R_c^k, t_c^k\}\in SE3$.
