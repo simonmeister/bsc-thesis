@@ -1,18 +1,18 @@
 \begin{abstract}
 
-Many state of the art energy-minimization approaches to optical flow and scene
-flow estimation rely on a rigid scene model, where the scene is
-represented as an ensemble of distinct, rigidly moving components, a static
-background and a moving camera.
-By constraining the optimization problem with a physically sound scene model,
-these approaches enable state-of-the art motion estimation.
+% Many state of the art energy-minimization approaches to optical flow and scene
+% flow estimation rely on a rigid scene model, where the scene is
+% represented as an ensemble of distinct, rigidly moving components, a static
+% background and a moving camera.
+% By constraining the optimization problem with a physically sound scene model,
+% these approaches enable state-of-the art motion estimation.
 
 With the advent of deep learning methods, it has become popular to re-purpose
 generic deep networks for classical computer vision problems involving
 pixel-wise estimation.
 
 Following this trend, many recent end-to-end deep learning approaches to optical
-flow and scene flow directly predict full resolution flow fields with
+flow and scene flow predict full resolution flow fields with
 a generic network for dense, pixel-wise prediction, thereby ignoring the
 inherent structure of the underlying motion estimation problem and any physical
 constraints within the scene.
@@ -20,7 +20,8 @@ constraints within the scene.
 We introduce a scalable end-to-end deep learning approach for dense motion estimation
 that respects the structure of the scene as being composed of distinct objects,
 thus combining the representation learning benefits and speed of end-to-end deep networks
-with a physically plausible scene model.
+with a physically plausible scene model inspired by slanted plane energy-minimization approaches to
+scene flow.
 
 Building on recent advanced in region-based convolutional networks (R-CNNs),
 we integrate motion estimation with instance segmentation.
@@ -29,7 +30,8 @@ our resulting end-to-end deep network detects objects with accurate per-pixel
 masks and estimates the 3D motion of each detected object between the frames.
 By additionally estimating a global camera motion in the same network,
 we compose a dense optical flow field based on instance-level and global motion
-predictions.
+predictions. Our network is trained on the synthetic Virtual KITTI dataset,
+which provides ground truth for all components of the system.
 
 \end{abstract}
 
