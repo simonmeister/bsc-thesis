@@ -1,3 +1,18 @@
+\subsection{Implementation}
+Our networks and loss functions are implemented using built-in TensorFlow \cite{TensorFlow}
+functions, enabling us to use automatic differentiation for all gradient
+computations. To make our code easy to extend and flexible, we build on
+the TensorFlow Object detection API \cite{TensorFlowObjectDetection}, which provides a Faster R-CNN baseline
+implementation.
+On top of this, we implemented Mask R-CNN and the Feature Pyramid Network (FPN)
+as well all extensions for motion estimation and related evaluations
+and postprocessings. In addition, we generated all ground truth for
+Motion R-CNN in the form of TFRecords from the raw Virtual KITTI
+data to enable fast loading during training.
+Note that for RoI pooling and cropping,
+we use the \texttt{tf.crop\_and\_resize} TensorFlow function with
+interpolation set to bilinear.
+
 \subsection{Datasets}
 
 \paragraph{Virtual KITTI}
