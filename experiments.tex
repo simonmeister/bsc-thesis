@@ -19,53 +19,82 @@ instance segmentation and motion estimation system, as it allows us to test
 different components in isolation and progress to more and more complete
 predictions up to supervising the full system on a single dataset.
 
+For our experiments, we use the \emph{clone} sequences, which are rendered in a
+way that most closely resembles the original KITTI dataset. We sample 100 examples
+to be used as validation set. From the remaining 2026 examples,
+we remove a small number of examples without object instances and use the resulting
+data as training set.
+
 \paragraph{Motion ground truth from 3D poses and camera extrinsics}
 For two consecutive frames $I_t$ and $I_{t+1}$,
-let $[R_t^{cam}|t_t^{cam}]$
-and $[R_{t+1}^{cam}|t_{t+1}^{cam}]$
+let $[R_t^{ex}|t_t^{ex}]$
+and $[R_{t+1}^{ex}|t_{t+1}^{ex}]$
 be the camera extrinsics at the two frames.
 We compute the ground truth camera motion
-$\{R_t^{gt, cam}, t_t^{gt, cam}\} \in SE3$ as
+$\{R_t^{gt, cam}, t_t^{gt, cam}\} \in \mathbf{SE}(3)$ as
 
 \begin{equation}
-R_{t}^{gt, cam} = R_{t+1}^{cam}  \cdot inv(R_t^{cam}),
+R_{t}^{gt, cam} = R_{t+1}^{ex}  \cdot inv(R_t^{ex}),
 \end{equation}
 \begin{equation}
-t_{t}^{gt, cam} = t_{t+1}^{cam}  - R_{gt}^{cam} \cdot t_t^{cam}.
+t_{t}^{gt, cam} = t_{t+1}^{ex}  - R_{t}^{ex} \cdot t_t^{ex}.
 \end{equation}
 
-For any object $k$ visible in both frames, let
-$(R_t^k, t_t^k)$ and $(R_{t+1}^k, t_{t+1}^k)$
+For any object $i$ visible in both frames, let
+$(R_t^i, t_t^i)$ and $(R_{t+1}^i, t_{t+1}^i)$
 be its orientation and position in camera space
 at $I_t$ and $I_{t+1}$.
 Note that the pose at $t$ is given with respect to the camera at $t$ and
 the pose at $t+1$ is given with respect to the camera at $t+1$.
 
-We define the ground truth pivot as
+We define the ground truth pivot $p_{t}^{gt, i} \in \mathbb{R}^3$ as
 
 \begin{equation}
-p_{t}^{gt, k} = t_t^k
+p_{t}^{gt, i} = t_t^i
 \end{equation}
 
 and compute the ground truth object motion
-$\{R_t^{gt, k}, t_t^{gt, k}\} \in SE3$ as
+$\{R_t^{gt, i}, t_t^{gt, i}\} \in \mathbf{SE}(3)$ as
 
 \begin{equation}
-R_{t}^{gt, k} = inv(R_{t}^{gt, cam}) \cdot R_{t+1}^k \cdot inv(R_t^k),
+R_{t}^{gt, i} = inv(R_t^{gt, cam}) \cdot R_{t+1}^i \cdot inv(R_t^i),
 \end{equation}
 \begin{equation}
-t_{t}^{gt, k} = t_{t+1}^{cam}  - R_{gt}^{cam} \cdot t_t.
-\end{equation} % TODO
- % TODO change notation in approach to remove t subscript from motion matrices and vectors!
+t_{t}^{gt, i} = t_{t+1}^{i}  - R_t^{gt, cam} \cdot t_t.
+\end{equation}
+
+\paragraph{Evaluation metrics with motion ground truth}
+Given a foreground detection $k$ with an IoU of at least $0.5$ with a ground truth example,
+let $i_k$ be the index of the best matching ground truth example,
+let $c_k$ be the predicted class,
+let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}$ be the predicted motion for class $c_k$
+and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}$ the ground truth motion for the example $i_k$.
+Then, assuming there are $N$ such detections,
+\begin{equation}
+E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{tr(inv(R^{k,c_k}) \cdot R^{gt,i_k}) - 1}{2} \right\}\right\} \right)
+\end{equation}
+measures the mean angle of the error rotation between predicted and ground truth rotation,
+\begin{equation}
+E_{t} = \frac{1}{N}\sum_k  \lVert inv(R^{k,c_k}) \cdot (t^{gt,i_k} - t^{k,c_k}) \rVert,
+\end{equation}
+is the mean euclidean norm between predicted and ground truth translation, and
+\begin{equation}
+E_{p} = \frac{1}{N}\sum_k \lVert p^{gt,i_k} - p^{k,c_k} \rVert
+\end{equation}
+is the mean euclidean norm between predicted and ground truth pivot.
 
 \subsection{Training Setup}
-Our training schedule is similar to the Mask R-CNN Cityscapes schedule.
+Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
 We train on a single Titan X (Pascal) for a total of 192K iterations on the
-Virtual KITTI dataset. As learning rate we use $0.25 \cdot 10^{-2}$ for the
+Virtual KITTI training set. As learning rate we use $0.25 \cdot 10^{-2}$ for the
 first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 
 \paragraph{R-CNN training parameters}
+\todo{add this}
 
 \subsection{Experiments on Virtual KITTI}
+\todo{add this}
+
 
 \subsection{Evaluation on KITTI 2015}
+\todo{add this}

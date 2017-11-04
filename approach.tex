@@ -1,24 +1,30 @@
 
 \subsection{Motion R-CNN architecture}
 
-Building on Mask R-CNN, we enable per-object motion estimation by predicting the 3D motion of each detected object
-in camera space.
+Building on Mask R-CNN \cite{MaskRCNN},
+we estimate per-object motion by predicting the 3D motion of each detected object.
+For this, we extend Mask R-CNN in two straightforward ways.
+First, we modify the backbone network and provide two frames to the R-CNN system
+in order to enable image matching between the consecutive frames.
+Second, we extend the Mask R-CNN RoI head to predict a 3D motion for each
+region proposal.
 
 \paragraph{Backbone Network}
-Like Faster R-CNN and Mask R-CNN, we use a ResNet variant as backbone network to compute feature maps from input imagery.
+Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backbone network to compute feature maps from input imagery.
 
-Inspired by FlowNetS, we make one modification to enable image matching within the backbone network,
+Inspired by FlowNetS \cite{FlowNet}, we make one modification to the ResNet backbone to enable image matching,
 laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
 we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both first stage RPN and second stage feature extractor for region cropping.
+% TODO figures; introduce XYZ inputs
 
 \paragraph{Per-RoI motion prediction}
-We use a rigid 3D motion parametrization similar to the one used by SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
+We use a rigid 3D motion parametrization similar to the one used in SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
 For the $k$-th object proposal, we predict the rigid transformation $\{R_t^k, t_t^k\}\in \mathbf{SE}(3)$
 \footnote{$\mathbf{SE}(3)$ refers to the Special Euclidean Group representing 3D rotations
 and translations: $\{R, t|R \in \mathbf{SO}(3), t \in \mathbb{R}^3\}$}
-of the object between the two frames $I_t$ and $I_{t+1}$ as well as the object pivot $p_t^k \in \mathbb{R}^3$ at time $t$ .
+of the object between the two frames $I_t$ and $I_{t+1}$, as well as the object pivot $p_t^k \in \mathbb{R}^3$ at time $t$.
 We parametrize ${R_t^k}$ using an Euler angle representation,
 
 \begin{equation}
@@ -53,50 +59,71 @@ R_t^{k,z}(\gamma) =
 \end{pmatrix},
 \end{equation}
 
-and $\alpha, \beta, \gamma$ are the rotation angles about the $x,y,z$-axis, respectively.
+and $\alpha, \beta, \gamma$ are the rotation angles in radians about the $x,y,z$-axis, respectively.
 
-
-Figure \ref{fig:motion_rcnn_head} shows our extended per-RoI head network.
-We then extend the Faster R-CNN head by adding a fully connected layer in parallel to the final fully connected layers for
-predicting refined boxes and classes.
+We then extend the Mask R-CNN head by adding a fully connected layer in parallel to the fully connected layers for
+refined boxes and classes. Figure \ref{fig:motion_rcnn_head} shows the Motion R-CNN RoI head.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
 Each motion is predicted as a set of nine scalar motion parameters,
 $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_t^k$ and $p_t^k$,
 where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
 and that objects rotate at most 90 degrees in either direction along any axis.
+All predictions are made in camera space, and translation and pivot predictions are in meters.
 
 \paragraph{Camera motion prediction}
 In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in \mathbf{SE}(3)$
 between the two frames $I_t$ and $I_{t+1}$.
-For this, we flatten the full output of the backbone and pass it through a fully connected layer.
+For this, we flatten the bottleneck output of the backbone and pass it through a fully connected layer.
 We again represent $R_t^{cam}$ using a Euler angle representation and
 predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
 
 \subsection{Supervision}
 
 \paragraph{Per-RoI supervision with motion ground truth}
-Given a positive RoI, let $i_k$ be the index of the matched ground truth example with class $c_k$,
-let $R_{c_k}^k, t_{c_k}^k, p_{c_k}^k$ be the predicted motion for class $c_k$
-and $R_{gt}^{i_k}, t_{gt}^{i_k}, p_{gt}^{i_k}$ the ground truth motion for the example $i_k$.
-We compute the motion loss $L_{motion}^k$ for each RoI as
+The most straightforward way to supervise the object motions is by using ground truth
+motions computed from ground truth object poses, which is in general
+only practical when training on synthetic datasets.
+Given the $k$-th positive RoI, let $i_k$ be the index of the matched ground truth example with class $c_k$,
+let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}$ be the predicted motion for class $c_k$
+and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}$ the ground truth motion for the example $i_k$.
+Note that we dropped the subscript $t$ to increase readability.
+Inspired by the camera pose regression loss in \cite{PoseNet2},
+we use $\ell_1$-loss to penalize the differences between ground truth and predicted % TODO actually, we use smooth l1
+rotation, translation and pivot.
+For each RoI, we compute the motion loss $L_{motion}^k$ as a linear sum of
+the individual losses,
 
 \begin{equation}
 L_{motion}^k =l_{R}^k + l_{t}^k + l_{p}^k,
 \end{equation}
 where
 \begin{equation}
-l_{R}^k = \arccos\left( \min\left\{1, \max\left\{-1, \frac{tr(inv(R_{c_k}^k) \cdot R_{gt}^{i_k}) - 1}{2} \right\}\right\} \right)
+l_{R}^k = \lVert R^{gt,i_k} - R^{k,c_k} \rVert _1,
 \end{equation}
-measures the angle of the error rotation between predicted and ground truth rotation,
+
 \begin{equation}
-l_{t}^k = \lVert inv(R_{c_k}^k) \cdot (t_{gt}^{i_k} - t_{c_k}^k) \rVert,
+l_{t}^k = \lVert t^{gt,i_k} - t^{k,c_k} \rVert_1,
 \end{equation}
-is the euclidean norm between predicted and ground truth translation, and
+and
 \begin{equation}
-l_{p}^k = \lVert p_{gt}^{i_k} - p_{c_k}^k \rVert
+l_{p}^k = \lVert p^{gt,i_k} - p^{k,c_k} \rVert_1.
 \end{equation}
-is the euclidean norm between predicted and ground truth pivot.
+
+\paragraph{Camera motion supervision}
+We supervise the camera motion with ground truth in the same way as the
+object motions.
+
+\paragraph{Per-RoI supervision \emph{without} motion ground truth}
+A more general way to supervise the object motions is a re-projection
+loss applied to coordinates within the object bounding box,
+as used in SfM-Net \cite{SfmNet}. Let
+
+
+
+When compared to supervision with motion ground truth, a re-projection
+loss could benefit motion regression by removing any loss balancing issues between the
+rotation, translation and pivot terms \cite{PoseNet2}.
 
 
 \subsection{Dense flow from motion}
@@ -130,7 +157,7 @@ P'_{t+1} =
 P_t + \sum_1^{k} m_t^k\left\{ R_t^k \cdot (P_t - p_t^k) + p_t^k + t_t^k - P_t \right\}
 \end{equation}
 
-Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} \in SE3$, % TODO introduce!
+Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} \in \mathbf{SE}(3)$, % TODO introduce!
 
 \begin{equation}
 \begin{pmatrix}
