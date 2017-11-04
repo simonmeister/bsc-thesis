@@ -1,4 +1,4 @@
-Here, we will give a more detailed description of previous works
+In this section, we will give a more detailed description of previous works
 we directly build on and other prerequisites.
 
 \subsection{Optical flow and scene flow}
@@ -50,16 +50,17 @@ most popular deep networks for object detection, and have recently also been app
 \paragraph{R-CNN}
 Region-based convolutional networks (R-CNNs) \cite{RCNN} use a non-learned algorithm external to a standard encoder CNN
 for computing \emph{region proposals} in the shape of 2D bounding boxes, which represent regions that may contain an object.
-For each of the region proposals, the input image is cropped at the proposed region and the crop is
+For each of the region proposals, the input image is cropped using the regions bounding box and the crop is
 passed through a CNN, which performs classification of the object (or non-object, if the region shows background). % and box refinement!
 
 \paragraph{Fast R-CNN}
 The original R-CNN involves computing one forward pass of the CNN for each of the region proposals,
-which is costly, as there is generally a large amount of proposals.
+which is costly, as there is generally a large number of proposals.
 Fast R-CNN \cite{FastRCNN} significantly reduces computation by performing only a single forward pass with the whole image
 as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
 Then, fixed size crops are taken from the compressed feature map of the image,
-collected into a batch and passed into a small Fast R-CNN
+each corresponding to one of the proposal bounding boxes.
+The crops are collected into a batch and passed into a small Fast R-CNN
 \emph{head} network, which performs classification and prediction of refined boxes for all regions in one forward pass.
 This technique is called \emph{RoI pooling}. % TODO explain how RoI pooling converts full image box coords to crop ranges
 Thus, given region proposals, the per-region computation is reduced to a single pass through the complete network,
@@ -75,7 +76,7 @@ and again, improved accuracy.
 This unified network operates in two stages.
 In the \emph{first stage}, one forward pass is performed on the \emph{backbone} network,
 which is a deep feature encoder CNN with the original image as input.
-Next, the \emph{backbone} features are passed into a small, fully convolutional \emph{Region Proposal Network (RPN)} head, which
+Next, the \emph{backbone} output features are passed into a small, fully convolutional \emph{Region Proposal Network (RPN)} head, which
 predicts objectness scores and regresses bounding boxes at each of its output positions.
 At any position, bounding boxes are predicted as offsets relative to a fixed set of \emph{anchors} with different
 aspect ratios.
@@ -84,9 +85,8 @@ For each anchor at a given position, the objectness score tells us how likely th
 The region proposals can then be obtained as the N highest scoring anchor boxes.
 
 The \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
-and bounding box refinement for each region proposal.
+and bounding box refinement for each region proposal. % TODO verify that it isn't modified
 As in Fast R-CNN, RoI pooling is used to crop one fixed size feature map for each of the region proposals.
-
 
 \paragraph{Mask R-CNN}
 Faster R-CNN and the earlier systems detect and classify objects at bounding box granularity.
@@ -101,5 +101,10 @@ In addition to extending the original Faster R-CNN head, Mask R-CNN also introdu
 variant based on Feature Pyramid Networks \cite{FPN}.
 Figure \ref{} compares the two Mask R-CNN head variants.
 
+\paragraph{Feature Pyramid Networks}
+\todo{TODO}
+
 \paragraph{Supervision of the RPN}
+\todo{TODO}
 \paragraph{Supervision of the RoI head}
+\todo{TODO}
