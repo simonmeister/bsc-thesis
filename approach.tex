@@ -72,7 +72,7 @@ and $\alpha, \beta, \gamma$ are the rotation angles in radians about the $x,y,z$
 We then extend the Mask R-CNN head by adding a fully connected layer in parallel to the fully connected layers for
 refined boxes and classes. Figure \ref{fig:motion_rcnn_head} shows the Motion R-CNN RoI head.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
-Each motion is predicted as a set of nine scalar motion parameters,
+Each instance motion is predicted as a set of nine scalar parameters,
 $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_t^k$ and $p_t^k$,
 where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
@@ -190,7 +190,7 @@ box of a detected object according to the predicted motion of the object.
 We first define the \emph{full image} mask $m_t^k$ for object k,
 which can be computed from the predicted box mask $m_k^b$ by bilinearly resizing
 $m_k^b$ to the width and height of the predicted bounding box and then copying the values
-of the resized mask into a full image map starting at the top-right coordinate of the predicted bounding box.
+of the resized mask into a full resolution all-zeros map, starting at the top-right coordinate of the predicted bounding box.
 Then,
 \begin{equation}
 P'_{t+1} =

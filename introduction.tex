@@ -1,3 +1,14 @@
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/teaser}
+\caption{
+Given two temporally consecutive frames,
+our network segments the pixels of the first frame into individual objects
+and estimates all 3D object motions between the frames.
+}
+\label{figure:teaser}
+\end{figure}
+
 \subsection{Motivation \& Goals}
 
 For moving in the real world, it is generally desirable to know which objects exists
@@ -21,7 +32,8 @@ and motion estimation.
 
 Thus, in this work, we aim to develop end-to-end deep networks which can, given
 sequences of images, segment the image pixels into object instances and estimate
-the location and 3D motion of each object instance relative to the camera.
+the location and 3D motion of each object instance relative to the camera
+(Figure \ref{figure:teaser}).
 
 \subsection{Technical outline}
 
@@ -51,7 +63,6 @@ two concatenated images as input, similar to FlowNetS \cite{FlowNet}.
 This results in a fully integrated end-to-end network architecture for segmenting pixels into instances
 and estimating the motion of all detected instances without any limitations
 as to the number or variety of object instances.
-Figure \ref{} illustrates our concept.
 
 Eventually, we want to extend our method to include depth prediction,
 yielding the first end-to-end deep network to perform 3D scene flow estimation
@@ -85,6 +96,9 @@ the optical flow estimation problem and introduce reasoning at the object level,
 but still require expensive energy minimization for each
 new input, as CNNs are only used for some of the components.
 
+In contrast, we tackle motion estimation at the instance-level with end-to-end
+deep networks and derive optical flow from the individual object motions.
+
 \paragraph{Slanted plane methods for 3D scene flow}
 The slanted plane model for scene flow \cite{PRSF, PRSM} models a 3D scene as being
 composed of planar segments. Pixels are assigned to one of the planar segments,
@@ -109,7 +123,7 @@ and takes minutes to make a prediction.
 Interestingly, the slanted plane methods achieve the current state-of-the-art
 in scene flow \emph{and} optical flow estimation on the challenging KITTI benchmarks \cite{KITTI2012, KITTI2015},
 outperforming end-to-end deep networks like \cite{FlowNet2, SceneFlowDataset}.
-However, the end-to-end deep networks are significantly faster than energy-minimization counterparts,
+However, the end-to-end deep networks are significantly faster than their energy-minimization counterparts,
 generally taking a fraction of a second instead of minutes for prediction and can often be made to run in realtime.
 These concerns restrict the applicability of the current slanted plane models in practical settings,
 which often require estimations to be done in realtime and for which an end-to-end

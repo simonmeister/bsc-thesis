@@ -63,6 +63,7 @@ each corresponding to one of the proposal bounding boxes.
 The crops are collected into a batch and passed into a small Fast R-CNN
 \emph{head} network, which performs classification and prediction of refined boxes for all regions in one forward pass.
 This technique is called \emph{RoI pooling}. % TODO explain how RoI pooling converts full image box coords to crop ranges
+\todo{more details and figure}
 Thus, given region proposals, the per-region computation is reduced to a single pass through the complete network,
 speeding up the system by orders of magnitude. % TODO verify that
 
@@ -80,8 +81,9 @@ Next, the \emph{backbone} output features are passed into a small, fully convolu
 predicts objectness scores and regresses bounding boxes at each of its output positions.
 At any position, bounding boxes are predicted as offsets relative to a fixed set of \emph{anchors} with different
 aspect ratios.
+\todo{more details and figure}
 % TODO more about striding & computing the anchors?
-For each anchor at a given position, the objectness score tells us how likely this anchors is to corresponds to a detection.
+For each anchor at a given position, the objectness score tells us how likely this anchors is to correspond to a detection.
 The region proposals can then be obtained as the N highest scoring anchor boxes.
 
 The \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
