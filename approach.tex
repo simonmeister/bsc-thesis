@@ -15,7 +15,7 @@ Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backb
 Inspired by FlowNetS \cite{FlowNet}, we make one modification to the ResNet backbone to enable image matching,
 laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
 we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
-Alternatively, we also experiment with concatenating the XYZ coordinates of each frame
+Alternatively, we also experiment with concatenating the camera space XYZ coordinates for each frame
 into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both first stage RPN and second stage feature extractor for region cropping.
@@ -98,7 +98,7 @@ let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}$ be the predicted motion for class $c_k$
 and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}$ the ground truth motion for the example $i_k$.
 Note that we dropped the subscript $t$ to increase readability.
 Inspired by the camera pose regression loss in \cite{PoseNet2},
-we use $\ell_1$-loss to penalize the differences between ground truth and predicted % TODO actually, we use smooth l1
+we use an $\ell_1$-loss to penalize the differences between ground truth and predicted % TODO actually, we use smooth l1
 rotation, translation and pivot.
 For each RoI, we compute the motion loss $L_{motion}^k$ as a linear sum of
 the individual losses,
@@ -130,7 +130,7 @@ loss similar to the unsupervised loss in SfM-Net \cite{SfmNet},
 which we can apply to coordinates within the object bounding boxes,
 and which does not require ground truth 3D object motions.
 
-For any RoI, we generate a uniform 2D grid of points inside the RPN proposal bounding box
+In this case, for any RoI, we generate a uniform 2D grid of points inside the RPN proposal bounding box
 with the same resolution as the predicted mask. We use the same bounding box
 to crop the corresponding region from the dense, full image depth map
 and bilinearly resize the depth crop to the same resolution as the mask and point

@@ -4,7 +4,7 @@
 \caption{
 Given two temporally consecutive frames,
 our network segments the pixels of the first frame into individual objects
-and estimates all 3D object motions between the frames.
+and estimates their 3D locations as well as all 3D object motions between the frames.
 }
 \label{figure:teaser}
 \end{figure}
@@ -118,8 +118,8 @@ In contrast to \cite{PRSF, PRSM}, the Object Scene Flow method \cite{KITTI2015}
 assigns each slanted plane to one rigidly moving object instance, thus
 reducing the number of independently moving segments by allowing multiple
 segments to share the motion of the object they belong to.
-In these methods, pixel assignment and motion estimation are formulated
-as energy-minimization problem and optimized for each input data point,
+In all of these methods, pixel assignment and motion estimation are formulated
+as energy-minimization problem which is optimized for each input data point,
 without the use of (deep) learning. % TODO make sure it's ok to say there's no learning
 
 In a more recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
