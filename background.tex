@@ -90,6 +90,22 @@ The \emph{second stage} corresponds to the original Fast R-CNN head network, per
 and bounding box refinement for each region proposal. % TODO verify that it isn't modified
 As in Fast R-CNN, RoI pooling is used to crop one fixed size feature map for each of the region proposals.
 
+\paragraph{Feature Pyramid Networks}
+In Faster R-CNN, a single feature map is used as a source of all RoIs, independent
+of the size of the bounding box of the RoI.
+However, for small objects, the C4 \todo{explain terminology of layers} features
+might have lost too much spatial information to properly predict the exact bounding
+box and a high resolution mask. Likewise, for very big objects, the fixed size
+RoI window might be too small to cover the region of the feature map containing
+information for this object.
+As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enable features
+of an appropriate scale to be used, depending of the size of the bounding box.
+For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
+encoder. \todo{figure and more details}
+Now, during RoI pooling,
+\todo{show formula}.
+
+
 \paragraph{Mask R-CNN}
 Faster R-CNN and the earlier systems detect and classify objects at bounding box granularity.
 However, it can be helpful to know class and object (instance) membership of all individual pixels,
@@ -102,11 +118,11 @@ compute a pixel-precise mask for each instance.
 In addition to extending the original Faster R-CNN head, Mask R-CNN also introduced a network
 variant based on Feature Pyramid Networks \cite{FPN}.
 Figure \ref{} compares the two Mask R-CNN head variants.
+\todo{RoI Align}
 
-\paragraph{Feature Pyramid Networks}
-\todo{TODO}
 
 \paragraph{Supervision of the RPN}
 \todo{TODO}
+
 \paragraph{Supervision of the RoI head}
 \todo{TODO}

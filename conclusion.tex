@@ -1,8 +1,21 @@
 \subsection{Summary}
-We have introduced an extension on top of region-based convolutional networks to enable 3D object motion estimation
-in parallel to instance segmentation, given two consecutive frames. Additionally, our network estimates the 3D
-motion of the camera between frames. Based on this, we compose optical flow from 3D motions in a end.
 
+We introduced Motion R-CNN, which enables 3D object motion estimation in parallel
+to instance segmentation in the framework of region-based convolutional networks,
+given an input of two consecutive frames from a monocular camera.
+In addition to instance motions, our network estimates the 3D motion of the camera.
+We combine all these estimates to yield a dense optical flow output from our
+end-to-end deep network.
+Our model is trained on the synthetic Virtual KITTI dataset, which provides
+us with all required ground truth data.
+During inference, our model does not add any significant computational overhead
+over the latest iterations of R-CNNs and is therefore just as fast and interesting
+for real time scenarios.
+We thus presented a step towards real time 3D motion estimation based on a
+physically sound scene decomposition. Thanks to instance-level reasoning, in contrast
+to previous end-to-end deep networks for dense motion estimation, the output
+of our network is highly interpretable, which may bring benefits for safety-critical
+applications.
 
 \subsection{Future Work}
 \paragraph{Predicting depth}
@@ -20,8 +33,8 @@ Due to the amount of supervision required by the different components of the net
 and the complexity of the optimization problem,
 we trained Motion R-CNN on the simple synthetic Virtual KITTI dataset for now.
 A next step will be training on a more realistic dataset.
-For this, we can first pre-train the RPN on an object detection dataset like
-Cityscapes. As soon as the RPN works reliably, we could execute alternating
+For this, we can first pre-train the RPN on an instance segmentation dataset like
+Cityscapes \cite{Cityscapes}. As soon as the RPN works reliably, we could execute alternating
 steps of training on, for example, Cityscapes and the KITTI stereo and optical flow datasets.
 On KITTI stereo and flow, we could run the instance segmentation component in testing mode and only penalize
 the motion losses (and depth prediction if added), as no instance segmentation ground truth exists.
@@ -33,7 +46,7 @@ instance segmentation dataset with unsupervised warping-based proxy losses for t
 \paragraph{Temporal consistency}
 A next step after the two aforementioned ones could be to extend our network to exploit more than two
 temporally consecutive frames, which has previously been shown to be beneficial in the
-context of scene flow \cite{TemporalSF}.
+context of energy-minimization based scene flow \cite{TemporalSF}.
 In fact, by incorporating recurrent neural networks, e.g. LSTMs \cite{LSTM},
-into our architecture, we could enable temporally consistent motion estimation 
-from image sequences of arbitrary length. 
+into our architecture, we could enable temporally consistent motion estimation
+from image sequences of arbitrary length.

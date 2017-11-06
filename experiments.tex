@@ -110,7 +110,10 @@ predicted camera motions.
 \subsection{Training Setup}
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
 We train on a single Titan X (Pascal) for a total of 192K iterations on the
-Virtual KITTI training set. As learning rate we use $0.25 \cdot 10^{-2}$ for the
+Virtual KITTI training set.
+As optimizer, we use stochastic gradient descent (SGD) \cite{SGD} with a
+momentum of $0.9$.
+As learning rate we use $0.25 \cdot 10^{-2}$ for the
 first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 
 \paragraph{R-CNN training parameters}
