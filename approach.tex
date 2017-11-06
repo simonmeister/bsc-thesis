@@ -15,6 +15,8 @@ Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backb
 Inspired by FlowNetS \cite{FlowNet}, we make one modification to the ResNet backbone to enable image matching,
 laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
 we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
+Alternatively, we also experiment with concatenating the XYZ coordinates of each frame
+into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both first stage RPN and second stage feature extractor for region cropping.
 Technically, our feature encoder network will have to learn a motion representation similar to
@@ -24,8 +26,6 @@ Thus, in contrast to the dense FlowNet decoder, the estimated dense motion infor
 from the encoder is integrated for specific objects via RoI cropping and
 processed by the RoI head for each object.
 \todo{figure of backbone}
-
-\todo{introduce optional XYZ input}
 
 \paragraph{Per-RoI motion prediction}
 We use a rigid 3D motion parametrization similar to the one used in SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.

@@ -62,13 +62,24 @@ As a foundation for image matching, we extend the ResNet \cite{ResNet} backbone 
 two concatenated images as input, similar to FlowNetS \cite{FlowNet}.
 This results in a fully integrated end-to-end network architecture for segmenting pixels into instances
 and estimating the motion of all detected instances without any limitations
-as to the number or variety of object instances.
+as to the number or variety of object instances (Figure \ref{figure:net_intro}).
 
 Eventually, we want to extend our method to include depth prediction,
 yielding the first end-to-end deep network to perform 3D scene flow estimation
 in a principled way from considering individual objects.
 For now, we will work with RGB-D frames to break down the problem into
 manageable pieces.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/net_intro}
+\caption{
+Overview of our network based on Mask R-CNN. For each RoI, we predict the instance motion
+in parallel to the class, bounding box and mask. We branch off a fully connected
+layer for predicting the camera motion from the bottleneck.
+}
+\label{figure:net_intro}
+\end{figure}
 
 \subsection{Related work}
 

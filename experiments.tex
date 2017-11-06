@@ -110,7 +110,19 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 \todo{add this}
 
 \subsection{Experiments on Virtual KITTI}
-\todo{complete this}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/vkitti}
+\caption{
+Visualization of results with XYZ input, camera motion prediction and 3D motion supervision
+with the ResNet (without FPN) architecture.
+From left to right, we show the input image with instance segmentation results as overlay,
+the estimated flow, as well as the flow error map.
+The flow error map depicts correct estimates ($\leq 3$ px or $\leq 5\%$ error) in blue and wrong estimates in red tones.
+}
+\label{figure:vkitti}
+\end{figure}
 
 {
 \begin{table}[t]
@@ -119,15 +131,9 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 \toprule
 \multicolumn{4}{c}{Network} & \multicolumn{3}{c}{Instance Motion Error} & \multicolumn{2}{c}{Camera Motion Error} &\multicolumn{2}{c}{Optical Flow Error} \\
 \cmidrule(lr){1-4}\cmidrule(lr){5-7}\cmidrule(l){8-9}\cmidrule(l){10-11}
-  FPN        & cam.       & sup. & XYZ & $E_{R}$ & $E_{t}$ & $E_{p}$ & $E_{R}^{cam}$ & $E_{t}^{cam}$ & AEE & Fl-all \\\midrule
-  $\times$   & $\times$   & 3D   &     & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
-  \checkmark & $\times$   & 3D   &     & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
-  $\times$   & \checkmark & 3D   &     & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
-  \checkmark & \checkmark & 3D   &     & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
-  $\times$   & $\times$   & flow &     & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
-  \checkmark & $\times$   & flow &     & ?       & ?       & ?       & -             & -             & ?   & ?\%    \\
-  $\times$   & \checkmark & flow &     & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
-  \checkmark & \checkmark & flow &     & ?       & ?       & ?       & ?             & ?             & ?   & ?\%    \\
+  FPN        & cam.       & sup. & XYZ         & $E_{R} [deg]$ & $E_{t} [m]$ & $E_{p} [m] $ & $E_{R}^{cam} [deg]$ & $E_{t}^{cam} [m]$ & AEE   & Fl-all \\\midrule
+  $\times$   & \checkmark & 3D   & \checkmark  & 0.4           & 0.49        & 17.06        & 0.1                 & 0.04              & 6.73  & 26.59\%    \\
+  \checkmark & \checkmark & 3D   & \checkmark  & 0.35          & 0.38        & 11.87        & 0.22                & 0.07              & 12.62 & 46.28\%    \\
 \bottomrule
 \end{tabular}
 
@@ -135,8 +141,10 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 Comparison of network variants on our Virtual KITTI validation set.
 AEE: Average Endpoint Error; Fl-all: Ratio of pixels where flow estimate is
 wrong by both $\geq 3$ pixels and $\geq 5\%$.
-We optionally train camera motion prediction (cam.)
-or replace the ResNet50 backbone with ResNet50-FPN (FPN).
+Camera and instance motion errors are averaged over the validation set.
+We optionally train camera motion prediction (cam.),
+replace the ResNet50 backbone with ResNet50-FPN (FPN),
+or input XYZ coordinates into the backbone (XYZ).
 We either supervise
 object motions (sup.) with 3D motion ground truth (3D) or
 with a 2D re-projection loss based on flow ground truth (flow).
