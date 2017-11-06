@@ -89,7 +89,7 @@ predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the sam
 
 \subsection{Supervision}
 
-\paragraph{Per-RoI supervision with motion ground truth}
+\paragraph{Per-RoI supervision with 3D motion ground truth}
 The most straightforward way to supervise the object motions is by using ground truth
 motions computed from ground truth object poses, which is in general
 only practical when training on synthetic datasets.
@@ -124,7 +124,7 @@ We supervise the camera motion with ground truth analogously to the
 object motions, with the only difference being that we only have
 a rotation and translation, but no pivot term for the camera motion.
 
-\paragraph{Per-RoI supervision \emph{without} motion ground truth}
+\paragraph{Per-RoI supervision \emph{without} 3D motion ground truth}
 A more general way to supervise the object motions is a re-projection
 loss similar to the unsupervised loss in SfM-Net \cite{SfmNet},
 which we can apply to coordinates within the object bounding boxes,

@@ -1,7 +1,8 @@
 \subsection{Summary}
-We have introduced an extension on top of region-based convolutional networks to enable object motion estimation
-in parallel to instance segmentation.
-\todo{complete}
+We have introduced an extension on top of region-based convolutional networks to enable 3D object motion estimation
+in parallel to instance segmentation, given two consecutive frames. Additionally, our network estimates the 3D
+motion of the camera between frames. Based on this, we compose optical flow from 3D motions in a end.
+
 
 \subsection{Future Work}
 \paragraph{Predicting depth}
@@ -28,3 +29,11 @@ On Cityscapes, we could continue train the instance segmentation components to
 improve detection and masks and avoid forgetting instance segmentation.
 As an alternative to this training scheme, we could investigate training on a pure
 instance segmentation dataset with unsupervised warping-based proxy losses for the motion (and depth) prediction.
+
+\paragraph{Temporal consistency}
+A next step after the two aforementioned ones could be to extend our network to exploit more than two
+temporally consecutive frames, which has previously been shown to be beneficial in the
+context of scene flow \cite{TemporalSF}.
+In fact, by incorporating recurrent neural networks, e.g. LSTMs \cite{LSTM},
+into our architecture, we could enable temporally consistent motion estimation 
+from image sequences of arbitrary length. 
