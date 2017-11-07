@@ -26,7 +26,6 @@ object-centric framework of a region based convolutional network head with a 3D 
 Thus, in contrast to the dense FlowNet decoder, the estimated dense motion information
 from the encoder is integrated for specific objects via RoI cropping and
 processed by the RoI head for each object.
-\todo{figure of backbone}
 
 \paragraph{Per-RoI motion prediction}
 We use a rigid 3D motion parametrization similar to the one used in SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
@@ -90,8 +89,54 @@ between the two frames $I_t$ and $I_{t+1}$.
 For this, we flatten the bottleneck output of the backbone and pass it through a fully connected layer.
 We again represent $R_t^{cam}$ using a Euler angle representation and
 predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
-Again, we predict a softmax score $o_t^k$ for classifying differentiating between
+Again, we predict a softmax score $o_t^{cam}$ for classifying differentiating between
 a still and moving camera.
+
+{
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
+layer id & layer operations & output dimensions \\
+\toprule \\
+& input image & H $\times$ W $\times$ C \\
+\midrule \\
+C$_4$ & \textbf{ResNet-50} [up to C$_4$] & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+\midrule \\
+\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)} (see Table \ref{table:maskrcnn_resnet})}\\
+\midrule \\
+\multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
+\midrule \\
+& From C$_4$: \textbf{ResNet-50} [C$_5$ without stride] & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+& average pool & 1 $\times$ 2048 \\
+& fully connected, 1024 & 1 $\times$ 1024 \\
+M$_1$ & fully connected, 1024 & 1 $\times$ 1024 \\
+$R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
+$t_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
+$o_t^{cam}$& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+\midrule \\
+\multicolumn{3}{c}{\textbf{RoI Head} (see Table \ref{table:maskrcnn_resnet})}\\
+\midrule \\
+\multicolumn{3}{c}{\textbf{RoI Head: Masks} (see Table \ref{table:maskrcnn_resnet})}\\
+\midrule \\
+\multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
+\midrule \\
+& From ave: fully connected, 1024 & N$_{RPN}$ $\times$ 1024 \\
+M$_2$ & fully connected, 1024 & N$_{RPN}$ $\times$ 1024 \\
+$\forall k: R_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: t_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: p_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: o_t^k$ & From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+
+\bottomrule
+\end{tabular}
+
+\caption {
+Motion R-CNN ResNet architecture based on the Mask R-CNN
+ResNet architecture (Table \ref{table:maskrcnn_resnet}).
+}
+\label{table:motion_rcnn_resnet}
+\end{table}
+}
 
 \subsection{Supervision}
 \label{ssec:supervision}
@@ -108,8 +153,8 @@ Similar to the camera pose regression loss in \cite{PoseNet2},
 we use a variant of the $\ell_1$-loss to penalize the differences between ground truth and predicted
 rotation, translation (and pivot, in our case). We found that the smooth $\ell_1$-loss
 performs better in our case than the standard $\ell_1$-loss.
-For each RoI, we compute the motion loss $L_{motion}^k$ as a linear sum of
-the individual losses,
+For each RoI, we compute the total motion loss $L_{motion}^k$ from
+the individual loss terms as,
 
 \begin{equation}
 L_{motion}^k =  l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o^{gt,i_k} + l_o^k,
@@ -124,7 +169,7 @@ l_{t}^k = \ell_1^* (t^{gt,i_k} - t^{k,c_k}),
 \begin{equation}
 l_{p}^k = \ell_1^* (p^{gt,i_k} - p^{k,c_k}).
 \end{equation}
-are the smooth $\ell_1$-losses for the predicted rotation, translation and pivot,
+are the smooth $\ell_1$-loss terms for the predicted rotation, translation and pivot,
 respectively and
 \begin{equation}
 l_o^k = \ell_{cls}(o_t^k, o^{gt,i_k}).
@@ -226,7 +271,7 @@ Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} 
 \begin{pmatrix}
 X_{t+1} \\ Y_{t+1} \\ Z_{t+1}
 \end{pmatrix}
-= P_{t+1} = R_t^c \cdot P'_{t+1} + t_t^k
+= P_{t+1} = R_t^c \cdot P'_{t+1} + t_t^c
 \end{equation}.
 
 Note that in our experiments, we either use the ground truth camera motion to focus

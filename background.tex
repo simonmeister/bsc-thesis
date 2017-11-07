@@ -48,7 +48,7 @@ performing upsampling of the compressed features and resulting in a encoder-deco
 The most popular deep networks of this kind for end-to-end optical flow prediction
 are variants of the FlowNet family \cite{FlowNet, FlowNet2},
 which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
-Figure \ref{} shows the classical FlowNetS architecture for optical fow prediction.
+Table \ref{} shows the classical FlowNetS architecture for optical fow prediction.
 Note that the network itself is a rather generic autoencoder and is specialized for optical flow only through being trained
 with supervision from dense optical flow ground truth.
 Potentially, the same network could also be used for semantic segmentation if
@@ -60,17 +60,94 @@ operations in the encoder.
 Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
 \subsection{SfM-Net}
-Here, we will describe the SfM-Net architecture in more detail and show their results
+Here, we will describe the SfM-Net \cite{SfmNet} architecture in more detail and show their results
 and some of the issues.
 
 \subsection{ResNet}
 \label{ssec:resnet}
-For completeness, we will give a short review of the ResNet \cite{ResNet} architecture we will use
-as a backbone CNN for our network.
+ResNet \cite{ResNet} was initially introduced as a CNN for image classification, but
+became popular as basic building block of many deep network architectures for a variety
+of different tasks. In Table \ref{table:resnet}, we show the ResNet-50 variant
+that will serve as the basic CNN backbone of our networks, and
+is also used in many other region-based convolutional networks.
+The initial image data is always passed through ResNet-50 as a first step to
+bootstrap the complete deep network.
+Figure \ref{figure:bottleneck}
+shows the fundamental building block of ResNet-50.
+
+{
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
+ layer id & layer operations & output dimensions \\
+\toprule \\
+ & input image & H $\times$ W $\times$ C \\
+\midrule \\
+\multicolumn{3}{c}{\textbf{ResNet-50}}\\
+\midrule \\
+C$_1$ & 7 $\times$ 7 conv, 64, stride 2 & $\tfrac{1}{2}$ H $\times$ $\tfrac{1}{2}$ W $\times$ 64 \\
+
+& 3 $\times$ 3 max pool, stride 2 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 64 \\
+
+C$_2$ &
+$\begin{bmatrix}
+1 \times 1, 64 \\
+3 \times 3, 64 \\
+1 \times 1, 256 \\
+\end{bmatrix}_b$ $\times$ 3
+& $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
+\midrule \\
+C$_3$ &
+$\begin{bmatrix}
+1 \times 1, 128 \\
+3 \times 3, 128 \\
+1 \times 1, 512 \\
+\end{bmatrix}_{b/2}$ $\times$ 4
+& $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 512 \\
+\midrule \\
+C$_4$ &
+$\begin{bmatrix}
+1 \times 1, 256 \\
+3 \times 3, 256 \\
+1 \times 1, 1024 \\
+\end{bmatrix}_{b/2}$ $\times$ 6
+& $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+\midrule \\
+C$_5$ &
+$\begin{bmatrix}
+1 \times 1, 512 \\
+3 \times 3, 512 \\
+1 \times 1, 2048 \\
+\end{bmatrix}_{b/2}$ $\times$ 3
+& $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+
+\bottomrule
+\end{tabular}
+
+\caption {
+ResNet-50 \cite{ResNet} architecture.
+Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
+block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
+the first conv operation in the block has a stride of 2. Note that the stride
+is only applied to the first block, but not to repeated blocks.
+}
+\label{table:resnet}
+\end{table}
+}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.3\textwidth]{figures/bottleneck}
+\caption{
+ResNet \cite{ResNet} \enquote{bottleneck} block introduced to reduce computational
+complexity in deeper network variants, shown here with 256 input and output channels.
+}
+\label{figure:bottleneck}
+\end{figure}
 
 \subsection{Region-based convolutional networks}
 \label{ssec:rcnn}
-We now give a short review of region-based convolutional networks, which are currently by far the
+We now give an overview of region-based convolutional networks, which are currently by far the
 most popular deep networks for object detection, and have recently also been applied to instance segmentation.
 
 \paragraph{R-CNN}
@@ -145,6 +222,49 @@ In addition to extending the original Faster R-CNN head, Mask R-CNN also introdu
 variant based on Feature Pyramid Networks \cite{FPN}.
 Figure \ref{} compares the two Mask R-CNN head variants.
 \todo{RoI Align}
+
+{
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
+layer id & layer operations & output dimensions \\
+\toprule \\
+& input image & H $\times$ W $\times$ C \\
+\midrule \\
+C$_4$ & \textbf{ResNet-50} [up to C$_4$] & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+\midrule \\
+\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
+\midrule \\
+& From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
+& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 4 \\
+& flatten & A $\times$ 4 \\
+ & decode bounding boxes \ref{} & A $\times$ 4 \\
+boxes$_{\mathrm{RPN}}$ & sample bounding boxes \ref{} & N$_{RPN}$ $\times$ 4 \\
+\midrule \\
+\multicolumn{3}{c}{\textbf{RoI Head}}\\
+\midrule \\
+& From C$_4$ with boxes$_{\mathrm{RPN}}$: RoI pooling \ref{} & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
+R$_1$& \textbf{ResNet-50} [C$_5$ without stride] & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
+ave & average pool & N$_{RPN}$ $\times$ 2048 \\
+boxes& From ave: fully connected, 4 & N$_{RPN}$ $\times$ 4 \\
+logits& From ave: fully connected, N$_{cls}$ & N$_{RPN}$ $\times$ N$_{cls}$ \\
+\midrule \\
+\multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
+\midrule \\
+& From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+masks & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
+
+\bottomrule
+\end{tabular}
+
+\caption {
+Mask R-CNN \cite{MaskRCNN} ResNet \cite{ResNet} architecture.
+Note that this is equivalent to the Faster R-CNN architecture if the mask
+head is left out.
+}
+\label{table:maskrcnn_resnet}
+\end{table}
+}
 
 \paragraph{Bounding box regression}
 All bounding boxes predicted by the RoI head or RPN are estimated as offsets
