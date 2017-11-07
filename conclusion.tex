@@ -14,12 +14,15 @@ for real time scenarios.
 We thus presented a step towards real time 3D motion estimation based on a
 physically sound scene decomposition. Thanks to instance-level reasoning, in contrast
 to previous end-to-end deep networks for dense motion estimation, the output
-of our network is highly interpretable, which may bring benefits for safety-critical
+of our network is highly interpretable, which may also bring benefits for safety-critical
 applications.
 
 \subsection{Future Work}
 \paragraph{Predicting depth}
-In most cases, we want to work with raw RGB sequences for which no depth is available.
+In this work, we focused on motion estimation when RGB-D frames with dense depth are available.
+However, in many applications settings, we are not provided with any depth information.
+In most cases, we want to work with raw RGB sequences from one or multiple simple cameras,
+from which no depth data is available.
 To do so, we could integrate depth prediction into our network by branching off a
 depth network from the backbone in parallel to the RPN, as in Figure \ref{}.
 Although single-frame monocular depth prediction with deep networks was already done

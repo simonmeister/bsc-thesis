@@ -1,5 +1,6 @@
 
 \subsection{Motion R-CNN architecture}
+\label{ssec:architecture}
 
 Building on Mask R-CNN \cite{MaskRCNN},
 we estimate per-object motion by predicting the 3D motion of each detected object.
@@ -76,8 +77,11 @@ Each instance motion is predicted as a set of nine scalar parameters,
 $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_t^k$ and $p_t^k$,
 where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
-and that objects rotate at most 90 degrees in either direction along any axis.
+and that objects rotate at most 90 degrees in either direction along any axis,
+which is in general a safe assumption for image sequences from videos.
 All predictions are made in camera space, and translation and pivot predictions are in meters.
+We additionally predict softmax scores $o_t^k$ for classifying the objects into
+still and moving objects.
 \todo{figure of head}
 
 \paragraph{Camera motion prediction}
@@ -86,8 +90,11 @@ between the two frames $I_t$ and $I_{t+1}$.
 For this, we flatten the bottleneck output of the backbone and pass it through a fully connected layer.
 We again represent $R_t^{cam}$ using a Euler angle representation and
 predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
+Again, we predict a softmax score $o_t^k$ for classifying differentiating between
+a still and moving camera.
 
 \subsection{Supervision}
+\label{ssec:supervision}
 
 \paragraph{Per-RoI supervision with 3D motion ground truth}
 The most straightforward way to supervise the object motions is by using ground truth
@@ -97,32 +104,47 @@ Given the $k$-th positive RoI, let $i_k$ be the index of the matched ground trut
 let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}$ be the predicted motion for class $c_k$
 and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}$ the ground truth motion for the example $i_k$.
 Note that we dropped the subscript $t$ to increase readability.
-Inspired by the camera pose regression loss in \cite{PoseNet2},
-we use an $\ell_1$-loss to penalize the differences between ground truth and predicted % TODO actually, we use smooth l1
-rotation, translation and pivot.
+Similar to the camera pose regression loss in \cite{PoseNet2},
+we use a variant of the $\ell_1$-loss to penalize the differences between ground truth and predicted
+rotation, translation (and pivot, in our case). We found that the smooth $\ell_1$-loss
+performs better in our case than the standard $\ell_1$-loss.
 For each RoI, we compute the motion loss $L_{motion}^k$ as a linear sum of
 the individual losses,
 
 \begin{equation}
-L_{motion}^k =l_{R}^k + l_{t}^k + l_{p}^k,
+L_{motion}^k =  l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o^{gt,i_k} + l_o^k,
 \end{equation}
 where
 \begin{equation}
-l_{R}^k = \lVert R^{gt,i_k} - R^{k,c_k} \rVert _1,
+l_{R}^k = \ell_1^* (R^{gt,i_k} - R^{k,c_k}),
 \end{equation}
+\begin{equation}
+l_{t}^k = \ell_1^* (t^{gt,i_k} - t^{k,c_k}),
+\end{equation}
+\begin{equation}
+l_{p}^k = \ell_1^* (p^{gt,i_k} - p^{k,c_k}).
+\end{equation}
+are the smooth $\ell_1$-losses for the predicted rotation, translation and pivot,
+respectively and
+\begin{equation}
+l_o^k = \ell_{cls}(o_t^k, o^{gt,i_k}).
+\end{equation}
+is the cross-entropy loss for the predicted classification into moving and non-moving objects.
 
-\begin{equation}
-l_{t}^k = \lVert t^{gt,i_k} - t^{k,c_k} \rVert_1,
-\end{equation}
-and
-\begin{equation}
-l_{p}^k = \lVert p^{gt,i_k} - p^{k,c_k} \rVert_1.
-\end{equation}
+Note that we do not penalize the rotation and translation for objects with
+$o^{gt,i_k} = 0$, which do not move between $t$ and $t+1$. We found that the network
+may not reliably predict exact identity motions for still objects, which is
+numerically more difficult to optimize than performing classification between
+moving and non-moving objects and discarding the regression for the non-moving
+ones.
 
 \paragraph{Camera motion supervision}
 We supervise the camera motion with ground truth analogously to the
 object motions, with the only difference being that we only have
 a rotation and translation, but no pivot term for the camera motion.
+If the ground truth shows that the camera is not moving, we again do not
+penalize rotation and translation. For the camera, the loss is reduced to the
+classification term in this case.
 
 \paragraph{Per-RoI supervision \emph{without} 3D motion ground truth}
 A more general way to supervise the object motions is a re-projection
@@ -166,6 +188,7 @@ which can make it interesting even when 3D motion ground truth is available.
 
 
 \subsection{Dense flow from motion}
+\label{ssec:postprocessing}
 As a postprocessing, we compose a dense optical flow map from the outputs of our Motion R-CNN network.
 Given the depth map $d_t$ for frame $I_t$, we first create a 3D point cloud in camera space at time $t$,
 where

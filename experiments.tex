@@ -14,6 +14,7 @@ we use the \texttt{tf.crop\_and\_resize} TensorFlow function with
 interpolation set to bilinear.
 
 \subsection{Datasets}
+\label{ssec:datasets}
 
 \paragraph{Virtual KITTI}
 The synthetic Virtual KITTI dataset \cite{VKITTI} is a re-creation of the KITTI
@@ -54,11 +55,21 @@ We compute the ground truth camera motion
 $\{R_t^{gt, cam}, t_t^{gt, cam}\} \in \mathbf{SE}(3)$ as
 
 \begin{equation}
-R_{t}^{gt, cam} = R_{t+1}^{ex}  \cdot inv(R_t^{ex}),
+R_{t}^{gt, cam} = R_{t+1}^{ex}  \cdot \mathrm{inv}(R_t^{ex}),
 \end{equation}
 \begin{equation}
 t_{t}^{gt, cam} = t_{t+1}^{ex}  - R_{t}^{ex} \cdot t_t^{ex}.
 \end{equation}
+
+Additionally, we define $o_t^{gt, cam} \in \{ 0, 1 \}$,
+\begin{equation}
+o_t^{gt, cam} =
+\begin{cases}
+1 &\text{if the camera pose changes between $t$ and $t+1$} \\
+0 &\text{otherwise,}
+\end{cases}
+\end{equation}
+which specifies the camera is moving in between the frames.
 
 For any object $i$ visible in both frames, let
 $(R_t^i, t_t^i)$ and $(R_{t+1}^i, t_{t+1}^i)$
@@ -77,11 +88,21 @@ and compute the ground truth object motion
 $\{R_t^{gt, i}, t_t^{gt, i}\} \in \mathbf{SE}(3)$ as
 
 \begin{equation}
-R_{t}^{gt, i} = inv(R_t^{gt, cam}) \cdot R_{t+1}^i \cdot inv(R_t^i),
+R_{t}^{gt, i} = \mathrm{inv}(R_t^{gt, cam}) \cdot R_{t+1}^i \cdot \mathrm{inv}(R_t^i),
 \end{equation}
 \begin{equation}
 t_{t}^{gt, i} = t_{t+1}^{i}  - R_t^{gt, cam} \cdot t_t.
 \end{equation}
+
+As for the camera, we define $o_t^{gt, i} \in \{ 0, 1 \}$,
+\begin{equation}
+o_t^{gt, i} =
+\begin{cases}
+1 &\text{if the position of object i changes between $t$ and $t+1$} \\
+0 &\text{otherwise,}
+\end{cases}
+\end{equation}
+which specifies whether an object is moving in between the frames.
 
 \paragraph{Evaluation metrics with motion ground truth}
 To evaluate the 3D instance and camera motions on the Virtual KITTI validation
@@ -93,21 +114,22 @@ let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}$ be the predicted motion for class $c_k$
 and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}$ the ground truth motion for the example $i_k$.
 Then, assuming there are $N$ such detections,
 \begin{equation}
-E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{tr(inv(R^{k,c_k}) \cdot R^{gt,i_k}) - 1}{2} \right\}\right\} \right)
+E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{tr(\mathrm{inv}(R^{k,c_k}) \cdot R^{gt,i_k}) - 1}{2} \right\}\right\} \right)
 \end{equation}
 measures the mean angle of the error rotation between predicted and ground truth rotation,
 \begin{equation}
-E_{t} = \frac{1}{N}\sum_k  \lVert inv(R^{k,c_k}) \cdot (t^{gt,i_k} - t^{k,c_k}) \rVert,
+E_{t} = \frac{1}{N}\sum_k  \left\lVert \mathrm{inv}(R^{k,c_k}) \cdot (t^{gt,i_k} - t^{k,c_k}) \right\rVert_2,
 \end{equation}
 is the mean euclidean norm between predicted and ground truth translation, and
 \begin{equation}
-E_{p} = \frac{1}{N}\sum_k \lVert p^{gt,i_k} - p^{k,c_k} \rVert
+E_{p} = \frac{1}{N}\sum_k \left\lVert p^{gt,i_k} - p^{k,c_k} \right\rVert_2
 \end{equation}
 is the mean euclidean norm between predicted and ground truth pivot.
 Analogously, we define error metrics $E_{R}^{cam}$ and $E_{t}^{cam}$ for
 predicted camera motions.
 
 \subsection{Training Setup}
+\label{ssec:setup}
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
 We train on a single Titan X (Pascal) for a total of 192K iterations on the
 Virtual KITTI training set.
@@ -120,6 +142,7 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 \todo{add this}
 
 \subsection{Experiments on Virtual KITTI}
+\label{ssec:vkitti}
 
 \begin{figure}[t]
   \centering

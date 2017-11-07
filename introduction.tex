@@ -9,7 +9,7 @@ and estimates their 3D locations as well as all 3D object motions between the fr
 \label{figure:teaser}
 \end{figure}
 
-\subsection{Motivation \& Goals}
+\subsection{Motivation}
 
 For moving in the real world, it is generally desirable to know which objects exists
 in the proximity of the moving agent,
@@ -35,7 +35,7 @@ sequences of images, segment the image pixels into object instances and estimate
 the location and 3D motion of each object instance relative to the camera
 (Figure \ref{figure:teaser}).
 
-\subsection{Technical outline}
+\subsection{Technical goals}
 
 Recently, SfM-Net \cite{SfmNet} introduced an end-to-end deep learning approach for predicting depth
 and dense optical flow in monocular image sequences based on estimating the 3D motion of individual objects and the camera.
@@ -178,3 +178,25 @@ a single RGB frame \cite{PoseNet, PoseNet2}. These works are related to
 ours in that we also need to output various rotations and translations from a deep network
 and thus need to solve similar regression problems and use similar parametrizations
 and losses.
+
+
+\subsection{Outline}
+In section \ref{sec:background}, we introduce preliminaries and building
+blocks from earlier works that serve as a foundation for our networks and losses.
+Most importantly, we re-view the ResNet CNN (\ref{ssec:resnet}) that will serve as CNN backbone
+as well as the developments in region-based CNNs onto which we build (\ref{ssec:rcnn}),
+specifically Mask R-CNN and the FPN \cite{FPN}.
+In section \ref{sec:approach}, we describe our technical contribution, starting
+with our modifications to the Mask R-CNN backbone and head networks (\ref{ssec:architecture}),
+followed by our losses and supervision methods for training
+the extended region-based CNN (\ref{ssec:supervision}), and
+finally the postprocessings we use to derive dense flow from our 3D motion estimates
+(\ref{ssec:postprocessing}).
+In section \ref{sec:experiments}, we introduce the Virtual KITTI dataset we use
+for training our networks as well as all preprocessings we perform (\ref{ssec:datasets}),
+give details of our experimental setup (\ref{ssec:setup}),
+and finally describe the experimental results
+on Virtual KITTI (\ref{ssec:vkitti}).
+In section \ref{sec:conclusion}, we summarize our work and describe future
+developments, including depth prediction, training on real world data,
+and exploiting frames over longer time intervals.
