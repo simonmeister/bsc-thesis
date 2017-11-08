@@ -8,7 +8,99 @@ For this, we extend Mask R-CNN in two straightforward ways.
 First, we modify the backbone network and provide two frames to the R-CNN system
 in order to enable image matching between the consecutive frames.
 Second, we extend the Mask R-CNN RoI head to predict a 3D motion for each
-region proposal.
+region proposal. Table \ref{table:motionrcnn_resnet} shows the modified network.
+
+{
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
+\toprule
+\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+& input image & H $\times$ W $\times$ C \\
+\midrule
+C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)} (Table \ref{table:maskrcnn_resnet})}\\
+\midrule
+\multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
+\midrule
+& From C$_4$: ResNet-50 \{C$_5$\} (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+& 1 $\times$ 1 conv, 1024 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+& 3 $\times$ 3 conv, 1024, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 1024 \\
+& average pool & 1 $\times$ 2048 \\
+M$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
+
+$R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
+$t_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
+$o_t^{cam}$& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet})}\\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
+\midrule
+M$_2$ & From ave: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RPN}$ $\times$ 1024 \\
+$\forall k: R_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: t_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: p_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: o_t^k$ & From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+
+\bottomrule
+\end{tabular}
+
+\caption {
+Motion R-CNN ResNet-50 architecture based on the Mask R-CNN
+ResNet-50 architecture (Table \ref{table:maskrcnn_resnet}).
+}
+\label{table:motionrcnn_resnet}
+\end{table}
+}
+
+{
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
+\toprule
+\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+& input image & H $\times$ W $\times$ C \\
+\midrule
+C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{RPN \& FPN} (Table \ref{table:maskrcnn_resnet_fpn})} \\
+\midrule
+\multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
+\midrule
+& From C$_5$: 1 $\times$ 1 conv, 1024 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+& 3 $\times$ 3 conv, 1024, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 1024 \\
+& average pool & 1 $\times$ 2048 \\
+M$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
+$R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
+$t_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
+$o_t^{cam}$& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet_fpn})} \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
+\midrule
+M$_2$ & From F$_1$: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RPN}$ $\times$ 1024 \\
+$\forall k: R_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: t_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: p_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
+$\forall k: o_t^k$ & From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+
+\bottomrule
+\end{tabular}
+
+\caption {
+Motion R-CNN ResNet-50-FPN architecture based on the Mask R-CNN
+ResNet-50-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
+The modifications are analogous to our Motion R-CNN ResNet-50,
+but we still show the architecture for completeness.
+}
+\label{table:motionrcnn_resnet_fpn}
+\end{table}
+}
 
 \paragraph{Backbone Network}
 Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backbone network to compute feature maps from input imagery.
@@ -70,7 +162,7 @@ R_t^{k,z}(\gamma) =
 and $\alpha, \beta, \gamma$ are the rotation angles in radians about the $x,y,z$-axis, respectively.
 
 We then extend the Mask R-CNN head by adding a fully connected layer in parallel to the fully connected layers for
-refined boxes and classes. Figure \ref{fig:motion_rcnn_head} shows the Motion R-CNN RoI head.
+refined boxes and classes.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
 Each instance motion is predicted as a set of nine scalar parameters,
 $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_t^k$ and $p_t^k$,
@@ -81,7 +173,6 @@ which is in general a safe assumption for image sequences from videos.
 All predictions are made in camera space, and translation and pivot predictions are in meters.
 We additionally predict softmax scores $o_t^k$ for classifying the objects into
 still and moving objects.
-\todo{figure of head}
 
 \paragraph{Camera motion prediction}
 In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in \mathbf{SE}(3)$
@@ -91,52 +182,6 @@ We again represent $R_t^{cam}$ using a Euler angle representation and
 predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
 Again, we predict a softmax score $o_t^{cam}$ for classifying differentiating between
 a still and moving camera.
-
-{
-\begin{table}[h]
-\centering
-\begin{tabular}{llr}
-layer id & layer operations & output dimensions \\
-\toprule \\
-& input image & H $\times$ W $\times$ C \\
-\midrule \\
-C$_4$ & \textbf{ResNet-50} [up to C$_4$] & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
-\midrule \\
-\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)} (see Table \ref{table:maskrcnn_resnet})}\\
-\midrule \\
-\multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
-\midrule \\
-& From C$_4$: \textbf{ResNet-50} [C$_5$ without stride] & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
-& average pool & 1 $\times$ 2048 \\
-& fully connected, 1024 & 1 $\times$ 1024 \\
-M$_1$ & fully connected, 1024 & 1 $\times$ 1024 \\
-$R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
-$t_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
-$o_t^{cam}$& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
-\midrule \\
-\multicolumn{3}{c}{\textbf{RoI Head} (see Table \ref{table:maskrcnn_resnet})}\\
-\midrule \\
-\multicolumn{3}{c}{\textbf{RoI Head: Masks} (see Table \ref{table:maskrcnn_resnet})}\\
-\midrule \\
-\multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
-\midrule \\
-& From ave: fully connected, 1024 & N$_{RPN}$ $\times$ 1024 \\
-M$_2$ & fully connected, 1024 & N$_{RPN}$ $\times$ 1024 \\
-$\forall k: R_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: t_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: p_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: o_t^k$ & From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
-
-\bottomrule
-\end{tabular}
-
-\caption {
-Motion R-CNN ResNet architecture based on the Mask R-CNN
-ResNet architecture (Table \ref{table:maskrcnn_resnet}).
-}
-\label{table:motion_rcnn_resnet}
-\end{table}
-}
 
 \subsection{Supervision}
 \label{ssec:supervision}

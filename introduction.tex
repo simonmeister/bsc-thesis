@@ -42,15 +42,34 @@ and dense optical flow in monocular image sequences based on estimating the 3D m
 SfM-Net predicts a batch of binary full image masks specyfing the object memberships of individual pixels with a standard encoder-decoder
 network for pixel-wise prediction. A fully connected network branching off the encoder predicts a 3D motion for each object.
 However, due to the fixed number of objects masks, the system can only predict a small number of motions and
-often fails to properly segment the pixels into the correct masks or assigns background pixels to object motions.
-
+often fails to properly segment the pixels into the correct masks or assigns background pixels to object motions (Figure \ref{figure:sfmnet_kitti}).
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/sfmnet_kitti}
+\caption{
+Results of SfM-Net \cite{MaskRCNN} on KITTI \cite{KITTI2015}.
+From left to right we show, instance segmentation into up to 3 independent objects,
+ground truth instance masks for the segmented objects, composed optical flow and ground truth optical flow.
+}
+\label{figure:sfmnet_kitti}
+\end{figure}
 Thus, this approach is very unlikely to scale to dynamic scenes with a potentially
 large number of diverse objects due to the inflexible nature of their instance segmentation technique.
 
 A scalable approach to instance segmentation based on region-based convolutional networks
 was recently introduced with Mask R-CNN \cite{MaskRCNN}, which inherits the ability to detect
 a large number of objects from a large number of classes at once from Faster R-CNN
-and predicts pixel-precise segmentation masks for each detected object.
+and predicts pixel-precise segmentation masks for each detected object (Figure \ref{figure:maskrcnn_cs}).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/maskrcnn_cs}
+\caption{
+Instance segmentation results of Mask R-CNN ResNet-50-FPN \cite{MaskRCNN}
+on Cityscapes \cite{Cityscapes}.
+}
+\label{figure:maskrcnn_cs}
+\end{figure}
 
 We propose \emph{Motion R-CNN}, which combines the scalable instance segmentation capabilities of
 Mask R-CNN with the end-to-end 3D motion estimation approach introduced with SfM-Net.

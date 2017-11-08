@@ -24,13 +24,49 @@ However, in many applications settings, we are not provided with any depth infor
 In most cases, we want to work with raw RGB sequences from one or multiple simple cameras,
 from which no depth data is available.
 To do so, we could integrate depth prediction into our network by branching off a
-depth network from the backbone in parallel to the RPN, as in Figure \ref{}.
+depth network from the backbone in parallel to the RPN (Figure \ref{table:motionrcnn_resnet_fpn_depth}).
+Alternatively, we could add a specialized network for end-to-end depth regression
+in parallel to the region-based network, e.g. \cite{GCNet}.
 Although single-frame monocular depth prediction with deep networks was already done
 to some level of success,
 our two-frame input should allow the network to make use of epipolar
 geometry for making a more reliable depth estimate, at least when the camera
 is moving.
 
+{
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
+\toprule
+\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+& input image & H $\times$ W $\times$ C \\
+\midrule
+C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{RPN \& FPN} (Table \ref{table:maskrcnn_resnet_fpn})} \\
+\midrule
+\multicolumn{3}{c}{\textbf{Depth Network}}\\
+\midrule
+& From P$_2$: 3 $\times$ 3 conv, 1024 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
+& 1 $\times$ 1 conv, 1 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 1 \\
+& $\times$ 2 bilinear upsample & H $\times$ W $\times$ 1 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Camera Motion Network} (Table \ref{table:motionrcnn_resnet_fpn})}\\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet_fpn})} \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head: Motions} (Table \ref{table:motionrcnn_resnet_fpn})}\\
+\bottomrule
+\end{tabular}
+
+\caption {
+Preliminary Motion R-CNN ResNet-50-FPN architecture with depth prediction,
+based on the Mask R-CNN ResNet-50-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
+}
+\label{table:motionrcnn_resnet_fpn_depth}
+\end{table}
+}
 \paragraph{Training on real world data}
 Due to the amount of supervision required by the different components of the network
 and the complexity of the optimization problem,

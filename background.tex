@@ -76,15 +76,16 @@ Figure \ref{figure:bottleneck}
 shows the fundamental building block of ResNet-50.
 
 {
-\begin{table}[h]
-\centering
-\begin{tabular}{llr}
- layer id & layer operations & output dimensions \\
-\toprule \\
+%\begin{table}[h]
+%\centering
+\begin{longtable}{llr}
+\toprule
+\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
  & input image & H $\times$ W $\times$ C \\
-\midrule \\
+\midrule
 \multicolumn{3}{c}{\textbf{ResNet-50}}\\
-\midrule \\
+\midrule
 C$_1$ & 7 $\times$ 7 conv, 64, stride 2 & $\tfrac{1}{2}$ H $\times$ $\tfrac{1}{2}$ W $\times$ 64 \\
 
 & 3 $\times$ 3 max pool, stride 2 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 64 \\
@@ -96,7 +97,7 @@ $\begin{bmatrix}
 1 \times 1, 256 \\
 \end{bmatrix}_b$ $\times$ 3
 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
-\midrule \\
+\midrule
 C$_3$ &
 $\begin{bmatrix}
 1 \times 1, 128 \\
@@ -104,7 +105,7 @@ $\begin{bmatrix}
 1 \times 1, 512 \\
 \end{bmatrix}_{b/2}$ $\times$ 4
 & $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 512 \\
-\midrule \\
+\midrule
 C$_4$ &
 $\begin{bmatrix}
 1 \times 1, 256 \\
@@ -112,7 +113,7 @@ $\begin{bmatrix}
 1 \times 1, 1024 \\
 \end{bmatrix}_{b/2}$ $\times$ 6
 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
-\midrule \\
+\midrule
 C$_5$ &
 $\begin{bmatrix}
 1 \times 1, 512 \\
@@ -122,24 +123,26 @@ $\begin{bmatrix}
 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
 
 \bottomrule
-\end{tabular}
 
 \caption {
-ResNet-50 \cite{ResNet} architecture.
+ResNet-50 \cite{ResNet} architecture (Figure from \cite{ResNet}).
 Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
 block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
 the first conv operation in the block has a stride of 2. Note that the stride
 is only applied to the first block, but not to repeated blocks.
 }
 \label{table:resnet}
-\end{table}
+\end{longtable}
+
+
+%\end{table}
 }
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.3\textwidth]{figures/bottleneck}
 \caption{
-ResNet \cite{ResNet} \enquote{bottleneck} block introduced to reduce computational
+ResNet \cite{ResNet} \enquote{bottleneck} convolutional block introduced to reduce computational
 complexity in deeper network variants, shown here with 256 input and output channels.
 }
 \label{figure:bottleneck}
@@ -193,21 +196,6 @@ The \emph{second stage} corresponds to the original Fast R-CNN head network, per
 and bounding box refinement for each region proposal. % TODO verify that it isn't modified
 As in Fast R-CNN, RoI pooling is used to crop one fixed size feature map for each of the region proposals.
 
-\paragraph{Feature Pyramid Networks}
-In Faster R-CNN, a single feature map is used as a source of all RoIs, independent
-of the size of the bounding box of the RoI.
-However, for small objects, the C4 \todo{explain terminology of layers} features
-might have lost too much spatial information to properly predict the exact bounding
-box and a high resolution mask. Likewise, for very big objects, the fixed size
-RoI window might be too small to cover the region of the feature map containing
-information for this object.
-As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enable features
-of an appropriate scale to be used, depending of the size of the bounding box.
-For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
-encoder. \todo{figure and more details}
-Now, during RoI pooling,
-\todo{show formula}.
-
 
 \paragraph{Mask R-CNN}
 Faster R-CNN and the earlier systems detect and classify objects at bounding box granularity.
@@ -218,54 +206,137 @@ Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentat
 fixed resolution instance masks within the bounding boxes of each detected object.
 This is done by simply extending the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise mask for each instance.
-In addition to extending the original Faster R-CNN head, Mask R-CNN also introduced a network
-variant based on Feature Pyramid Networks \cite{FPN}.
-Figure \ref{} compares the two Mask R-CNN head variants.
+The basic Mask R-CNN ResNet-50 architecture is shown in Table \ref{table:maskrcnn_resnet}.
 \todo{RoI Align}
 
 {
-\begin{table}[h]
-\centering
-\begin{tabular}{llr}
-layer id & layer operations & output dimensions \\
-\toprule \\
+%\begin{table}[t]
+%\centering
+\begin{longtable}{llr}
+\toprule
+\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
 & input image & H $\times$ W $\times$ C \\
-\midrule \\
-C$_4$ & \textbf{ResNet-50} [up to C$_4$] & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
-\midrule \\
+\midrule
+C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+\midrule
 \multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
-\midrule \\
+\midrule
 & From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 4 \\
-& flatten & A $\times$ 4 \\
- & decode bounding boxes \ref{} & A $\times$ 4 \\
-boxes$_{\mathrm{RPN}}$ & sample bounding boxes \ref{} & N$_{RPN}$ $\times$ 4 \\
-\midrule \\
+& 1 $\times$ 1 conv, 6 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 6 \\
+& flatten & A $\times$ 6 \\
+ & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
+ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores (Listing \ref{}) & N$_{RPN}$ $\times$ 6 \\
+\midrule
 \multicolumn{3}{c}{\textbf{RoI Head}}\\
-\midrule \\
-& From C$_4$ with boxes$_{\mathrm{RPN}}$: RoI pooling \ref{} & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
-R$_1$& \textbf{ResNet-50} [C$_5$ without stride] & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
+\midrule
+& From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI pooling (\ref{}) & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
+R$_1$& ResNet-50 \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
 ave & average pool & N$_{RPN}$ $\times$ 2048 \\
 boxes& From ave: fully connected, 4 & N$_{RPN}$ $\times$ 4 \\
 logits& From ave: fully connected, N$_{cls}$ & N$_{RPN}$ $\times$ N$_{cls}$ \\
-\midrule \\
+\midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
-\midrule \\
+\midrule
 & From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
 masks & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
 
 \bottomrule
-\end{tabular}
 
 \caption {
-Mask R-CNN \cite{MaskRCNN} ResNet \cite{ResNet} architecture.
+Mask R-CNN \cite{MaskRCNN} ResNet-50 \cite{ResNet} architecture.
 Note that this is equivalent to the Faster R-CNN architecture if the mask
 head is left out.
 }
 \label{table:maskrcnn_resnet}
-\end{table}
+\end{longtable}
+%\end{table}
 }
 
+\paragraph{Feature Pyramid Networks}
+In Faster R-CNN, a single feature map is used as a source of all RoIs, independent
+of the size of the bounding box of the RoI.
+However, for small objects, the C$_4$ (see Table \ref{table:maskrcnn_resnet}) features
+might have lost too much spatial information to properly predict the exact bounding
+box and a high resolution mask. Likewise, for very big objects, the fixed size
+RoI window might be too small to cover the region of the feature map containing
+information for this object.
+As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enable features
+of an appropriate scale to be used, depending of the size of the bounding box.
+For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
+encoder. \todo{figure and more details}
+Now, during RoI pooling,
+\todo{show formula}.
+The Mask R-CNN ResNet-50-FPN variant is shown in Table \ref{table:maskrcnn_resnet_fpn}.
+
+{
+%\begin{table}[t]
+%\centering
+\begin{longtable}{llr}
+\toprule
+\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+& input image & H $\times$ W $\times$ C \\
+\midrule
+C$_5$ & ResNet-50 (Table \ref{table:resnet})  & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Feature Pyramid Network (FPN)}}\\
+\midrule
+P$_5$ & From C$_5$: 1 $\times$ 1 conv, 256 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 256 \\
+P$_4$ & $\begin{bmatrix}\textrm{skip from C$_4$}\end{bmatrix}_p$ & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 256 \\
+P$_3$ & $\begin{bmatrix}\textrm{skip from C$_3$}\end{bmatrix}_p$ & $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 256 \\
+P$_2$ & $\begin{bmatrix}\textrm{skip from C$_2$}\end{bmatrix}_p$ & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
+P$_6$ & From P$_5$: 2 $\times$ 2 subsample, 256 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 256 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
+\midrule
+\multicolumn{3}{c}{$\forall i \in \{2...6\}$}\\
+& From P$_i$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 512 \\
+& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 6 \\
+RPN$_i$& flatten & A$_i$ $\times$ 6 \\
+\midrule
+& From \{RPN$_2$ ... RPN$_6$\}: concatenate & A $\times$ 6 \\
+& decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
+ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores (Listing \ref{}) & N$_{RPN}$ $\times$ 6 \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head}}\\
+\midrule
+R$_2$ & From \{P$_2$ ... P$_6$\} with ROI$_{\mathrm{RPN}}$: FPN RoI crop & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 2 $\times$ 2 max pool & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 256 \\
+F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RPN}$ $\times$ 1024 \\
+boxes& From F$_1$: fully connected, 4 & N$_{RPN}$ $\times$ 4 \\
+logits& From F$_1$: fully connected, N$_{cls}$ & N$_{RPN}$ $\times$ N$_{cls}$ \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
+\midrule
+& From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 2 $\times$ 2 deconv, 256, stride 2 & N$_{RPN}$ $\times$ 28 $\times$ 28 $\times$ 256 \\
+masks & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RPN}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
+\bottomrule
+
+\caption {
+Mask R-CNN \cite{MaskRCNN} ResNet-50-FPN \cite{ResNet} architecture.
+Operations enclosed in a []$_p$ block make up a single FPN
+block (see Figure \ref{figure:fpn_block}).
+}
+\label{table:maskrcnn_resnet_fpn}
+\end{longtable}
+%\end{table}
+}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.3\textwidth]{figures/fpn}
+\caption{
+FPN block from \cite{FPN}.
+Lower resolution features coming from the bottleneck are bilinearly upsampled
+and added with higher resolution skip connections from the encoder.
+}
+\label{figure:fpn_block}
+\end{figure}
+
+\subsection{Training Mask R-CNN}
+\label{ssec:rcnn_techn}
 \paragraph{Bounding box regression}
 All bounding boxes predicted by the RoI head or RPN are estimated as offsets
 with respect to a reference bounding box. In the case of the RPN,
@@ -274,10 +345,10 @@ predicted relative to the RPN output bounding boxes.
 Let $(x, y, w, h)$ be the top left coordinates, height and width of the bounding box
 to be predicted. Likewise, let $(x^*, y^*, w^*, h^*)$ be the ground truth bounding
 box and let $(x_r, y_r, w_r, h_r)$ be the reference bounding box.
-We then define the ground truth \emph{box encoding} $b^*$ as
-\begin{equation*}
-b^* = (b_x^*, b_y^*, b_w^*, b_h^*),
-\end{equation*}
+We then define the ground truth \emph{box encoding} $b_e^*$ as
+\begin{equation}
+b_e^* = (b_x^*, b_y^*, b_w^*, b_h^*),
+\end{equation}
 where
 \begin{equation*}
 b_x^* = \frac{x^* - x_r}{w_r},
@@ -294,10 +365,10 @@ b_h^* = \log \left( \frac{h^*}{h_r} \right),
 which represents the regression target for the bounding box refinement
 outputs of the network.
 
-In the same way, we define the predicted box encoding $b$ as
-\begin{equation*}
-(b_x, b_y, b_w, b_h),
-\end{equation*}
+In the same way, we define the predicted box encoding $b_e$ as
+\begin{equation}
+b_e = (b_x, b_y, b_w, b_h),
+\end{equation}
 where
 \begin{equation*}
 b_x = \frac{x - x_r}{w_r},
@@ -312,8 +383,13 @@ b_w = \log \left( \frac{w}{w_r} \right)
 b_h = \log \left( \frac{h}{h_r} \right).
 \end{equation*}
 
-At test time, to get from a predicted box encoding $(b_x, b_y, b_w, b_h)$ to the actual bounding box $(x, y, w, h)$,
+At test time, to get from a predicted box encoding $b_e$ to the predicted bounding box $b$,
 we invert the definitions above,
+\begin{equation}
+b = (x, y, w, h),
+\label{eq:pred_bounding_box}
+\end{equation}
+where
 \begin{equation*}
 x = b_x \cdot w_r + x_r,
 \end{equation*}
