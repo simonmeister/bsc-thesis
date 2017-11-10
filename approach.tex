@@ -17,7 +17,7 @@ region proposal. Table \ref{table:motionrcnn_resnet} shows the modified network.
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
-& input image & H $\times$ W $\times$ C \\
+& input images & H $\times$ W $\times$ C \\
 \midrule
 C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
 \midrule
@@ -26,8 +26,8 @@ C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H
 \multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
 \midrule
 & From C$_4$: ResNet-50 \{C$_5$\} (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
-& 1 $\times$ 1 conv, 1024 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
-& 3 $\times$ 3 conv, 1024, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 1024 \\
+& 1 $\times$ 1 conv, 2048 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+& 3 $\times$ 3 conv, 2048, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 & average pool & 1 $\times$ 2048 \\
 M$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
 
@@ -65,7 +65,7 @@ ResNet-50 architecture (Table \ref{table:maskrcnn_resnet}).
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
-& input image & H $\times$ W $\times$ C \\
+& input images & H $\times$ W $\times$ C \\
 \midrule
 C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
 \midrule
@@ -73,8 +73,8 @@ C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfra
 \midrule
 \multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
 \midrule
-& From C$_5$: 1 $\times$ 1 conv, 1024 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
-& 3 $\times$ 3 conv, 1024, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 1024 \\
+& From C$_5$: 1 $\times$ 1 conv, 2048 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+& 3 $\times$ 3 conv, 2048, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 & average pool & 1 $\times$ 2048 \\
 M$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
 $R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
@@ -265,7 +265,7 @@ and finally compute the optical flow at each point as the difference of the init
 Note that we batch this computation over all RoIs, so that we only perform
 it once per forward pass. The mathematical details are analogous to the
 dense, full image flow computation in the following subsection and will not
-be repeated here. \todo{add diagram to make it easier to understand}
+be repeated here. \todo{probably better to add the mathematical details, as it may otherwise be confusing at some points}
 
 For each RoI, we can now penalize the optical flow grid to supervise the object motion.
 If there is optical flow ground truth available, we can use the RoI bounding box to

@@ -2,12 +2,12 @@ In this section, we will give a more detailed description of previous works
 we directly build on and other prerequisites.
 
 \subsection{Optical flow and scene flow}
-Let $I_1,I_2 : P \to \mathbb{R}^3$ be two temporally consecutive frames in a
+Let $I_t,I_{t+1} : P \to \mathbb{R}^3$ be two temporally consecutive frames in a
 sequence of images.
 The optical flow
-$\mathbf{w} = (u, v)^T$ from $I_1$ to $I_2$
-maps pixel coordinates in the first frame $I_1$ to pixel coordinates of the
-visually corresponding pixel in the second frame $I_2$,
+$\mathbf{w} = (u, v)^T$ from $I_t$ to $I_{t+1}$
+maps pixel coordinates in the first frame $I_t$ to pixel coordinates of the
+visually corresponding pixel in the second frame $I_{t+1}$,
 and can be interpreted as the apparent movement of brigthness patterns between the two frames.
 Optical flow can be regarded as two-dimensional motion estimation.
 
@@ -32,11 +32,50 @@ performing upsampling of the compressed features and resulting in a encoder-deco
 The most popular deep networks of this kind for end-to-end optical flow prediction
 are variants of the FlowNet family \cite{FlowNet, FlowNet2},
 which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
-Table \ref{} shows the classical FlowNetS architecture for optical flow prediction.
+Table \ref{table:flownets} shows the classical FlowNetS architecture for optical flow prediction.
+
+{
+%\begin{table}[h]
+%\centering
+\begin{longtable}{llr}
+\toprule
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+ & input images $I_t$ and $I_{t+1}$ & H $\times$ W $\times$ 6 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Encoder}}\\
+\midrule
+& 7 $\times$ 7 conv, 64, stride 2 & $\tfrac{1}{2}$ H $\times$ $\tfrac{1}{2}$ W $\times$ 64 \\
+& 5 $\times$ 5 conv, 128, stride 2 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 128 \\
+& 5 $\times$ 5 conv, 256, stride 2 & $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 256 \\
+& 3 $\times$ 3 conv, 256 & $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 256 \\
+& 3 $\times$ 3 conv, 512, stride 2 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
+& 3 $\times$ 3 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
+& 3 $\times$ 3 conv, 512, stride 2 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
+& 3 $\times$ 3 conv, 512, & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
+& 3 $\times$ 3 conv, 1024, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Refinement}}\\
+& 5 $\times$ 5 deconv, 512, stride 2 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
+\multicolumn{3}{c}{...}\\
+\midrule
+flow & $\times$ 2 bilinear upsample & $\tfrac{1}{1}$ H $\times$ $\tfrac{1}{1}$ W $\times$ 2 \\
+\bottomrule
+
+\caption {
+FlowNetS \cite{FlowNet} architecture.
+}
+\label{table:flownets}
+\end{longtable}
+
+
+%\end{table}
+}
+
 Note that the network itself is a rather generic autoencoder and is specialized for optical flow only through being trained
 with supervision from dense optical flow ground truth.
 Potentially, the same network could also be used for semantic segmentation if
-the number of output channels was adapted from two to the number of classes. % TODO verify
+the number of output final and intermediate output channels was adapted from two to the number of classes.\
 Still, FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to perform image matching arguably well,
 given just two consecutive frames as input and a large enough receptive field at the outputs to cover the displacements.
 Note that the maximum displacement that can be correctly estimated only depends on the number of 2D strides or pooling
@@ -44,8 +83,45 @@ operations in the encoder.
 Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
 \subsection{SfM-Net}
-Here, we will describe the SfM-Net \cite{SfmNet} architecture in more detail and show their results
-and some of the issues.
+Here, we will describe the SfM-Net \cite{SfmNet} architecture in some more detail \todo{finish}.
+
+{
+%\begin{table}[h]
+%\centering
+\begin{longtable}{llr}
+\toprule
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+\multicolumn{3}{c}{\todo{Conv-Deconv}}\\
+\midrule
+\midrule
+\multicolumn{3}{c}{\textbf{Motion Network}}\\
+\midrule
+ & input images $I_t$ and $I_{t+1}$ & H $\times$ W $\times$ 6 \\
+ & Conv-Deconv & H $\times$ W $\times$ 32 \\
+masks & 1 $\times$1 conv, N$_{motions}$ & H $\times$ W $\times$ N$_{motions}$ \\
+FC & From bottleneck: $\begin{bmatrix}\textrm{fully connected}, 512\end{bmatrix}$ $\times$ 2 & H $\times$ W $\times$ 32 \\
+object motions & fully connected, $N_{motions} \cdot$ 9 & H $\times$ W $\times$ $N_{motions} \cdot$ 9 \\
+camera motion & From FC: $\times$ 2 & H $\times$ W $\times$ 6 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Structure Network} ()}\\
+\midrule
+& input image $I_t$ & H $\times$ W $\times$ 3 \\
+& Conv-Deconv & H $\times$ W $\times$ 32 \\
+depth & 1 $\times$1 conv, 1  & H $\times$ W $\times$ 1 \\
+\bottomrule
+
+\caption {
+SfM-Net \cite{SfmNet} architecture.
+The Conv-Deconv weights for the structure and motion networks are not shared,
+and N$_{motions} = 3$.
+}
+\label{table:flownets}
+\end{longtable}
+
+
+%\end{table}
+}
 
 \subsection{ResNet}
 \label{ssec:resnet}
@@ -109,7 +185,7 @@ $\begin{bmatrix}
 \bottomrule
 
 \caption {
-ResNet-50 \cite{ResNet} architecture (Figure from \cite{ResNet}).
+ResNet-50 \cite{ResNet} architecture.
 Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
 block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
 the first conv operation in the block has a stride of 2. Note that the stride
@@ -220,18 +296,22 @@ C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ 
 \midrule
 \multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
 \midrule
-& From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 6 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 6 \\
-& flatten & A $\times$ 6 \\
- & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
-ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores & N$_{RoI}$ $\times$ 6 \\
+R$_0$ & From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
+& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 4 \\
+& flatten & A $\times$ 4 \\
+boxes$_{\mathrm{RPN}}$ & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 4\\
+& From R$_0$: 1 $\times$ 1 conv, 2 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 2 \\
+& flatten & A $\times$ 2 \\
+scores$_{\mathrm{RPN}}$& softmax & A $\times$ 2 \\
+ROI$_{\mathrm{RPN}}$ & sample boxes$_{\mathrm{RPN}}$ and scores$_{\mathrm{RPN}}$ & N$_{RoI}$ $\times$ 6 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head}}\\
 \midrule
 & From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI extraction & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
 R$_1$& ResNet-50 \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
-ave & average pool & N$_{RPN}$ $\times$ 2048 \\
-boxes& From ave: fully connected, 4 & N$_{RPN}$ $\times$ 4 \\
+ave & average pool & N$_{RoI}$ $\times$ 2048 \\
+& From ave: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
+boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
 & From ave: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
@@ -271,7 +351,7 @@ The Mask R-CNN ResNet-50-FPN variant is shown in Table \ref{table:maskrcnn_resne
 Instead of a single RPN head with anchors at 3 scales and 3 aspect ratios,
 the FPN variant has one RPN head after each of the pyramid levels P$_2$ ... P$_6$.
 At each output position of the resulting RPN pyramid, bounding boxes are predicted
-with respect to 3 anchor aspect ratios $\{1:2, 1:1, 2:1\}$ and a single scale.
+with respect to 3 anchor aspect ratios $\{1:2, 1:1, 2:1\}$ and a single scale ($N_a = 3$).
 For P$_2$, P$_3$, P$_4$, P$_5$, P$_6$,
 the scale corresponds to anchor bounding boxes of areas $32^2, 64^2, 128^2, 256^2, 512^2$,
 respectively.
@@ -311,7 +391,7 @@ P$_6$ & From P$_5$: 2 $\times$ 2 subsample, 256 & $\tfrac{1}{64}$ H $\times$ $\t
 \midrule
 \multicolumn{3}{c}{$\forall i \in \{2...6\}$}\\
 & From P$_i$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 6 \\
+& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ $N_a \cdot$ 6 \\
 RPN$_i$& flatten & A$_i$ $\times$ 6 \\
 \midrule
 & From \{RPN$_2$ ... RPN$_6$\}: concatenate & A $\times$ 6 \\
@@ -323,7 +403,8 @@ ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores & N$_{RoI}$ $\times$ 6 \\
 R$_2$ & From \{P$_2$ ... P$_6$\} with ROI$_{\mathrm{RPN}}$: RoI extraction (Eq. \ref{eq:level_assignment}) & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
 & 2 $\times$ 2 max pool & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 256 \\
 F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
-boxes& From F$_1$: fully connected, 4 & N$_{RoI}$ $\times$ 4 \\
+& From F$_1$: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4 \\
+boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
 & From F$_1$: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
