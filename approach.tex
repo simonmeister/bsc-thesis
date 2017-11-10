@@ -15,7 +15,7 @@ region proposal. Table \ref{table:motionrcnn_resnet} shows the modified network.
 \centering
 \begin{tabular}{llr}
 \toprule
-\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
@@ -33,7 +33,8 @@ M$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 
 
 $R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
 $t_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
-$o_t^{cam}$& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+$o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet})}\\
 \midrule
@@ -43,7 +44,8 @@ M$_2$ & From ave: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $
 $\forall k: R_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
 $\forall k: t_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
 $\forall k: p_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: o_t^k$ & From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+& From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+$\forall k: o_t^k$ & softmax, 2 & N$_{RPN}$ $\times$ 2 \\
 
 \bottomrule
 \end{tabular}
@@ -61,7 +63,7 @@ ResNet-50 architecture (Table \ref{table:maskrcnn_resnet}).
 \centering
 \begin{tabular}{llr}
 \toprule
-\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
@@ -77,7 +79,8 @@ C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfra
 M$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
 $R_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
 $t_t^{cam}$& From M$_1$: fully connected, 3 & 1 $\times$ 3 \\
-$o_t^{cam}$& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+& From M$_1$: fully connected, 2 & 1 $\times$ 2 \\
+$o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet_fpn})} \\
 \midrule
@@ -87,7 +90,8 @@ M$_2$ & From F$_1$: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$
 $\forall k: R_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
 $\forall k: t_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
 $\forall k: p_t^k$ & From M$_2$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: o_t^k$ & From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+& From M$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
+$\forall k: o_t^k$ & softmax, 2 & N$_{RPN}$ $\times$ 2 \\
 
 \bottomrule
 \end{tabular}
@@ -108,8 +112,8 @@ Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backb
 Inspired by FlowNetS \cite{FlowNet}, we make one modification to the ResNet backbone to enable image matching,
 laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
 we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
-Alternatively, we also experiment with concatenating the camera space XYZ coordinates for each frame
-into the input as well.
+Alternatively, we also experiment with concatenating the camera space XYZ coordinates for each frame,
+XYZ$_t$ and XYZ$_{t+1}$, into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both first stage RPN and second stage feature extractor for region cropping.
 Technically, our feature encoder network will have to learn a motion representation similar to
@@ -172,7 +176,9 @@ and that objects rotate at most 90 degrees in either direction along any axis,
 which is in general a safe assumption for image sequences from videos.
 All predictions are made in camera space, and translation and pivot predictions are in meters.
 We additionally predict softmax scores $o_t^k$ for classifying the objects into
-still and moving objects.
+still and moving objects. As a postprocessing, for any object instance $k$ with predicted moving flag $o_t^k = 0$,
+we set $\sin(\alpha) = \sin(\beta) = \sin(\gamma) = 0$ and $t_t^k = (0,0,0)^T$,
+and thus predict an identity motion.
 
 \paragraph{Camera motion prediction}
 In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in \mathbf{SE}(3)$
@@ -180,7 +186,7 @@ between the two frames $I_t$ and $I_{t+1}$.
 For this, we flatten the bottleneck output of the backbone and pass it through a fully connected layer.
 We again represent $R_t^{cam}$ using a Euler angle representation and
 predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
-Again, we predict a softmax score $o_t^{cam}$ for classifying differentiating between
+Again, we predict a softmax score $o_t^{cam}$ for differentiating between
 a still and moving camera.
 
 \subsection{Supervision}
@@ -190,29 +196,28 @@ a still and moving camera.
 The most straightforward way to supervise the object motions is by using ground truth
 motions computed from ground truth object poses, which is in general
 only practical when training on synthetic datasets.
-Given the $k$-th positive RoI, let $i_k$ be the index of the matched ground truth example with class $c_k$,
-let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}$ be the predicted motion for class $c_k$
-and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}$ the ground truth motion for the example $i_k$.
+Given the $k$-th foreground RoI, let $i_k$ be the index of the matched ground truth example with class $c_k$,
+let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}, o^{k,c_k}$ be the predicted motion for class $c_k$
+and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}, o^{gt,i_k}$ the ground truth motion for the example $i_k$.
 Note that we dropped the subscript $t$ to increase readability.
 Similar to the camera pose regression loss in \cite{PoseNet2},
 we use a variant of the $\ell_1$-loss to penalize the differences between ground truth and predicted
 rotation, translation (and pivot, in our case). We found that the smooth $\ell_1$-loss
 performs better in our case than the standard $\ell_1$-loss.
-For each RoI, we compute the total motion loss $L_{motion}^k$ from
-the individual loss terms as,
+We then compute the RoI motion loss as
 
 \begin{equation}
-L_{motion}^k =  l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o^{gt,i_k} + l_o^k,
+L_{motion} = \frac{1}{N_{RoI}^{fg}} \sum_k^{N_{RoI}} l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o^{gt,i_k} + l_o^k,
 \end{equation}
 where
 \begin{equation}
-l_{R}^k = \ell_1^* (R^{gt,i_k} - R^{k,c_k}),
+l_{R}^k = \ell_{reg} (R^{gt,i_k} - R^{k,c_k}),
 \end{equation}
 \begin{equation}
-l_{t}^k = \ell_1^* (t^{gt,i_k} - t^{k,c_k}),
+l_{t}^k = \ell_{reg} (t^{gt,i_k} - t^{k,c_k}),
 \end{equation}
 \begin{equation}
-l_{p}^k = \ell_1^* (p^{gt,i_k} - p^{k,c_k}).
+l_{p}^k = \ell_{reg} (p^{gt,i_k} - p^{k,c_k}).
 \end{equation}
 are the smooth $\ell_1$-loss terms for the predicted rotation, translation and pivot,
 respectively and
@@ -227,6 +232,11 @@ may not reliably predict exact identity motions for still objects, which is
 numerically more difficult to optimize than performing classification between
 moving and non-moving objects and discarding the regression for the non-moving
 ones.
+
+Now, our modified RoI loss is
+\begin{equation}
+L_{RoI} = L_{cls} + L_{box} + L_{mask} + L_{motion}.
+\end{equation}
 
 \paragraph{Camera motion supervision}
 We supervise the camera motion with ground truth analogously to the

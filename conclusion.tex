@@ -31,7 +31,10 @@ Although single-frame monocular depth prediction with deep networks was already 
 to some level of success,
 our two-frame input should allow the network to make use of epipolar
 geometry for making a more reliable depth estimate, at least when the camera
-is moving.
+is moving. We could also extend our method to stereo input data easily by concatenating
+all of the frames into the input image, which
+would however require using a different dataset for training, as Virtual KITTI does not
+provide stereo images.
 
 {
 \begin{table}[h]
@@ -48,7 +51,7 @@ C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfra
 \midrule
 \multicolumn{3}{c}{\textbf{Depth Network}}\\
 \midrule
-& From P$_2$: 3 $\times$ 3 conv, 1024 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
+& From P$_2$: 3 $\times$ 3 conv, 1024 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 1024 \\
 & 1 $\times$ 1 conv, 1 & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 1 \\
 & $\times$ 2 bilinear upsample & H $\times$ W $\times$ 1 \\
 \midrule

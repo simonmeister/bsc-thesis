@@ -1,22 +1,6 @@
 In this section, we will give a more detailed description of previous works
 we directly build on and other prerequisites.
 
-\subsection{Basic definitions}
-For regression, we define the smooth $\ell_1$-loss as
-\begin{equation}
-\ell_1^*(x) =
-\begin{cases}
-0.5x^2 &\text{if |x| < 1} \\
-|x| - 0.5 &\text{otherwise,}
-\end{cases}
-\end{equation}
-which provides a certain robustness to outliers and will be used
-frequently in the following chapters.
-For classification we define the cross-entropy loss as
-\begin{equation}
-\ell_{cls} =
-\end{equation}
-
 \subsection{Optical flow and scene flow}
 Let $I_1,I_2 : P \to \mathbb{R}^3$ be two temporally consecutive frames in a
 sequence of images.
@@ -48,7 +32,7 @@ performing upsampling of the compressed features and resulting in a encoder-deco
 The most popular deep networks of this kind for end-to-end optical flow prediction
 are variants of the FlowNet family \cite{FlowNet, FlowNet2},
 which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
-Table \ref{} shows the classical FlowNetS architecture for optical fow prediction.
+Table \ref{} shows the classical FlowNetS architecture for optical flow prediction.
 Note that the network itself is a rather generic autoencoder and is specialized for optical flow only through being trained
 with supervision from dense optical flow ground truth.
 Potentially, the same network could also be used for semantic segmentation if
@@ -80,7 +64,7 @@ shows the fundamental building block of ResNet-50.
 %\centering
 \begin{longtable}{llr}
 \toprule
-\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
  & input image & H $\times$ W $\times$ C \\
 \midrule
@@ -144,6 +128,7 @@ is only applied to the first block, but not to repeated blocks.
 \caption{
 ResNet \cite{ResNet} \enquote{bottleneck} convolutional block introduced to reduce computational
 complexity in deeper network variants, shown here with 256 input and output channels.
+Figure from \cite{ResNet}.
 }
 \label{figure:bottleneck}
 \end{figure}
@@ -164,14 +149,16 @@ The original R-CNN involves computing one forward pass of the CNN for each of th
 which is costly, as there is generally a large number of proposals.
 Fast R-CNN \cite{FastRCNN} significantly reduces computation by performing only a single forward pass with the whole image
 as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
-Then, fixed size crops are taken from the compressed feature map of the image,
+Then, fixed size (H $\times$ W) feature maps are extracted from the compressed feature map of the image,
 each corresponding to one of the proposal bounding boxes.
-The crops are collected into a batch and passed into a small Fast R-CNN
+The extracted per-RoI feature maps are collected into a batch and passed into a small Fast R-CNN
 \emph{head} network, which performs classification and prediction of refined boxes for all regions in one forward pass.
-This technique is called \emph{RoI pooling}. % TODO explain how RoI pooling converts full image box coords to crop ranges
-\todo{more details and figure}
+The extraction technique is called \emph{RoI pooling}. In RoI pooling, the RoI bounding box window over the full image features
+is divided into a H $\times$ W grid of cells. For each cell, the values of the underlying
+full image feature map are max-pooled to yield the output value at this cell.
 Thus, given region proposals, the per-region computation is reduced to a single pass through the complete network,
-speeding up the system by orders of magnitude. % TODO verify that
+speeding up the system by two orders of magnitude at inference time and one order of magnitude
+at training time.
 
 \paragraph{Faster R-CNN}
 After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
@@ -185,17 +172,21 @@ In the \emph{first stage}, one forward pass is performed on the \emph{backbone} 
 which is a deep feature encoder CNN with the original image as input.
 Next, the \emph{backbone} output features are passed into a small, fully convolutional \emph{Region Proposal Network (RPN)} head, which
 predicts objectness scores and regresses bounding boxes at each of its output positions.
-At any position, bounding boxes are predicted as offsets relative to a fixed set of \emph{anchors} with different
-aspect ratios.
-\todo{more details and figure}
-% TODO more about striding & computing the anchors?
-For each anchor at a given position, the objectness score tells us how likely this anchors is to correspond to a detection.
-The region proposals can then be obtained as the N highest scoring anchor boxes.
+At any of the $h \times w$ output positions of the RPN head,
+$N_a$ bounding boxes with their objectness scores are predicted as offsets relative to a fixed set of $N_a$ \emph{anchors} with different
+aspect ratios and scales. Thus, there are $N_a \times h \times w$ reference anchors in total.
+In Faster R-CNN, $N_a = 9$, with 3 scales corresponding
+to anchor boxes of areas of $\{128^2, 256^2, 512^2\}$ pixels and 3 aspect ratios,
+$\{1:2, 1:1, 2:1\}$. For the ResNet Faster R-CNN backbone, we generally have a stride of 16
+with respect to the input image at the RPN output (Table \ref{table:maskrcnn_resnet}).
 
-The \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
-and bounding box refinement for each region proposal. % TODO verify that it isn't modified
-As in Fast R-CNN, RoI pooling is used to crop one fixed size feature map for each of the region proposals.
+For each RPN prediction at a given position, the objectness score tells us how likely it is to correspond to a detection.
+The region proposals can then be obtained as the N highest scoring RPN predictions.
 
+Then, the \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
+and bounding box refinement for each of the region proposals, which are now obtained
+from the RPN instead of being pre-computed by some external algorithm.
+As in Fast R-CNN, RoI pooling is used to extract one fixed size feature map for each of the region proposals.
 
 \paragraph{Mask R-CNN}
 Faster R-CNN and the earlier systems detect and classify objects at bounding box granularity.
@@ -205,16 +196,23 @@ to that object. This problem is called \emph{instance segmentation}.
 Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentation by predicting
 fixed resolution instance masks within the bounding boxes of each detected object.
 This is done by simply extending the Faster R-CNN head with multiple convolutions, which
-compute a pixel-precise mask for each instance.
+compute a pixel-precise binary mask for each instance.
 The basic Mask R-CNN ResNet-50 architecture is shown in Table \ref{table:maskrcnn_resnet}.
-\todo{RoI Align}
+Note that the per-class masks logits are put through a sigmoid layer, and thus there is no
+comptetition between classes for the mask prediction branch.
+
+One important technical aspect of Mask R-CNN is the replacement of RoI pooling with
+bilinear sampling for extracting the RoI features, which is much more precise.
+%In RoI pooling, at the borders, the bins for max-pooling are not aligned with the actual pixel
+%boundary of the bounding box.
+
 
 {
 %\begin{table}[t]
 %\centering
 \begin{longtable}{llr}
 \toprule
-\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
@@ -226,27 +224,30 @@ C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ 
 & 1 $\times$ 1 conv, 6 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 6 \\
 & flatten & A $\times$ 6 \\
  & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
-ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores (Listing \ref{}) & N$_{RPN}$ $\times$ 6 \\
+ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores & N$_{RoI}$ $\times$ 6 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head}}\\
 \midrule
-& From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI pooling (\ref{}) & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
-R$_1$& ResNet-50 \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
+& From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI extraction & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
+R$_1$& ResNet-50 \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
 ave & average pool & N$_{RPN}$ $\times$ 2048 \\
 boxes& From ave: fully connected, 4 & N$_{RPN}$ $\times$ 4 \\
-logits& From ave: fully connected, N$_{cls}$ & N$_{RPN}$ $\times$ N$_{cls}$ \\
+& From ave: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
-& From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
-masks & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
+& From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
+masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
 
 \bottomrule
 
 \caption {
 Mask R-CNN \cite{MaskRCNN} ResNet-50 \cite{ResNet} architecture.
 Note that this is equivalent to the Faster R-CNN architecture if the mask
-head is left out.
+head is left out. In Mask R-CNN, bilinear sampling is used for RoI extraction,
+whereas Faster R-CNN used RoI pooling.
 }
 \label{table:maskrcnn_resnet}
 \end{longtable}
@@ -264,17 +265,35 @@ information for this object.
 As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enable features
 of an appropriate scale to be used, depending of the size of the bounding box.
 For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
-encoder. \todo{figure and more details}
-Now, during RoI pooling,
-\todo{show formula}.
+encoder by combining bilinear upsampled feature maps coming from the bottleneck
+with lateral skip connections from the encoder.
 The Mask R-CNN ResNet-50-FPN variant is shown in Table \ref{table:maskrcnn_resnet_fpn}.
+Instead of a single RPN head with anchors at 3 scales and 3 aspect ratios,
+the FPN variant has one RPN head after each of the pyramid levels P$_2$ ... P$_6$.
+At each output position of the resulting RPN pyramid, bounding boxes are predicted
+with respect to 3 anchor aspect ratios $\{1:2, 1:1, 2:1\}$ and a single scale.
+For P$_2$, P$_3$, P$_4$, P$_5$, P$_6$,
+the scale corresponds to anchor bounding boxes of areas $32^2, 64^2, 128^2, 256^2, 512^2$,
+respectively.
+Note that there is no need for multiple anchor scales per anchor position anymore,
+as the RPN heads themselves correspond to multiple scales.
+Now, in the RPN, higher resolution feature maps can be used for regressing smaller
+bounding boxes. For example, boxes of area close to $32^2$ are predicted using P$_2$,
+which has a stride of $4$ with respect to the input image.
+Most importantly, the RoI features can now be extracted at the pyramid level $P_j$ appropriate for a
+RoI bounding box with size $h \times w$,
+\begin{equation}
+j = \log_2(\sqrt{w \cdot h} / 224). %TODO complete
+\label{eq:level_assignment}
+\end{equation}
+
 
 {
 %\begin{table}[t]
 %\centering
 \begin{longtable}{llr}
 \toprule
-\textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
@@ -297,21 +316,23 @@ RPN$_i$& flatten & A$_i$ $\times$ 6 \\
 \midrule
 & From \{RPN$_2$ ... RPN$_6$\}: concatenate & A $\times$ 6 \\
 & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
-ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores (Listing \ref{}) & N$_{RPN}$ $\times$ 6 \\
+ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores & N$_{RoI}$ $\times$ 6 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head}}\\
 \midrule
-R$_2$ & From \{P$_2$ ... P$_6$\} with ROI$_{\mathrm{RPN}}$: FPN RoI crop & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
-& 2 $\times$ 2 max pool & N$_{RPN}$ $\times$ 7 $\times$ 7 $\times$ 256 \\
-F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RPN}$ $\times$ 1024 \\
-boxes& From F$_1$: fully connected, 4 & N$_{RPN}$ $\times$ 4 \\
-logits& From F$_1$: fully connected, N$_{cls}$ & N$_{RPN}$ $\times$ N$_{cls}$ \\
+R$_2$ & From \{P$_2$ ... P$_6$\} with ROI$_{\mathrm{RPN}}$: RoI extraction (Eq. \ref{eq:level_assignment}) & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 2 $\times$ 2 max pool & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 256 \\
+F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
+boxes& From F$_1$: fully connected, 4 & N$_{RoI}$ $\times$ 4 \\
+& From F$_1$: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
-& From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RPN}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
-& 2 $\times$ 2 deconv, 256, stride 2 & N$_{RPN}$ $\times$ 28 $\times$ 28 $\times$ 256 \\
-masks & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RPN}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
+& From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ 256 \\
+& 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
+masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
 \bottomrule
 
 \caption {
@@ -331,11 +352,26 @@ block (see Figure \ref{figure:fpn_block}).
 FPN block from \cite{FPN}.
 Lower resolution features coming from the bottleneck are bilinearly upsampled
 and added with higher resolution skip connections from the encoder.
+Figure from \cite{FPN}.
 }
 \label{figure:fpn_block}
 \end{figure}
 
 \subsection{Training Mask R-CNN}
+\paragraph{Loss definitions}
+For regression, we define the smooth $\ell_1$ regression loss as
+\begin{equation}
+\ell_{reg}(x) =
+\begin{cases}
+0.5x^2 &\text{if |x| < 1} \\
+|x| - 0.5 &\text{otherwise,}
+\end{cases}
+\end{equation}
+which provides a certain robustness to outliers and will be used
+frequently in the following chapters. For vector or tuple arguments, the sum of the componentwise scalar
+losses is computed.
+For classification we define $\ell_{cls}$ as the cross-entropy classification loss.
+
 \label{ssec:rcnn_techn}
 \paragraph{Bounding box regression}
 All bounding boxes predicted by the RoI head or RPN are estimated as offsets
@@ -345,7 +381,7 @@ predicted relative to the RPN output bounding boxes.
 Let $(x, y, w, h)$ be the top left coordinates, height and width of the bounding box
 to be predicted. Likewise, let $(x^*, y^*, w^*, h^*)$ be the ground truth bounding
 box and let $(x_r, y_r, w_r, h_r)$ be the reference bounding box.
-We then define the ground truth \emph{box encoding} $b_e^*$ as
+The ground truth \emph{box encoding} $b_e^*$ is then defined as
 \begin{equation}
 b_e^* = (b_x^*, b_y^*, b_w^*, b_h^*),
 \end{equation}
@@ -354,18 +390,18 @@ where
 b_x^* = \frac{x^* - x_r}{w_r},
 \end{equation*}
 \begin{equation*}
-b_y^* = \frac{y^* - y_r}{h_r}
+b_y^* = \frac{y^* - y_r}{h_r},
 \end{equation*}
 \begin{equation*}
-b_w^* = \log \left( \frac{w^*}{w_r} \right)
+b_w^* = \log \left( \frac{w^*}{w_r} \right),
 \end{equation*}
 \begin{equation*}
 b_h^* = \log \left( \frac{h^*}{h_r} \right),
 \end{equation*}
-which represents the regression target for the bounding box refinement
+which represents the regression target for the bounding box
 outputs of the network.
 
-In the same way, we define the predicted box encoding $b_e$ as
+Thus, for each bounding box prediction, the network predicts the box encoding $b_e$,
 \begin{equation}
 b_e = (b_x, b_y, b_w, b_h),
 \end{equation}
@@ -374,17 +410,17 @@ where
 b_x = \frac{x - x_r}{w_r},
 \end{equation*}
 \begin{equation*}
-b_y = \frac{y - y_r}{h_r}
+b_y = \frac{y - y_r}{h_r},
 \end{equation*}
 \begin{equation*}
-b_w = \log \left( \frac{w}{w_r} \right)
+b_w = \log \left( \frac{w}{w_r} \right),
 \end{equation*}
 \begin{equation*}
 b_h = \log \left( \frac{h}{h_r} \right).
 \end{equation*}
 
 At test time, to get from a predicted box encoding $b_e$ to the predicted bounding box $b$,
-we invert the definitions above,
+the definitions above can be inverted,
 \begin{equation}
 b = (x, y, w, h),
 \label{eq:pred_bounding_box}
@@ -402,12 +438,88 @@ w = \exp(b_w) \cdot w_r,
 \begin{equation*}
 h = \exp(b_h) \cdot h_r,
 \end{equation*}
-and thus obtain the bounding box as the reference bounding box adjusted by
+and thus the bounding box is obtained as the reference bounding box adjusted by
 the predicted relative offsets and scales.
 
-
 \paragraph{Supervision of the RPN}
-\todo{TODO}
+A positive RPN proposal is defined as one with a IoU of at least $0.7$ with
+a ground truth bounding box. For training the RPN, $N_{RPN} = 256$  positive and negative
+examples are randomly sampled from the set of all RPN proposals,
+with at most $50\%$ positive examples (if there are less positive examples,
+more negative examples are used instead).
+For examples selected in this way, a regression loss is computed between
+predicted and ground truth bounding box encoding, and a classification loss
+is computed for the predicted objectness.
+Specifically, let $s_i^* = 1$ if proposal $i$ is positive and $s_i^* = 0$ if
+it is negative, let $s_i$ be the predicted objectness score and $b_i$, $b_i^*$ the
+predicted and ground truth bounding box encodings.
+Then, the RPN loss is computed as
+\begin{equation}
+L_{RPN} = L_{obj} + L_{box}^{RPN},
+\end{equation}
+where
+\begin{equation}
+L_{obj} = \frac{1}{N_{RPN}} \sum_{i=1}^{N_{RPN}} \ell_{cls}(s_i, s_i^*),
+\end{equation}
+\begin{equation}
+L_{box}^{RPN} = \frac{1}{N_{RPN}^{pos}} \sum_{i=1}^{N_{RPN}} s_i^* \cdot \ell_{reg}(b_i^* - b_i),
+\end{equation}
+and
+\begin{equation}
+N_{RPN}^{pos} = \sum_{i=1}^{N_{pos}} s_i^*
+\end{equation}
+is the number of positive examples. Note that the bounding box loss is only
+active for positive examples, and that the classification loss is computed
+between the classes $\{\textrm{object},\textrm{non-object}\}$.
 
-\paragraph{Supervision of the RoI head}
-\todo{TODO}
+\paragraph{Supervision of the Mask R-CNN RoI head}
+For selecting RoIs to train the RoI head network, a foreground example
+is defined as one with a IoU of at least $0.5$ with
+a ground truth bounding box, and a background example is defined as
+one with a maximum IoU in $[0.1, 0.5)$.
+A total of 64 (without FPN) or 512 (with FPN) RoIs are sampled, with
+at most $25\%$ foreground examples.
+Now, let $c_i^*$ be the ground truth object class, where $c_i = 0$
+for background examples and $c_i \in \{1, ..., N_{cls}\}$ for foreground examples,
+and let $c_i$ be the class prediction.
+Now, for any foreground RoI, let $b_i^*$ be the ground truth bounding box encoding and $b_i$
+the predicted refined box encoding for class $c_i^*$.
+Additionally, for any foreground RoI, let $m_i$ be the predicted $m \times m$ mask for class $c_i^*$
+and $m_i^*$ the $m \times m$ mask target with values in $\{0,1\}$, where the mask target is cropped and resized from
+the binary ground truth mask using the RPN proposal bounding box.
+Then, the ROI loss is computed as
+\begin{equation}
+L_{RoI} = L_{cls} + L_{box} + L_{mask}
+\end{equation}
+where
+\begin{equation}
+L_{cls} = \frac{1}{N_{RoI}} \sum_{i=1}^{N_{RoI}} \ell_{cls}(c_i, c_i^*),
+\end{equation}
+is the average cross-entropy classification loss,
+\begin{equation}
+L_{box} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_{reg}(b_i^* - b_i)
+\end{equation}
+is the average smooth-$\ell_1$ bounding box regression loss,
+\begin{equation}
+L_{mask} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_{cls}(m_i,m_i^*)
+\end{equation}
+is the average binary cross-entropy mask loss,
+\begin{equation}
+N_{RoI}^{fg} = \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1]
+\end{equation}
+is the number of foreground examples, and
+\begin{equation}
+[c_i^* \geq 1] =
+\begin{cases}
+1 &\text{$c_i^* \geq 1$} \\
+0 &\text{otherwise}
+\end{cases}
+\end{equation}
+is the Iverson bracket indicator function. Thus, the bounding box and mask
+losses are only enabled for the foreground RoIs. Note that the bounding box and mask predictions
+for all classes other than $c_i^*$ are not penalized.
+
+\paragraph{Test-time operation}
+During inference, the 300 (without FPN) or 1000 (with FPN) highest scoring region proposals
+are selected and passed through the RoI head. After this, non-maximum supression
+is applied to predicted foreground RoIs.
