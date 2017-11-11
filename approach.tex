@@ -196,8 +196,8 @@ a still and moving camera.
 The most straightforward way to supervise the object motions is by using ground truth
 motions computed from ground truth object poses, which is in general
 only practical when training on synthetic datasets.
-Given the $k$-th foreground RoI, let $i_k$ be the index of the matched ground truth example with class $c_k$,
-let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}, o^{k,c_k}$ be the predicted motion for class $c_k$
+Given the $k$-th foreground RoI, let $i_k$ be the index of the matched ground truth example with class $c_k^*$,
+let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}, o^{k,c_k}$ be the predicted motion for class $c_k^*$
 and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}, o^{gt,i_k}$ the ground truth motion for the example $i_k$.
 Note that we dropped the subscript $t$ to increase readability.
 Similar to the camera pose regression loss in \cite{PoseNet2},
@@ -231,7 +231,8 @@ $o^{gt,i_k} = 0$, which do not move between $t$ and $t+1$. We found that the net
 may not reliably predict exact identity motions for still objects, which is
 numerically more difficult to optimize than performing classification between
 moving and non-moving objects and discarding the regression for the non-moving
-ones.
+ones. Also, analogous to masks and bounding boxes, the estimates for classes
+other than $c_k^*$ are not penalized.
 
 Now, our modified RoI loss is
 \begin{equation}

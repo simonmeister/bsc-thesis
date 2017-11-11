@@ -600,7 +600,16 @@ is the Iverson bracket indicator function. Thus, the bounding box and mask
 losses are only enabled for the foreground RoIs. Note that the bounding box and mask predictions
 for all classes other than $c_i^*$ are not penalized.
 
-\paragraph{Test-time operation}
+\paragraph{Inference}
 During inference, the 300 (without FPN) or 1000 (with FPN) highest scoring region proposals
-are selected and passed through the RoI head. After this, non-maximum supression
-is applied to predicted foreground RoIs.
+from the RPN are selected. The corresponding features are extracted from the backbone, as during training, by using the RPN bounding boxes,
+and passed through the RoI bounding box refinement and classification heads
+(but not through the mask head).
+After this, non-maximum supression (NMS) is applied to predicted RoIs with predicted non-background class,
+with a maximum IoU of 0.7.
+Then, the mask head is applied to the 100 highest scoring (after NMS) refined boxes,
+after again extracting the corresponding features.
+Thus, during inference, the features for the mask head are extracted using the refined
+bounding boxes, instead of the RPN bounding boxes. This is important for not
+introducing any misalignment, as we want to create the instance mask inside of the
+more precise, refined detection bounding boxes.
