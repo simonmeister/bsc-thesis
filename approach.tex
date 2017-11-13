@@ -39,13 +39,13 @@ $o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
 \midrule
-& From M$_0$: flatten & N$_{RPN}$ $\times$ 7 $\cdot$ 7 $\cdot$ 256 \\
-T$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RPN}$ $\times$ 1024 \\
-$\forall k: R_t^k$ & From T$_1$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: t_t^k$ & From T$_1$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: p_t^k$ & From T$_1$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-& From T$_1$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
-$\forall k: o_t^k$ & softmax, 2 & N$_{RPN}$ $\times$ 2 \\
+& From M$_0$: flatten & N$_{RoI}$ $\times$ 7 $\cdot$ 7 $\cdot$ 256 \\
+T$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
+$\forall k: R_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: t_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: p_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+& From T$_1$: fully connected, 2 & N$_{RoI}$ $\times$ 2 \\
+$\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 
 \bottomrule
 \end{tabular}
@@ -88,13 +88,13 @@ $o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
 \midrule
-& From M$_1$: flatten & N$_{RPN}$ $\times$ 14 $\cdot$ 14 $\cdot$ 256 \\
-T$_3$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RPN}$ $\times$ 1024 \\
-$\forall k: R_t^k$ & From T$_3$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: t_t^k$ & From T$_3$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-$\forall k: p_t^k$ & From T$_3$: fully connected, 3 & N$_{RPN}$ $\times$ 3 \\
-& From T$_2$: fully connected, 2 & N$_{RPN}$ $\times$ 2 \\
-$\forall k: o_t^k$ & softmax, 2 & N$_{RPN}$ $\times$ 2 \\
+& From M$_1$: flatten & N$_{RoI}$ $\times$ 14 $\cdot$ 14 $\cdot$ 256 \\
+T$_3$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
+$\forall k: R_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: t_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: p_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+& From T$_2$: fully connected, 2 & N$_{RoI}$ $\times$ 2 \\
+$\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 
 \bottomrule
 \end{tabular}
@@ -324,6 +324,11 @@ loss could benefit motion regression by removing any loss balancing issues betwe
 rotation, translation and pivot terms \cite{PoseNet2},
 which can make it interesting even when 3D motion ground truth is available.
 
+\subsection{Inference}
+\label{ssec:inference}
+During inference, we proceed analogously to Mask R-CNN.
+In the same way as the RoI mask head, at test time, we compute the RoI motion head
+from the features extracted with refined bounding boxes.
 
 \subsection{Dense flow from motion}
 \label{ssec:postprocessing}
