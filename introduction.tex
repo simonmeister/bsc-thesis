@@ -40,7 +40,7 @@ the location and 3D motion of each object instance relative to the camera
 Recently, SfM-Net \cite{SfmNet} introduced an end-to-end deep learning approach for predicting depth
 and dense optical flow in monocular image sequences based on estimating the 3D motion of individual objects and the camera.
 SfM-Net predicts a batch of binary full image masks specyfing the object memberships of individual pixels with a standard encoder-decoder
-network for pixel-wise prediction. A fully connected network branching off the encoder predicts a 3D motion for each object.
+network for pixel-wise prediction. A fully-connected network branching off the encoder predicts a 3D motion for each object.
 However, due to the fixed number of objects masks, the system can only predict a small number of motions and
 often fails to properly segment the pixels into the correct masks or assigns background pixels to object motions (Figure \ref{figure:sfmnet_kitti}).
 \begin{figure}[t]
@@ -95,8 +95,8 @@ manageable pieces.
   \includegraphics[width=\textwidth]{figures/net_intro}
 \caption{
 Overview of our network based on Mask R-CNN. For each RoI, we predict the instance motion
-in parallel to the class, bounding box and mask. We branch off a fully connected
-layer for predicting the camera motion from the bottleneck.
+in parallel to the class, bounding box and mask. We branch off a additionaly
+small network for predicting the camera motion from the bottleneck.
 }
 \label{figure:net_intro}
 \end{figure}

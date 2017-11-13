@@ -22,7 +22,7 @@ Deep convolutional neural network (CNN) architectures
 became widely popular through numerous successes in classification and recognition tasks.
 The general structure of a CNN consists of a convolutional encoder, which
 learns a spatially compressed, wide (in the number of channels) representation of the input image,
-and a fully connected prediction network on top of the encoder.
+and a fully-connected prediction network on top of the encoder.
 
 The compressed representations learned by CNNs of these categories do not, however, allow
 for prediction of high-resolution output, as spatial detail is lost through sequential applications
@@ -190,6 +190,7 @@ Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottlenec
 block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
 the first conv operation in the block has a stride of 2. Note that the stride
 is only applied to the first block, but not to repeated blocks.
+Batch normalization \cite{BN} is used after every convolution.
 }
 \label{table:resnet}
 \end{longtable}
@@ -317,7 +318,7 @@ classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
-& From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+M$_0$ & From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
 & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
 masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
 
@@ -410,7 +411,7 @@ classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
-& From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+M$_1$ & From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
 & 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ 256 \\
 & 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
 masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\

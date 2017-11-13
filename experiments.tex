@@ -41,9 +41,6 @@ to be used as validation set. From the remaining 2026 examples,
 we remove a small number of examples without object instances and use the resulting
 data as training set.
 
-\paragraph{KITTI 2015}
-\todo{add this if adding KITTI 2015 evaluations}
-
 \paragraph{Motion ground truth from 3D poses and camera extrinsics}
 We will now describe how we use the ground truth poses and camera matrices from Virtual KITTI to
 compute instance and camera motion ground truth.
@@ -161,7 +158,20 @@ As learning rate we use $0.25 \cdot 10^{-2}$ for the
 first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 
 \paragraph{R-CNN training parameters}
-\todo{add this}
+For training the RPN and RoI heads and during inference,
+we use the exact same number of proposals and RoIs as Mask R-CNN in
+the ResNet-50 and ResNet-50-FPN variants, respectively.
+
+\paragraph{Initialization}
+Following the pre-existing TensorFlow implementation of Faster R-CNN,
+we initialize all hidden layers with He initialization \cite{He}.
+For the fully-connected camera and instance motion output layers,
+we use a truncated normal initializer with a standard
+deviation of $0.0001$ and zero mean, truncated at two standard deviations.
+Note that a larger weight prevented the
+angle sine estimates from properly converging to the very small values they
+are in general expected to output.
+
 
 \subsection{Experiments on Virtual KITTI}
 \label{ssec:vkitti}
@@ -221,7 +231,3 @@ Figure \ref{figure:vkitti} visualizes instance segmentation and optical flow
 results on the Virtual KITTI validation set.
 Table \ref{table:vkitti} compares the performance of different network variants on the Virtual KITTI validation
 set.
-
-\subsection{Evaluation on KITTI 2015}
-\todo{if there is enough time,
-add evaluation (table + visualizations) of instance segmentation and composed optical flow on RGB-D frames from KITTI 2015 train}
