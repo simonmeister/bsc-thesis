@@ -324,8 +324,15 @@ loss could benefit motion regression by removing any loss balancing issues betwe
 rotation, translation and pivot terms \cite{PoseNet2},
 which can make it interesting even when 3D motion ground truth is available.
 
-\subsection{Inference}
-\label{ssec:inference}
+\subsection{Training and Inference}
+\label{ssec:training_inference}
+\paragraph{Training}
+We train the Motion R-CNN RPN and RoI heads in the exact same way as described for Mask R-CNN.
+We additionally compute the camera and instance motion losses and concatenate additional
+information into the network input, but otherwise do not modify the training procedure
+and sample proposals and RoIs in the exact same way.
+
+\paragraph{Inference}
 During inference, we proceed analogously to Mask R-CNN.
 In the same way as the RoI mask head, at test time, we compute the RoI motion head
 from the features extracted with refined bounding boxes.

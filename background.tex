@@ -569,6 +569,8 @@ the predicted refined box encoding for class $c_i^*$.
 Additionally, for any foreground RoI, let $m_i$ be the predicted $m \times m$ mask for class $c_i^*$
 and $m_i^*$ the $m \times m$ mask target with values in $\{0,1\}$, where the mask target is cropped and resized from
 the binary ground truth mask using the RPN proposal bounding box.
+In our implementation, we use nearest neighbour resizing for resizing the mask
+targets.
 Then, the ROI loss is computed as
 \begin{equation}
 L_{RoI} = L_{cls} + L_{box} + L_{mask}
