@@ -209,7 +209,7 @@ Then, in both, the ResNet-50 and ResNet-50-FPN variant (Table \ref{table:motionr
 convolution to the $C_5$ features to reduce the number of inputs to the following
 fully-connected layers.
 Instead of averaging, we use bilinear resizing to bring the convolutional features
-to a fixed size without losing spatial information,
+to a fixed size without losing all spatial information,
 flatten them, and finally apply multiple fully-connected layers to compute the
 camera motion prediction.
 
@@ -217,19 +217,13 @@ camera motion prediction.
 In both of our network variants
 (Tables \ref{table:motionrcnn_resnet} and \ref{table:motionrcnn_resnet_fpn}),
 we compute the fully-connected network for motion prediction from the
-convolutional mask features, branching off right before the mask upsampling
-deconvolution. The intuition behind this is that the final mask features contain
-high resolution, spatial information about which positions belong to the object and
-which belong to the background. Thus, we allow the motion estimation network to
-make use of this data and ideally integrate the motion (image matching) information
-localized within the object, but not that belonging to the background,
-into the final object motion estimate.
-
+flattened RoI features, which are also the basis for classification and
+bounding box refinement.
 
 \subsection{Supervision}
 \label{ssec:supervision}
 
-\paragraph{Per-RoI supervision with 3D motion ground truth}
+\paragraph{Per-RoI instance motion supervision with 3D instance motion ground truth}
 The most straightforward way to supervise the object motions is by using ground truth
 motions computed from ground truth object poses, which is in general
 only practical when training on synthetic datasets.
@@ -284,14 +278,16 @@ If the ground truth shows that the camera is not moving, we again do not
 penalize rotation and translation. For the camera, the loss is reduced to the
 classification term in this case.
 
-\paragraph{Per-RoI supervision \emph{without} 3D motion ground truth}
+\paragraph{Per-RoI instance motion supervision \emph{without} 3D instance motion ground truth}
 A more general way to supervise the object motions is a re-projection
 loss similar to the unsupervised loss in SfM-Net \cite{SfmNet},
 which we can apply to coordinates within the object bounding boxes,
 and which does not require ground truth 3D object motions.
 
-In this case, for any RoI, we generate a uniform 2D grid of points inside the RPN proposal bounding box
-with the same resolution as the predicted mask. We use the same bounding box
+In this case, for any RoI,
+we generate a uniform $m \times m$ 2D grid of points inside the RPN proposal bounding box
+with the same resolution as the predicted mask.
+We use the same bounding box
 to crop the corresponding region from the dense, full image depth map
 and bilinearly resize the depth crop to the same resolution as the mask and point
 grid.
@@ -301,11 +297,18 @@ apply the RoI's predicted motion, masked by the predicted mask.
 Then, we apply the camera motion to the points, project them back to 2D
 and finally compute the optical flow at each point as the difference of the initial and re-projected 2D grids.
 Note that we batch this computation over all RoIs, so that we only perform
-it once per forward pass. The mathematical details are analogous to the
-dense, full image flow computation in the following subsection and will not
-be repeated here. \todo{probably better to add the mathematical details, as it may otherwise be confusing at some points}
+it once per forward pass. Figure \ref{figure:flow_loss} illustrates the approach.
+The mathematical details for the 3D transformations and mappings between 2D and 3D are analogous to the
+dense, full image flow composition in the following subsection, so we will not
+include them here. The only differences are that there is no sum over objects during
+the point transformation based on instance motion, as we consider the single object
+corresponding to an RoI in isolation, and that the masks are not resized to the
+full image resolution, as
+the depth crops and 2D point grid are at the same resolution as the predicted
+$m \times m$ mask.
 
-For each RoI, we can now penalize the optical flow grid to supervise the object motion.
+For each RoI, we can now compute $L_{RoI}$ and thus supervise the object motion
+by penalizing the $m \times m$ optical flow grid.
 If there is optical flow ground truth available, we can use the RoI bounding box to
 crop and resize a region from the ground truth optical flow to match the RoI's
 optical flow grid and penalize the difference between the flow grids with an $\ell_1$-loss.
@@ -336,6 +339,17 @@ and sample proposals and RoIs in the exact same way.
 During inference, we proceed analogously to Mask R-CNN.
 In the same way as the RoI mask head, at test time, we compute the RoI motion head
 from the features extracted with refined bounding boxes.
+Additionally, we use the \emph{predicted} binarized masks for each RoI to mask the
+extracted RoI features before passing them into the motion head.
+The intuition behind that is that we want to mask out (set to zero) any positions in the
+extracted feature window which belong to the background. Then, the RoI motion
+head aggregates the motion (image matching) information from the backbone
+over positions localized within the object only, but not over positions belonging
+to the background, which should not influence the final object motion estimate.
+
+Again, as for masks and bounding boxes in Mask R-CNN,
+the predicted output object motions are the predicted object motions for the
+highest scoring class.
 
 \subsection{Dense flow from motion}
 \label{ssec:postprocessing}
@@ -360,17 +374,21 @@ For now, the depth map is always assumed to come from ground truth.
 Given $k$ detections with predicted motions as above, we transform all points within the bounding
 box of a detected object according to the predicted motion of the object.
 
-We first define the \emph{full image} mask $m_t^k$ for object k,
-which can be computed from the predicted box mask $m_k^b$ by bilinearly resizing
-$m_k^b$ to the width and height of the predicted bounding box and then copying the values
-of the resized mask into a full resolution all-zeros map, starting at the top-right coordinate of the predicted bounding box.
-Then,
+We first define the \emph{full image} mask $M_t^k$ for object k,
+which can be computed from the predicted box mask $m_t^k$ by bilinearly resizing
+$m_t^k$ to the width and height of the predicted bounding box and then copying the values
+of the resized mask into a full resolution mask initialized with zeros,
+starting at the top-left coordinate of the predicted bounding box.
+Then, given the predicted motions $(R_t^k, t_t^k)$ as well as $p_t^k$ for all objects,
 \begin{equation}
 P'_{t+1} =
-P_t + \sum_1^{k} m_t^k\left\{ R_t^k \cdot (P_t - p_t^k) + p_t^k + t_t^k - P_t \right\}
+P_t + \sum_1^{k} M_t^k\left\{ R_t^k \cdot (P_t - p_t^k) + p_t^k + t_t^k - P_t \right\}
 \end{equation}
+These motion predictions are understood to have already taken into account
+the classification into moving and still objects,
+and we thus, as described above, have identity motions for all objects with $o_t^k = 0$.
 
-Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} \in \mathbf{SE}(3)$, % TODO introduce!
+Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} \in \mathbf{SE}(3)$,
 
 \begin{equation}
 \begin{pmatrix}
@@ -380,8 +398,8 @@ X_{t+1} \\ Y_{t+1} \\ Z_{t+1}
 \end{equation}.
 
 Note that in our experiments, we either use the ground truth camera motion to focus
-on the object motion predictions or the predicted camera motion to predict complete
-motion. We will always state which variant we use in the experimental section.
+on evaluating the object motion predictions or the predicted camera motion to evaluate
+the complete motion estimates. We will always state which variant we use in the experimental section.
 
 Finally, we project the transformed 3D points at time $t+1$ to pixel coordinates again,
 \begin{equation}

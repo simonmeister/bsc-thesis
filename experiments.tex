@@ -5,11 +5,11 @@ computations. To make our code easy to extend and flexible, we build on
 the TensorFlow Object detection API \cite{TensorFlowObjectDetection}, which provides a Faster R-CNN baseline
 implementation.
 On top of this, we implemented Mask R-CNN and the Feature Pyramid Network (FPN)
-as well as extensions for motion estimation and related evaluations
+as well as the Motion R-CNN extensions for motion estimation and related evaluations
 and postprocessings. In addition, we generated all ground truth for
 Motion R-CNN in the form of TFRecords from the raw Virtual KITTI
 data to enable fast loading during training.
-Note that for RoI extraction and cropping operations,
+Note that for RoI extraction and bilinear crop and resize operations,
 we use the \texttt{tf.crop\_and\_resize} TensorFlow function with
 interpolation set to bilinear.
 
@@ -147,8 +147,14 @@ fn = \sum_k [o^{k,c_k} = 0 \land o^{gt,i_k} = 1].
 Analogously, we define error metrics $E_{R}^{cam}$ and $E_{t}^{cam}$ for
 predicted camera motions.
 
-\subsection{Training Setup}
+\subsection{Virtual KITTI training setup}
 \label{ssec:setup}
+
+For our initial experiments, we concatenate both RGB frames as
+well as the XYZ coordinates for both frames as input to the networks.
+We train both, the Motion R-CNN ResNet-50 and ResNet-50-FPN variants.
+
+\paragraph{Training schedule}
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
 We train on a single Titan X (Pascal) for a total of 192K iterations on the
 Virtual KITTI training set.
@@ -172,8 +178,7 @@ Note that a larger weight prevented the
 angle sine estimates from properly converging to the very small values they
 are in general expected to output.
 
-
-\subsection{Experiments on Virtual KITTI}
+\subsection{Virtual KITTI evaluation}
 \label{ssec:vkitti}
 
 \begin{figure}[t]
@@ -227,7 +232,8 @@ only impacted by the predicted 3D object motions.
 \label{table:vkitti}
 \end{table}
 }
-Figure \ref{figure:vkitti} visualizes instance segmentation and optical flow
+
+In Figure \ref{figure:vkitti}, we visualize instance segmentation and optical flow
 results on the Virtual KITTI validation set.
-Table \ref{table:vkitti} compares the performance of different network variants on the Virtual KITTI validation
-set.
+In Table \ref{table:vkitti}, we compare the performance of different network variants
+on the Virtual KITTI validation set.
