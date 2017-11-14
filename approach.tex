@@ -196,7 +196,7 @@ predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the sam
 Again, we predict a softmax score $o_t^{cam}$ for differentiating between
 a still and moving camera.
 
-\subsection{Motion R-CNN network design}
+\subsection{Network design}
 
 \label{ssec:design}
 \paragraph{Camera motion network}
@@ -327,7 +327,7 @@ loss could benefit motion regression by removing any loss balancing issues betwe
 rotation, translation and pivot terms \cite{PoseNet2},
 which can make it interesting even when 3D motion ground truth is available.
 
-\subsection{Training and Inference}
+\subsection{Training and inference}
 \label{ssec:training_inference}
 \paragraph{Training}
 We train the Motion R-CNN RPN and RoI heads in the exact same way as described for Mask R-CNN.

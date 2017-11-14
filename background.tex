@@ -16,7 +16,7 @@ requires estimating depth for each pixel. Generally, stereo input is used for sc
 to estimate disparity-based depth, however monocular depth estimation with deep networks is becoming
 popular \cite{DeeperDepth}.
 
-\subsection{Convolutional neural networks for dense motion estimation}
+\subsection{CNNs for dense motion estimation}
 Deep convolutional neural network (CNN) architectures
 \cite{ImageNetCNN, VGGNet, ResNet}
 became widely popular through numerous successes in classification and recognition tasks.
@@ -210,7 +210,7 @@ Figure taken from \cite{ResNet}.
 \label{figure:bottleneck}
 \end{figure}
 
-\subsection{Region-based convolutional networks}
+\subsection{Region-based CNNs}
 \label{ssec:rcnn}
 We now give an overview of region-based convolutional networks, which are currently by far the
 most popular deep networks for object detection, and have recently also been applied to instance segmentation.
@@ -439,7 +439,7 @@ Figure taken from \cite{FPN}.
 \label{figure:fpn_block}
 \end{figure}
 
-\subsection{Mask R-CNN: Training and Inference}
+\subsection{Mask R-CNN: Training and inference}
 \paragraph{Loss definitions}
 For regression, we define the smooth $\ell_1$ regression loss as
 \begin{equation}
