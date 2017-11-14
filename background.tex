@@ -205,7 +205,7 @@ Batch normalization \cite{BN} is used after every convolution.
 \caption{
 ResNet \cite{ResNet} \enquote{bottleneck} convolutional block introduced to reduce computational
 complexity in deeper network variants, shown here with 256 input and output channels.
-Figure from \cite{ResNet}.
+Figure taken from \cite{ResNet}.
 }
 \label{figure:bottleneck}
 \end{figure}
@@ -278,10 +278,10 @@ The basic Mask R-CNN ResNet-50 architecture is shown in Table \ref{table:maskrcn
 Note that the per-class masks logits are put through a sigmoid layer, and thus there is no
 comptetition between classes for the mask prediction branch.
 
-One important technical aspect of Mask R-CNN is the replacement of RoI pooling with
+One important additional technical aspect of Mask R-CNN is the replacement of RoI pooling with
 bilinear sampling for extracting the RoI features, which is much more precise.
-%In RoI pooling, at the borders, the bins for max-pooling are not aligned with the actual pixel
-%boundary of the bounding box.
+In the original RoI pooling from Fast R-CNN, the bins for max-pooling are not aligned with the actual pixel
+boundary of the bounding box, and thus some detail is lost.
 
 
 {
@@ -434,7 +434,7 @@ block (see Figure \ref{figure:fpn_block}).
 FPN block from \cite{FPN}.
 Lower resolution features coming from the bottleneck are bilinearly upsampled
 and added with higher resolution skip connections from the encoder.
-Figure from \cite{FPN}.
+Figure taken from \cite{FPN}.
 }
 \label{figure:fpn_block}
 \end{figure}
