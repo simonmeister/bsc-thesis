@@ -39,8 +39,8 @@ $o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
 \midrule
-& From M$_0$: flatten & N$_{RoI}$ $\times$ 7 $\cdot$ 7 $\cdot$ 256 \\
-T$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
+%& From M$_0$: flatten & N$_{RoI}$ $\times$ 7 $\cdot$ 7 $\cdot$ 256 \\
+T$_1$ & From ave: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
 $\forall k: R_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
 $\forall k: t_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
 $\forall k: p_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
@@ -88,8 +88,8 @@ $o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Motions}}\\
 \midrule
-& From M$_1$: flatten & N$_{RoI}$ $\times$ 14 $\cdot$ 14 $\cdot$ 256 \\
-T$_3$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
+%& From M$_1$: flatten & N$_{RoI}$ $\times$ 14 $\cdot$ 14 $\cdot$ 256 \\
+T$_3$ & From F$_1$: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
 $\forall k: R_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
 $\forall k: t_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
 $\forall k: p_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
@@ -284,7 +284,7 @@ classification term in this case.
   \includegraphics[width=\textwidth]{figures/flow_loss}
 \caption{
 Overview of the alternative, optical flow based loss for instance motion
-supervision without 3D instance motion ground truth. 
+supervision without 3D instance motion ground truth.
 In contrast to SfM-Net, where a single optical flow field is
 composed and penalized to supervise the motion prediction, our loss considers
 the motion of all objects in isolation and composes a batch of flow windows

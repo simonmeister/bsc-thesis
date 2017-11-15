@@ -13,8 +13,9 @@ Optical flow can be regarded as two-dimensional motion estimation.
 
 Scene flow is the generalization of optical flow to 3-dimensional space and
 requires estimating depth for each pixel. Generally, stereo input is used for scene flow
-to estimate disparity-based depth, however monocular depth estimation with deep networks is becoming
-popular \cite{DeeperDepth}.
+to estimate disparity-based depth, however monocular depth estimation with deep networks is also becoming
+popular \cite{DeeperDepth, UnsupPoseDepth}.
+In this preliminary work, we will assume per-pixel depth to be given.
 
 \subsection{CNNs for dense motion estimation}
 Deep convolutional neural network (CNN) architectures
@@ -80,7 +81,8 @@ Still, FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn t
 given just two consecutive frames as input and a large enough receptive field at the outputs to cover the displacements.
 Note that the maximum displacement that can be correctly estimated depends on the number of 2D convolution strides or pooling
 operations in the encoder.
-Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
+Recently, other, similarly generic,
+encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
 \subsection{SfM-Net}
 Here, we will describe the SfM-Net \cite{SfmNet} architecture in some more detail \todo{finish}.
@@ -188,7 +190,7 @@ $\begin{bmatrix}
 ResNet-50 \cite{ResNet} architecture.
 Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
 block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
-the first conv operation in the block has a stride of 2. Note that the stride
+the first convolution operation in the block has a stride of 2. Note that the stride
 is only applied to the first block, but not to repeated blocks.
 Batch normalization \cite{BN} is used after every convolution.
 }
@@ -368,7 +370,7 @@ j = 2 + j_a,
 \end{equation}
 where
 \begin{equation}
-j_a = \mathrm{clip}\left(\left[\log_2\left(\frac{w \cdot h}{s_0}\right)\right], 0, 4\right)
+j_a = \mathrm{clip}\left(\left[\log_2\left(\frac{\sqrt{w \cdot h}}{s_0}\right)\right], 0, 4\right)
 \label{eq:level_assignment}
 \end{equation}
 is the index (from small anchor to large anchor) of the corresponding anchor box and
@@ -456,7 +458,7 @@ Figure taken from \cite{FPN}.
 
 \subsection{Mask R-CNN: Training and inference}
 \paragraph{Loss definitions}
-For regression, we define the smooth $\ell_1$ regression loss as
+For regression, we define the smooth-$\ell_1$ regression loss as
 \begin{equation}
 \ell_{reg}(x) =
 \begin{cases}
@@ -581,7 +583,7 @@ at most $25\%$ foreground examples.
 Now, let $c_i^*$ be the ground truth object class, where $c_i = 0$
 for background examples and $c_i \in \{1, ..., N_{cls}\}$ for foreground examples,
 and let $c_i$ be the class prediction.
-Now, for any foreground RoI, let $b_i^*$ be the ground truth bounding box encoding and $b_i$
+Then, for any foreground RoI, let $b_i^*$ be the ground truth bounding box encoding and $b_i$
 the predicted refined box encoding for class $c_i^*$.
 Additionally, for any foreground RoI, let $m_i$ be the predicted $m \times m$ mask for class $c_i^*$
 and $m_i^*$ the $m \times m$ mask target with values in $\{0,1\}$, where the mask target is cropped and resized from
