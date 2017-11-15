@@ -345,7 +345,7 @@ might have lost too much spatial information to properly predict the exact bound
 box and a high resolution mask. Likewise, for very big objects, the fixed size
 RoI window might be too small to cover the region of the feature map containing
 information for this object.
-As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enable features
+As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enables features
 of an appropriate scale to be used, depending of the size of the bounding box.
 For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
 encoder by combining bilinear upsampled feature maps coming from the bottleneck
