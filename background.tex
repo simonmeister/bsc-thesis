@@ -59,7 +59,7 @@ Table \ref{table:flownets} shows the classical FlowNetS architecture for optical
 & 5 $\times$ 5 deconv, 512, stride 2 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
 \multicolumn{3}{c}{...}\\
 \midrule
-flow & $\times$ 2 bilinear upsample & $\tfrac{1}{1}$ H $\times$ $\tfrac{1}{1}$ W $\times$ 2 \\
+flow & $\times$ 2 bilinear upsample & H $\times$ W $\times$ 2 \\
 \bottomrule
 
 \caption {
@@ -78,7 +78,7 @@ Potentially, the same network could also be used for semantic segmentation if
 the number of output final and intermediate output channels was adapted from two to the number of classes.\
 Still, FlowNetS demonstrates that a generic deep encoder-decoder CNN can learn to perform image matching arguably well,
 given just two consecutive frames as input and a large enough receptive field at the outputs to cover the displacements.
-Note that the maximum displacement that can be correctly estimated only depends on the number of 2D strides or pooling
+Note that the maximum displacement that can be correctly estimated depends on the number of 2D convolution strides or pooling
 operations in the encoder.
 Recently, other encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
@@ -364,9 +364,24 @@ which has a stride of $4$ with respect to the input image.
 Most importantly, the RoI features can now be extracted at the pyramid level $P_j$ appropriate for a
 RoI bounding box with size $h \times w$,
 \begin{equation}
-j = \log_2(\sqrt{w \cdot h} / 224). \todo{complete}
+j = 2 + j_a,
+\end{equation}
+where
+\begin{equation}
+j_a = \mathrm{clip}\left(\left[\log_2\left(\frac{w \cdot h}{s_0}\right)\right], 0, 4\right)
 \label{eq:level_assignment}
 \end{equation}
+is the index (from small anchor to large anchor) of the corresponding anchor box and
+\begin{equation}
+s_0 = 256 \cdot 0.125
+\label{eq:level_assignment}
+\end{equation}
+is the scale of the smallest anchor boxes.
+This formula is slightly different from the one used in the FPN paper,
+as we want to assign the bounding boxes which are at the same scale
+as some anchor to the exact same pyramid level from which the RPN of this
+anchor is computed. Now, for example, the smallest boxes are cropped from $P_2$,
+which is the highest resolution feature map.
 
 
 {
@@ -453,6 +468,8 @@ which provides a certain robustness to outliers and will be used
 frequently in the following chapters. For vector or tuple arguments, the sum of the componentwise scalar
 losses is computed.
 For classification we define $\ell_{cls}$ as the cross-entropy classification loss.
+
+\todo{formally define cross-entropy losses?}
 
 \label{ssec:rcnn_techn}
 \paragraph{Bounding box regression}

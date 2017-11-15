@@ -57,6 +57,13 @@ Figure taken from \cite{SfmNet}.
 Thus, this approach is very unlikely to scale to dynamic scenes with a potentially
 large number of diverse objects due to the inflexible nature of their instance segmentation technique.
 
+Still, we think that the general idea of estimating object-level motion with
+end-to-end deep networks instead
+of directly predicting a dense flow field, as is common in current end-to-end
+deep learning approaches to motion estimation, may significantly benefit motion
+estimation by structuring the problem, creating physical constraints and reducing
+the dimensionality of the estimate.
+
 A scalable approach to instance segmentation based on region-based convolutional networks
 was recently introduced with Mask R-CNN \cite{MaskRCNN}, which inherits the ability to detect
 a large number of objects from a large number of classes at once from Faster R-CNN
@@ -71,10 +78,10 @@ on Cityscapes \cite{Cityscapes}. Figure taken from \cite{MaskRCNN}.
 }
 \label{figure:maskrcnn_cs}
 \end{figure}
-
-We propose \emph{Motion R-CNN}, which combines the scalable instance segmentation capabilities of
-Mask R-CNN with the end-to-end 3D motion estimation approach introduced with SfM-Net.
-For this, we naturally integrate 3D motion prediction for individual objects into the per-RoI R-CNN head
+Inspired by the accurate segmentation results of Mask R-CNN,
+we thus propose \emph{Motion R-CNN}, which combines the scalable instance segmentation capabilities of
+Mask R-CNN with the end-to-end instance-level 3D motion estimation approach introduced with SfM-Net.
+For this, we naturally integrate 3D motion prediction for individual objects into the per-RoI Mask R-CNN head
 in parallel to classification, bounding box refinement and mask prediction.
 For each RoI, we predict a single 3D rigid object motion together with the object
 pivot in camera space in this way.
@@ -86,8 +93,8 @@ as to the number or variety of object instances (Figure \ref{figure:net_intro}).
 
 Eventually, we want to extend our method to include depth prediction,
 yielding the first end-to-end deep network to perform 3D scene flow estimation
-in a principled way from considering individual objects.
-For now, we will work with RGB-D frames to break down the problem into
+in a principled way from the consideration of individual objects.
+For now, we will assume that RGB-D frames are given to break down the problem into
 manageable pieces.
 
 \begin{figure}[t]
@@ -95,7 +102,7 @@ manageable pieces.
   \includegraphics[width=\textwidth]{figures/net_intro}
 \caption{
 Overview of our network based on Mask R-CNN. For each RoI, we predict the instance motion
-in parallel to the class, bounding box and mask. We branch off a additionaly
+in parallel to the class, bounding box and mask. Additionally, we branch off a
 small network for predicting the camera motion from the bottleneck.
 }
 \label{figure:net_intro}
@@ -104,8 +111,8 @@ small network for predicting the camera motion from the bottleneck.
 \subsection{Related work}
 
 In the following, we will refer to systems which use deep networks for all
-optimization and do not perform time-critical side computation at inference time as
-\emph{end-to-end} deep learning systems.
+optimization and do not perform time-critical side computation (e.g. numerical optimization)
+at inference time as \emph{end-to-end} deep learning systems.
 
 \paragraph{Deep networks in optical flow}
 
@@ -118,14 +125,15 @@ image depending on the semantics of each region or pixel, which include whether 
 pixel belongs to the background, to which object instance it belongs if it is not background,
 and the class of the object it belongs to.
 Often, failure cases of these methods include motion boundaries or regions with little texture,
-where semantics become more important. \todo{elaborate}% TODO make sure this is a grounded statement
+where semantics become important.
 Extensions of these approaches to scene flow estimate flow and depth
 with similarly generic networks \cite{SceneFlowDataset} and similar limitations.
 
 Other works \cite{FlowLayers, ESI, MRFlow} make use of semantic segmentation to structure % TODO cite jun's paper?
 the optical flow estimation problem and introduce reasoning at the object level,
 but still require expensive energy minimization for each
-new input, as CNNs are only used for some of the components.
+new input, as CNNs are only used for some of the components and numerical
+optimization is central to their inference.
 
 In contrast, we tackle motion estimation at the instance-level with end-to-end
 deep networks and derive optical flow from the individual object motions.
@@ -133,14 +141,16 @@ deep networks and derive optical flow from the individual object motions.
 \paragraph{Slanted plane methods for 3D scene flow}
 The slanted plane model for scene flow \cite{PRSF, PRSM} models a 3D scene as being
 composed of planar segments. Pixels are assigned to one of the planar segments,
-each of which undergoes a independent 3D rigid motion. % TODO explain benefits of this modelling, but unify with explanations above
+each of which undergoes a independent 3D rigid motion.
+This model simplifies the motion estimation problem significantly by reducing the dimensionality
+of the estimate, and thus leads to accurate results.
 In contrast to \cite{PRSF, PRSM}, the Object Scene Flow method \cite{KITTI2015}
 assigns each slanted plane to one rigidly moving object instance, thus
 reducing the number of independently moving segments by allowing multiple
 segments to share the motion of the object they belong to.
 In all of these methods, pixel assignment and motion estimation are formulated
 as energy-minimization problem which is optimized for each input data point,
-without the use of (deep) learning. % TODO make sure it's ok to say there's no learning
+without the use of (deep) learning.
 
 In a more recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
 a CNN is used to compute 2D bounding boxes and instance masks for all objects in the scene, which are then combined
@@ -183,25 +193,27 @@ SE3-Nets \cite{SE3Nets}, which take raw 3D point clouds as input and produce a s
 of the points into objects together with the 3D motion of each object.
 Bringing this idea to the context of image sequences, SfM-Net \cite{SfmNet} takes two consecutive frames and
 estimates a segmentation of pixels into objects together with their 3D motions between the frames.
-In addition, SfM-Net predicts dense depth and camera motion to obtain full 3D scene flow from end-to-end deep learning.
+In addition, SfM-Net predicts dense depth and camera ego-motion to obtain full 3D scene flow from end-to-end deep learning.
 For supervision, SfM-Net penalizes the dense optical flow composed from all 3D motions and the depth estimate
 with a brightness constancy proxy loss.
 
-Like SfM-Net, we aim to estimate motion and instance segmentation jointly with
+Like SfM-Net, we aim to estimate 3D motion and instance segmentation jointly with
 end-to-end deep learning.
 Unlike SfM-Net, we build on a scalable object detection and instance segmentation
 approach with R-CNNs, which provide a strong baseline.
 
 \paragraph{End-to-end deep networks for camera pose estimation}
 Deep networks have been used for estimating the 6-DOF camera pose from
-a single RGB frame \cite{PoseNet, PoseNet2}. These works are related to
+a single RGB frame \cite{PoseNet, PoseNet2}, or for estimating depth and camera ego-motion
+from monocular video \cite{UnsupPoseDepth}.
+These works are related to
 ours in that we also need to output various rotations and translations from a deep network
 and thus need to solve similar regression problems and use similar parametrizations
 and losses.
 
 
 \subsection{Outline}
-In section \ref{sec:background}, we introduce preliminaries and building
+First, in section \ref{sec:background}, we introduce preliminaries and building
 blocks from earlier works that serve as a foundation for our networks and losses.
 Most importantly, we re-view the ResNet CNN (\ref{ssec:resnet}) that will serve as CNN backbone
 as well as the developments in region-based CNNs onto which we build (\ref{ssec:rcnn}),
@@ -212,11 +224,11 @@ followed by our losses and supervision methods for training
 the extended region-based CNN (\ref{ssec:supervision}), and
 finally the postprocessings we use to derive dense flow from our 3D motion estimates
 (\ref{ssec:postprocessing}).
-In section \ref{sec:experiments}, we introduce the Virtual KITTI dataset we use
+Then, in section \ref{sec:experiments}, we introduce the Virtual KITTI dataset we use
 for training our networks as well as all preprocessings we perform (\ref{ssec:datasets}),
 give details of our experimental setup (\ref{ssec:setup}),
 and finally describe the experimental results
 on Virtual KITTI (\ref{ssec:vkitti}).
-In section \ref{sec:conclusion}, we summarize our work and describe future
+Finally, in section \ref{sec:conclusion}, we summarize our work and describe future
 developments, including depth prediction, training on real world data,
 and exploiting frames over longer time intervals.

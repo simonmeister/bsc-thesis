@@ -279,6 +279,20 @@ penalize rotation and translation. For the camera, the loss is reduced to the
 classification term in this case.
 
 \paragraph{Per-RoI instance motion supervision \emph{without} 3D instance motion ground truth}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/flow_loss}
+\caption{
+Overview of the alternative, optical flow based loss for instance motion
+supervision without 3D instance motion ground truth. 
+In contrast to SfM-Net, where a single optical flow field is
+composed and penalized to supervise the motion prediction, our loss considers
+the motion of all objects in isolation and composes a batch of flow windows
+for the RoIs.
+}
+\label{figure:flow_loss}
+\end{figure}
+
 A more general way to supervise the object motions is a re-projection
 loss similar to the unsupervised loss in SfM-Net \cite{SfmNet},
 which we can apply to coordinates within the object bounding boxes,
