@@ -8,10 +8,11 @@ For this, we extend Mask R-CNN in two straightforward ways.
 First, we modify the backbone network and provide two frames to the R-CNN system
 in order to enable image matching between the consecutive frames.
 Second, we extend the Mask R-CNN RoI head to predict a 3D motion for each
-region proposal. Table \ref{table:motionrcnn_resnet} shows the modified network.
+region proposal. Tables \ref{table:motionrcnn_resnet} and \ref{table:motionrcnn_resnet_fpn}
+show our Motion R-CNN networks based on Mask R-CNN ResNet-50 and Mask R-CNN ResNet-50-FPN,
+rspectively.
 
-{
-\begin{table}[h]
+{\begin{table}[h]
 \centering
 \begin{tabular}{llr}
 \toprule
