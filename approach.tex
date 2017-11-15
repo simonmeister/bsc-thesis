@@ -121,7 +121,7 @@ we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yiel
 Alternatively, we also experiment with concatenating the camera space XYZ coordinates for each frame,
 XYZ$_t$ and XYZ$_{t+1}$, into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
-as both first stage RPN and second stage feature extractor for region cropping.
+as both first stage RPN and second stage feature extractor for extracting the RoI features.
 Technically, our feature encoder network will have to learn a motion representation similar to
 that learned by the FlowNet encoder, but the output will be computed in the
 object-centric framework of a region based convolutional network head with a 3D parametrization.
