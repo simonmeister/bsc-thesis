@@ -9,7 +9,7 @@ First, we modify the backbone network and provide two frames to the R-CNN system
 in order to enable image matching between the consecutive frames.
 Second, we extend the Mask R-CNN RoI head to predict a 3D motion for each
 region proposal. Tables \ref{table:motionrcnn_resnet} and \ref{table:motionrcnn_resnet_fpn}
-show our Motion R-CNN networks based on Mask R-CNN ResNet-50 and Mask R-CNN ResNet-50-FPN,
+show our Motion R-CNN networks based on Mask R-CNN  and Mask R-CNN -FPN,
 respectively.
 
 {\begin{table}[h]
@@ -20,13 +20,13 @@ respectively.
 \midrule\midrule
 & input images & H $\times$ W $\times$ C \\
 \midrule
-C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
 \midrule
 \multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)} (Table \ref{table:maskrcnn_resnet})}\\
 \midrule
 \multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
 \midrule
-& From C$_4$: ResNet-50 \{C$_5$\} (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+& From C$_4$: ResNet \{C$_6$\} (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 & bilinear resize, 7 $\times$ 7 & 7 $\times$ 7 $\times$ 512 \\
 & flatten & 1 $\times$ 7 $\cdot$ 7 $\cdot$ 512 \\
 T$_0$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
@@ -52,8 +52,8 @@ $\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 \end{tabular}
 
 \caption {
-Motion R-CNN ResNet-50 architecture based on the Mask R-CNN
-ResNet-50 architecture (Table \ref{table:maskrcnn_resnet}).
+Motion R-CNN ResNet architecture based on the Mask R-CNN
+ResNet architecture (Table \ref{table:maskrcnn_resnet}).
 We use ReLU activations after all hidden layers and
 additonally dropout with $p = 0.5$ after all fully-connected hidden layers.
 }
@@ -70,13 +70,13 @@ additonally dropout with $p = 0.5$ after all fully-connected hidden layers.
 \midrule\midrule
 & input images & H $\times$ W $\times$ C \\
 \midrule
-C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+C$_6$ & ResNet (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RPN \& FPN} (Table \ref{table:maskrcnn_resnet_fpn})} \\
 \midrule
 \multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
 \midrule
-& From C$_5$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
+& From C$_6$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
 & bilinear resize, 7 $\times$ 7 & 7 $\times$ 7 $\times$ 512 \\
 & flatten & 1 $\times$ 7 $\cdot$ 7 $\cdot$ 512 \\
 T$_2$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
@@ -101,9 +101,11 @@ $\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 \end{tabular}
 
 \caption {
-Motion R-CNN ResNet-50-FPN architecture based on the Mask R-CNN
-ResNet-50-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
-The modifications are analogous to our Motion R-CNN ResNet-50,
+Motion R-CNN ResNet-FPN architecture based on the Mask R-CNN
+ResNet-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
+To obtain a larger bottleneck stride, we compute the feature pyramid starting
+with C$_6$ instead of C$_5$ (thus, the subsampling from P$_5$ to P$_6$) is omitted.
+The modifications are analogous to our Motion R-CNN ResNet,
 but we still show the architecture for completeness.
 Again, we use ReLU activations after all hidden layers and
 additonally dropout with $p = 0.5$ after all fully-connected hidden layers.
@@ -201,12 +203,12 @@ a still and moving camera.
 
 \label{ssec:design}
 \paragraph{Camera motion network}
-In our ResNet-50 variant (Table \ref{table:motionrcnn_resnet}), the underlying
+In our  variant (Table \ref{table:motionrcnn_resnet}), the underlying
 ResNet backbone is only computed up to the $C_4$ block, as otherwise the
-feature resolution for RoI extraction would be reduced too much.
-In our ResNet-50 variant, we first pass the $C_4$ features through a $C_5$
+feature resolution prior to RoI extraction would be reduced too much.
+In our  variant, we therefore first pass the $C_4$ features through a $C_5$
 block to make the camera network of both variants comparable.
-Then, in both, the ResNet-50 and ResNet-50-FPN variant (Table \ref{table:motionrcnn_resnet_fpn}), we apply a additional
+Then, in both, the  and -FPN variant (Table \ref{table:motionrcnn_resnet_fpn}), we apply a additional
 convolution to the $C_5$ features to reduce the number of inputs to the following
 fully-connected layers.
 Instead of averaging, we use bilinear resizing to bring the convolutional features

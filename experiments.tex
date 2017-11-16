@@ -152,7 +152,7 @@ predicted camera motions.
 
 For our initial experiments, we concatenate both RGB frames as
 well as the XYZ coordinates for both frames as input to the networks.
-We train both, the Motion R-CNN ResNet-50 and ResNet-50-FPN variants.
+We train both, the Motion R-CNN  and -FPN variants.
 
 \paragraph{Training schedule}
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
@@ -166,11 +166,13 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 \paragraph{R-CNN training parameters}
 For training the RPN and RoI heads and during inference,
 we use the exact same number of proposals and RoIs as Mask R-CNN in
-the ResNet-50 and ResNet-50-FPN variants, respectively.
+the  and -FPN variants, respectively.
 
 \paragraph{Initialization}
+For initializing the  C$_1$ to C$_5$ weights, we use a pre-trained
+ImageNet \cite{ImageNet} checkpoint from the official TensorFlow repository.
 Following the pre-existing TensorFlow implementation of Faster R-CNN,
-we initialize all hidden layers with He initialization \cite{He}.
+we initialize all other hidden layers with He initialization \cite{He}.
 For the fully-connected camera and instance motion output layers,
 we use a truncated normal initializer with a standard
 deviation of $0.0001$ and zero mean, truncated at two standard deviations.
@@ -220,7 +222,7 @@ AEE: Average Endpoint Error; Fl-all: Ratio of pixels where flow estimate is
 wrong by both $\geq 3$ pixels and $\geq 5\%$.
 Camera and instance motion errors are averaged over the validation set.
 We optionally enable camera motion prediction (cam.),
-replace the ResNet-50 backbone with ResNet-50-FPN (FPN),
+replace the  backbone with -FPN (FPN),
 or input XYZ coordinates into the backbone (XYZ).
 We either supervise
 object motions (sup.) with 3D motion ground truth (3D) or

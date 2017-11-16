@@ -129,13 +129,25 @@ and N$_{motions} = 3$.
 \label{ssec:resnet}
 ResNet \cite{ResNet} was initially introduced as a CNN for image classification, but
 became popular as basic building block of many deep network architectures for a variety
-of different tasks. In Table \ref{table:resnet}, we show the ResNet-50 variant
+of different tasks. Figure \ref{figure:bottleneck}
+shows the fundamental building block of . The additive \emph{residual unit} enables the training
+of very deep networks without the gradients becoming too small as the distance
+from the output layer increases.
+
+In Table \ref{table:resnet}, we show the ResNet variant
 that will serve as the basic CNN backbone of our networks, and
 is also used in many other region-based convolutional networks.
-The initial image data is always passed through ResNet-50 as a first step to
+The initial image data is always passed through the ResNet backbone as a first step to
 bootstrap the complete deep network.
-Figure \ref{figure:bottleneck}
-shows the fundamental building block of ResNet-50.
+Note that for the Mask R-CNN architectures we describe below, this is equivalent
+to the standard  backbone.
+In , the C$_5$ bottleneck has a stride of 32 with respect to the
+input image resolution. In FlowNetS \cite{FlowNet}, this bottleneck stride is 64.
+For accurately estimating motions corresponding to larger pixel displacements, a larger
+stride may be important.
+Thus, we add a additional C$_6$ block to be used in the Motion R-CNN ResNet variants
+to increase the bottleneck stride to 64, following FlowNetS.
+
 
 {
 %\begin{table}[h]
@@ -146,7 +158,7 @@ shows the fundamental building block of ResNet-50.
 \midrule\midrule
  & input image & H $\times$ W $\times$ C \\
 \midrule
-\multicolumn{3}{c}{\textbf{ResNet-50}}\\
+\multicolumn{3}{c}{\textbf{ResNet}}\\
 \midrule
 C$_1$ & 7 $\times$ 7 conv, 64, stride 2 & $\tfrac{1}{2}$ H $\times$ $\tfrac{1}{2}$ W $\times$ 64 \\
 
@@ -182,17 +194,25 @@ $\begin{bmatrix}
 3 \times 3, 512 \\
 1 \times 1, 2048 \\
 \end{bmatrix}_{b/2}$ $\times$ 3
-& $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+& $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+\midrule
+C$_6$ &
+$\begin{bmatrix}
+1 \times 1, 512 \\
+3 \times 3, 512 \\
+1 \times 1, 2048 \\
+\end{bmatrix}_{b/2}$ $\times$ 3
+& $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 
 \bottomrule
 
 \caption {
-ResNet-50 \cite{ResNet} architecture.
+Backbone architecture based on ResNet-50 \cite{ResNet}.
 Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
 block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
 the first convolution operation in the block has a stride of 2. Note that the stride
 is only applied to the first block, but not to repeated blocks.
-Batch normalization \cite{BN} is used after every convolution.
+Batch normalization \cite{BN} is used after every residual unit.
 }
 \label{table:resnet}
 \end{longtable}
@@ -230,7 +250,7 @@ Fast R-CNN \cite{FastRCNN} significantly reduces computation by performing only 
 as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
 Then, fixed size (H $\times$ W) feature maps are extracted from the compressed feature map of the image,
 each corresponding to one of the proposal bounding boxes.
-The extracted per-RoI feature maps are collected into a batch and passed into a small Fast R-CNN
+The extracted per-RoI (region of interest) feature maps are collected into a batch and passed into a small Fast R-CNN
 \emph{head} network, which performs classification and prediction of refined boxes for all regions in one forward pass.
 The extraction technique is called \emph{RoI pooling}. In RoI pooling, the RoI bounding box window over the full image features
 is divided into a H $\times$ W grid of cells. For each cell, the values of the underlying
@@ -276,7 +296,7 @@ Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentat
 fixed resolution instance masks within the bounding boxes of each detected object.
 This is done by simply extending the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise binary mask for each instance.
-The basic Mask R-CNN ResNet-50 architecture is shown in Table \ref{table:maskrcnn_resnet}.
+The basic Mask R-CNN  architecture is shown in Table \ref{table:maskrcnn_resnet}.
 Note that the per-class masks logits are put through a sigmoid layer, and thus there is no
 comptetition between classes for the mask prediction branch.
 
@@ -295,7 +315,7 @@ boundary of the bounding box, and thus some detail is lost.
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
-C$_4$ & ResNet-50 \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
 \midrule
 \multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
 \midrule
@@ -311,7 +331,7 @@ ROI$_{\mathrm{RPN}}$ & sample boxes$_{\mathrm{RPN}}$ and scores$_{\mathrm{RPN}}$
 \multicolumn{3}{c}{\textbf{RoI Head}}\\
 \midrule
 & From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI extraction & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
-R$_1$& ResNet-50 \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
+R$_1$& ResNet \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
 ave & average pool & N$_{RoI}$ $\times$ 2048 \\
 & From ave: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
 boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
@@ -327,8 +347,8 @@ masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}
 \bottomrule
 
 \caption {
-Mask R-CNN \cite{MaskRCNN} ResNet-50 \cite{ResNet} architecture.
-Note that this is equivalent to the Faster R-CNN architecture if the mask
+Mask R-CNN \cite{MaskRCNN} ResNet \cite{ResNet} architecture.
+Note that this is equivalent to the Faster R-CNN ResNet architecture if the mask
 head is left out. In Mask R-CNN, bilinear sampling is used for RoI extraction,
 whereas Faster R-CNN used RoI pooling.
 }
@@ -350,7 +370,7 @@ of an appropriate scale to be used, depending of the size of the bounding box.
 For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
 encoder by combining bilinear upsampled feature maps coming from the bottleneck
 with lateral skip connections from the encoder.
-The Mask R-CNN ResNet-50-FPN variant is shown in Table \ref{table:maskrcnn_resnet_fpn}.
+The Mask R-CNN -FPN variant is shown in Table \ref{table:maskrcnn_resnet_fpn}.
 Instead of a single RPN head with anchors at 3 scales and 3 aspect ratios,
 the FPN variant has one RPN head after each of the pyramid levels P$_2$ ... P$_6$.
 At each output position of the resulting RPN pyramid, bounding boxes are predicted
@@ -395,7 +415,7 @@ which is the highest resolution feature map.
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
-C$_5$ & ResNet-50 (Table \ref{table:resnet})  & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+C$_5$ & ResNet (Table \ref{table:resnet})  & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
 \midrule
 \multicolumn{3}{c}{\textbf{Feature Pyramid Network (FPN)}}\\
 \midrule
@@ -435,7 +455,7 @@ masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}
 \bottomrule
 
 \caption {
-Mask R-CNN \cite{MaskRCNN} ResNet-50-FPN \cite{ResNet} architecture.
+Mask R-CNN \cite{MaskRCNN} ResNet-FPN \cite{ResNet} architecture.
 Operations enclosed in a []$_p$ block make up a single FPN
 block (see Figure \ref{figure:fpn_block}).
 }

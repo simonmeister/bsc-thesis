@@ -66,7 +66,7 @@ and also fine-tune on the training set as mentioned in the previous paragraph.
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
-C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+C$_6$ & ResNet (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RPN \& FPN} (Table \ref{table:maskrcnn_resnet_fpn})} \\
 \midrule
@@ -85,8 +85,8 @@ C$_5$ & ResNet-50 (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfra
 \end{tabular}
 
 \caption {
-A possible Motion R-CNN ResNet-50-FPN architecture with depth prediction,
-based on the Mask R-CNN ResNet-50-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
+A possible Motion R-CNN ResNet-FPN architecture with depth prediction,
+based on the Mask R-CNN ResNet-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
 }
 \label{table:motionrcnn_resnet_fpn_depth}
 \end{table}
@@ -140,14 +140,15 @@ into our architecture, we could enable temporally consistent motion estimation
 from image sequences of arbitrary length.
 
 \paragraph{Deeper networks for larger bottleneck strides}
+% TODO remove?
 Our current ResNet C$_5$ bottleneck has a stride of 32 with respect to the
 input image resolution. In FlowNetS \cite{FlowNet}, this bottleneck stride was 64.
 For accurately estimating the motion of objects with large displacements between
 the two frames, it might be useful to increase the maximum bottleneck stride in our backbone network.
-We could do this easily in both of our network variants by adding one ore multiple additional
+We could do this easily in both of our network variants by adding one or multiple additional
 ResNet blocks. In the variant without FPN, these blocks would have to be placed
 after RoI feature extraction. In the FPN variant, the blocks could be simply
 added after the encoder C$_5$ bottleneck.
 For saving memory, we could however also consider modifying the underlying
-ResNet-50 architecture and increase the number of blocks, but reduce the number
+ architecture and increase the number of blocks, but reduce the number
 of layers in each block.
