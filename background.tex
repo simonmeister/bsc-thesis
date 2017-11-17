@@ -57,6 +57,7 @@ Table \ref{table:flownets} shows the classical FlowNetS architecture for optical
 & 3 $\times$ 3 conv, 1024, stride 2 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 1024 \\
 \midrule
 \multicolumn{3}{c}{\textbf{Refinement}}\\
+\midrule
 & 5 $\times$ 5 deconv, 512, stride 2 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
 \multicolumn{3}{c}{...}\\
 \midrule
@@ -64,7 +65,8 @@ flow & $\times$ 2 bilinear upsample & H $\times$ W $\times$ 2 \\
 \bottomrule
 
 \caption {
-FlowNetS \cite{FlowNet} architecture.
+FlowNetS \cite{FlowNet} architecture. Transpose convolutions (deconvolutions)
+are used for refinement.
 }
 \label{table:flownets}
 \end{longtable}
@@ -85,7 +87,10 @@ Recently, other, similarly generic,
 encoder-decoder CNNs have been applied to optical flow as well \cite{DenseNetDenseFlow}.
 
 \subsection{SfM-Net}
-Here, we will describe the SfM-Net \cite{SfmNet} architecture in some more detail \todo{finish}.
+Table \ref{table:sfmnet} shows the SfM-Net \cite{SfmNet} architecture.
+Motions and full-image masks for a fixed number N$_{motions}$ of independent objects
+are predicted in addition to a depth map, and a unsupervised re-projection loss based on
+image brightness differences penalizes the predictions.
 
 {
 %\begin{table}[h]
@@ -94,8 +99,7 @@ Here, we will describe the SfM-Net \cite{SfmNet} architecture in some more detai
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
-\multicolumn{3}{c}{\todo{Conv-Deconv}}\\
-\midrule
+\multicolumn{3}{c}{\textbf{Conv-Deconv}}\\
 \midrule
 \multicolumn{3}{c}{\textbf{Motion Network}}\\
 \midrule
@@ -106,7 +110,7 @@ FC & From bottleneck: $\begin{bmatrix}\textrm{fully connected}, 512\end{bmatrix}
 object motions & fully connected, $N_{motions} \cdot$ 9 & H $\times$ W $\times$ $N_{motions} \cdot$ 9 \\
 camera motion & From FC: $\times$ 2 & H $\times$ W $\times$ 6 \\
 \midrule
-\multicolumn{3}{c}{\textbf{Structure Network} ()}\\
+\multicolumn{3}{c}{\textbf{Structure Network}}\\
 \midrule
 & input image $I_t$ & H $\times$ W $\times$ 3 \\
 & Conv-Deconv & H $\times$ W $\times$ 32 \\
@@ -114,11 +118,14 @@ depth & 1 $\times$1 conv, 1  & H $\times$ W $\times$ 1 \\
 \bottomrule
 
 \caption {
-SfM-Net \cite{SfmNet} architecture.
+SfM-Net \cite{SfmNet} architecture. Here, Conv-Deconv is a simple fully convolutional
+encoder-decoder network, where convolutions and deconvolutions with stride 2 are
+used for downsampling and upsampling, respectively. The stride at the bottleneck
+with respect to the input image is 32.
 The Conv-Deconv weights for the structure and motion networks are not shared,
 and N$_{motions} = 3$.
 }
-\label{table:flownets}
+\label{table:sfmnet}
 \end{longtable}
 
 
@@ -201,7 +208,7 @@ $\begin{bmatrix}
 1 \times 1, 512 \\
 3 \times 3, 512 \\
 1 \times 1, 2048 \\
-\end{bmatrix}_{b/2}$ $\times$ 3
+\end{bmatrix}_{b/2}$ $\times$ 2
 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 
 \bottomrule
@@ -296,7 +303,7 @@ Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentat
 fixed resolution instance masks within the bounding boxes of each detected object.
 This is done by simply extending the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise binary mask for each instance.
-The basic Mask R-CNN  architecture is shown in Table \ref{table:maskrcnn_resnet}.
+The basic Mask R-CNN ResNet architecture is shown in Table \ref{table:maskrcnn_resnet}.
 Note that the per-class masks logits are put through a sigmoid layer, and thus there is no
 comptetition between classes for the mask prediction branch.
 
@@ -370,7 +377,7 @@ of an appropriate scale to be used, depending of the size of the bounding box.
 For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
 encoder by combining bilinear upsampled feature maps coming from the bottleneck
 with lateral skip connections from the encoder.
-The Mask R-CNN -FPN variant is shown in Table \ref{table:maskrcnn_resnet_fpn}.
+The Mask R-CNN ResNet-FPN variant is shown in Table \ref{table:maskrcnn_resnet_fpn}.
 Instead of a single RPN head with anchors at 3 scales and 3 aspect ratios,
 the FPN variant has one RPN head after each of the pyramid levels P$_2$ ... P$_6$.
 At each output position of the resulting RPN pyramid, bounding boxes are predicted

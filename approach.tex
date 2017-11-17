@@ -9,7 +9,7 @@ First, we modify the backbone network and provide two frames to the R-CNN system
 in order to enable image matching between the consecutive frames.
 Second, we extend the Mask R-CNN RoI head to predict a 3D motion for each
 region proposal. Tables \ref{table:motionrcnn_resnet} and \ref{table:motionrcnn_resnet_fpn}
-show our Motion R-CNN networks based on Mask R-CNN  and Mask R-CNN -FPN,
+show our Motion R-CNN networks based on Mask R-CNN ResNet and Mask R-CNN ResNet-FPN,
 respectively.
 
 {\begin{table}[h]
@@ -203,12 +203,12 @@ a still and moving camera.
 
 \label{ssec:design}
 \paragraph{Camera motion network}
-In our  variant (Table \ref{table:motionrcnn_resnet}), the underlying
+In our ResNet variant without FPN (Table \ref{table:motionrcnn_resnet}), the underlying
 ResNet backbone is only computed up to the $C_4$ block, as otherwise the
 feature resolution prior to RoI extraction would be reduced too much.
-In our  variant, we therefore first pass the $C_4$ features through a $C_5$
+In our ResNet variant, we therefore first pass the $C_4$ features through a $C_5$
 block to make the camera network of both variants comparable.
-Then, in both, the  and -FPN variant (Table \ref{table:motionrcnn_resnet_fpn}), we apply a additional
+Then, in both, the ResNet and ResNet-FPN variant (Table \ref{table:motionrcnn_resnet_fpn}), we apply a additional
 convolution to the $C_5$ features to reduce the number of inputs to the following
 fully-connected layers.
 Instead of averaging, we use bilinear resizing to bring the convolutional features
@@ -291,7 +291,7 @@ supervision without 3D instance motion ground truth.
 In contrast to SfM-Net, where a single optical flow field is
 composed and penalized to supervise the motion prediction, our loss considers
 the motion of all objects in isolation and composes a batch of flow windows
-for the RoIs.
+for the RoIs. Network predictions are shown in red.
 }
 \label{figure:flow_loss}
 \end{figure}

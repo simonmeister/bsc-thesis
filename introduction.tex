@@ -73,7 +73,7 @@ and predicts pixel-precise segmentation masks for each detected object (Figure \
   \centering
   \includegraphics[width=\textwidth]{figures/maskrcnn_cs}
 \caption{
-Instance segmentation results of Mask R-CNN -FPN \cite{MaskRCNN}
+Instance segmentation results of Mask R-CNN ResNet-50-FPN \cite{MaskRCNN}
 on Cityscapes \cite{Cityscapes}. Figure taken from \cite{MaskRCNN}.
 }
 \label{figure:maskrcnn_cs}
@@ -104,6 +104,7 @@ manageable pieces.
 Overview of our network based on Mask R-CNN. For each region of interest (RoI), we predict the instance motion
 in parallel to the class, bounding box and mask. Additionally, we branch off a
 small network for predicting the camera motion from the bottleneck.
+Novel components in addition to Mask R-CNN are shown in red.
 }
 \label{figure:net_intro}
 \end{figure}
