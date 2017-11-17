@@ -134,10 +134,10 @@ and N$_{motions} = 3$.
 
 \subsection{ResNet}
 \label{ssec:resnet}
-ResNet \cite{ResNet} was initially introduced as a CNN for image classification, but
+ResNet (Residual Network) \cite{ResNet} was initially introduced as a CNN for image classification, but
 became popular as basic building block of many deep network architectures for a variety
 of different tasks. Figure \ref{figure:bottleneck}
-shows the fundamental building block of . The additive \emph{residual unit} enables the training
+shows the fundamental building block of ResNet. The additive \emph{residual unit} enables the training
 of very deep networks without the gradients becoming too small as the distance
 from the output layer increases.
 
@@ -147,8 +147,9 @@ is also used in many other region-based convolutional networks.
 The initial image data is always passed through the ResNet backbone as a first step to
 bootstrap the complete deep network.
 Note that for the Mask R-CNN architectures we describe below, this is equivalent
-to the standard  backbone.
-In , the C$_5$ bottleneck has a stride of 32 with respect to the
+to the standard ResNet-50 backbone. We now introduce one small extension that
+will be useful for our Motion R-CNN network.
+In ResNet-50, the C$_5$ bottleneck has a stride of 32 with respect to the
 input image resolution. In FlowNetS \cite{FlowNet}, this bottleneck stride is 64.
 For accurately estimating motions corresponding to larger pixel displacements, a larger
 stride may be important.

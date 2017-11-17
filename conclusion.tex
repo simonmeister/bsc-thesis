@@ -130,7 +130,6 @@ For training on a dataset without any motion ground truth, e.g.
 Cityscapes, it may be critical to add this term in addition to an unsupervised
 loss for the instance motions.
 
-
 \paragraph{Temporal consistency}
 A next step after the two aforementioned ones could be to extend our network to exploit more than two
 temporally consecutive frames, which has previously been shown to be beneficial in the
@@ -139,16 +138,19 @@ In fact, by incorporating recurrent neural networks, e.g. LSTMs \cite{LSTM},
 into our architecture, we could enable temporally consistent motion estimation
 from image sequences of arbitrary length.
 
-\paragraph{Deeper networks for larger bottleneck strides}
-% TODO remove?
-Our current ResNet C$_5$ bottleneck has a stride of 32 with respect to the
-input image resolution. In FlowNetS \cite{FlowNet}, this bottleneck stride was 64.
-For accurately estimating the motion of objects with large displacements between
-the two frames, it might be useful to increase the maximum bottleneck stride in our backbone network.
-We could do this easily in both of our network variants by adding one or multiple additional
-ResNet blocks. In the variant without FPN, these blocks would have to be placed
-after RoI feature extraction. In the FPN variant, the blocks could be simply
-added after the encoder C$_5$ bottleneck.
-For saving memory, we could however also consider modifying the underlying
-ResNet architecture and increase the number of blocks, but reduce the number
-of layers in each block.
+\paragraph{Masking prior to the RoI motion head}
+Currently, in the Motion R-CNN RoI motion head, the RoI features extracted from
+the backbone are integrated over the complete RoI window to yield the features
+for motion estimation.
+For example, average pooling is applied before the fully-connected layers in the variant without FPN.
+However, ideally, the motion (image matching) information from the backbone should
+
+For example, consider
+
+Additionally, we use the \emph{predicted} binarized masks for each RoI to mask the
+extracted RoI features before passing them into the motion head.
+The intuition behind that is that we want to mask out (set to zero) any positions in the
+extracted feature window which belong to the background. Then, the RoI motion
+head could aggregate the motion (image matching) information from the backbone
+over positions localized within the object only, but not over positions belonging
+to the background, which should probably not influence the final object motion estimate.

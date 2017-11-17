@@ -26,7 +26,8 @@ C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\
 \midrule
 \multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
 \midrule
-& From C$_4$: ResNet \{C$_6$\} (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
+& From C$_4$: ResNet \{C$_5$\} (Table \ref{table:resnet}) & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 2048 \\
+& ResNet \{C$_6$\} (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 & bilinear resize, 7 $\times$ 7 & 7 $\times$ 7 $\times$ 512 \\
 & flatten & 1 $\times$ 7 $\cdot$ 7 $\cdot$ 512 \\
 T$_0$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
@@ -76,7 +77,7 @@ C$_6$ & ResNet (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1
 \midrule
 \multicolumn{3}{c}{\textbf{Camera Motion Network}}\\
 \midrule
-& From C$_6$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 512 \\
+& From C$_6$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 512 \\
 & bilinear resize, 7 $\times$ 7 & 7 $\times$ 7 $\times$ 512 \\
 & flatten & 1 $\times$ 7 $\cdot$ 7 $\cdot$ 512 \\
 T$_2$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
@@ -104,7 +105,7 @@ $\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 Motion R-CNN ResNet-FPN architecture based on the Mask R-CNN
 ResNet-FPN architecture (Table \ref{table:maskrcnn_resnet_fpn}).
 To obtain a larger bottleneck stride, we compute the feature pyramid starting
-with C$_6$ instead of C$_5$ (thus, the subsampling from P$_5$ to P$_6$) is omitted.
+with C$_6$ instead of C$_5$, and thus, the subsampling from P$_5$ to P$_6$ is omitted.
 The modifications are analogous to our Motion R-CNN ResNet,
 but we still show the architecture for completeness.
 Again, we use ReLU activations after all hidden layers and
@@ -206,10 +207,14 @@ a still and moving camera.
 In our ResNet variant without FPN (Table \ref{table:motionrcnn_resnet}), the underlying
 ResNet backbone is only computed up to the $C_4$ block, as otherwise the
 feature resolution prior to RoI extraction would be reduced too much.
-In our ResNet variant, we therefore first pass the $C_4$ features through a $C_5$
-block to make the camera network of both variants comparable.
-Then, in both, the ResNet and ResNet-FPN variant (Table \ref{table:motionrcnn_resnet_fpn}), we apply a additional
-convolution to the $C_5$ features to reduce the number of inputs to the following
+Therefore, in our the variant without FPN, we first pass the $C_4$ features through $C_5$
+and $C_6$ blocks (with weights independent from the $C_5$ block used in the RoI head in this variant)
+to increase the bottleneck stride prior to the camera network to 64.
+In our ResNet-FPN variant (Table \ref{table:motionrcnn_resnet_fpn}),
+the backbone makes use of all blocks through $C_6$ and
+we can simply branch of our camera network from the $C_6$ bottleneck.
+Then, in both, the ResNet and ResNet-FPN variant, we apply a additional
+convolution to the $C_6$ features to reduce the number of inputs to the following
 fully-connected layers.
 Instead of averaging, we use bilinear resizing to bring the convolutional features
 to a fixed size without losing all spatial information,
@@ -356,13 +361,6 @@ and sample proposals and RoIs in the exact same way.
 During inference, we proceed analogously to Mask R-CNN.
 In the same way as the RoI mask head, at test time, we compute the RoI motion head
 from the features extracted with refined bounding boxes.
-Additionally, we use the \emph{predicted} binarized masks for each RoI to mask the
-extracted RoI features before passing them into the motion head.
-The intuition behind that is that we want to mask out (set to zero) any positions in the
-extracted feature window which belong to the background. Then, the RoI motion
-head aggregates the motion (image matching) information from the backbone
-over positions localized within the object only, but not over positions belonging
-to the background, which should not influence the final object motion estimate.
 
 Again, as for masks and bounding boxes in Mask R-CNN,
 the predicted output object motions are the predicted object motions for the
