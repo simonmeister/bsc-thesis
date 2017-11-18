@@ -1,0 +1,112 @@
+% Replace the following information with your document's actual
+% metadata. If you do not want to set a value for a certain parameter,
+% just omit it.
+%
+% Symbols permitted in metadata
+% =============================
+%
+% Within the metadata, all printable ASCII characters except
+% '\', '{', '}', and '%' represent themselves. Also, all printable
+% Unicode characters from the basic multilingual plane (i.e., up to
+% code point U+FFFF) can be used directly with the UTF-8 encoding.
+% Consecutive whitespace characters are combined into a single
+% space. Whitespace after a macro such as \copyright, \backslash, or
+% \sep is ignored. Blank lines are not permitted. Moreover, the
+% following markup can be used:
+%
+%  '\ '         - a literal space  (for example after a macro)
+%   \%          - a literal '%'
+%   \{          - a literal '{'
+%   \}          - a literal '}'
+%   \backslash  - a literal '\'
+%   \copyright  - the (c) copyright symbol
+%
+% The macro \sep is only permitted within \Author, \Keywords, and
+% \Org.  It is used to separate multiple authors, keywords, etc.
+%
+% List of supported metadata fields
+% =================================
+%
+% Here is a complete list of user-definable metadata fields currently
+% supported, and their meanings. More may be added in the future.
+%
+% General information:
+%
+%  \Author           - the document's human author. Separate multiple
+%                      authors with \sep.
+%  \Title            - the document's title.
+%  \Keywords         - list of keywords, separated with \sep.
+%  \Subject          - the abstract.
+%  \Org              - publishers.
+%
+% Copyright information:
+%
+%  \Copyright        - a copyright statement.
+%  \CopyrightURL     - location of a web page describing the owner
+%                      and/or rights statement for this document.
+%  \Copyrighted      - 'True' if the document is copyrighted, and
+%                      'False' if it isn't. This is automatically set
+%                      to 'True' if either \Copyright or \CopyrightURL
+%                      is specified, but can be overridden. For
+%                      example, if the copyright statement is "Public
+%                      Domain", this should be set to 'False'.
+%
+% Publication information:
+%
+% \PublicationType   - The type of publication. If defined, must be
+%                      one of book, catalog, feed, journal, magazine,
+%                      manual, newsletter, pamphlet. This is
+%                      automatically set to "journal" if \Journaltitle
+%                      is specified, but can be overridden.
+% \Journaltitle      - The title of the journal in which the document
+%                      was published.
+% \Journalnumber     - The ISSN for the publication in which the
+%                      document was published.
+% \Volume            - Journal volume.
+% \Issue             - Journal issue/number.
+% \Firstpage         - First page number of the published version of
+%                      the document.
+% \Lastpage          - Last page number of the published version of
+%                      the document.
+% \Doi               - Digital Object Identifier (DOI) for the
+%                      document, without the leading "doi:".
+% \CoverDisplayDate  - Date on the cover of the journal issue, as a
+%                      human-readable text string.
+% \CoverDate         - Date on the cover of the journal issue, in a
+%                      format suitable for storing in a database field
+%                      with a 'date' data type.
+
+
+
+\Title{Motion R-CNN: Instance-level 3D Motion Estimation with Region-based CNNs}
+
+\Author{Simon Meister}
+
+\Copyright{Copyright \copyright\ 2017 "Simon Meister"}
+
+\Keywords{optical flow\sep
+          instance segmentation\sep
+          deep learning}
+
+\Subject{With the advent of deep learning, it has become popular to re-purpose generic deep networks for classical
+computer vision problems involving pixel-wise estimation.
+Following this trend, many recent end-to-end deep learning approaches to optical flow and scene flow
+predict complete, high resolution flow fields with a generic network for dense, pixel-wise prediction,
+thereby ignoring the inherent structure of the underlying motion estimation problem and any physical
+constraints within the scene.
+We introduce a scalable end-to-end deep learning approach for dense motion estimation that respects the
+structure of the scene as being composed of distinct objects, thus combining the representation learning
+benefits and speed of end-to-end deep networks with a physically plausible scene model inspired by
+slanted plane energy-minimization approaches to scene flow.
+Building on recent advances in region-based convolutional networks (R-CNNs), we integrate motion
+estimation with instance segmentation. Given two consecutive frames from a monocular RGB-D camera,
+our resulting end-to-end deep network detects objects with precise per-pixel object masks and estimates
+the 3D motion of each detected object between the frames. By additionally estimating a global camera
+motion in the same network, we compose a dense optical flow field based on instance-level and global
+motion predictions. We train our network on the synthetic Virtual KITTI dataset, which provides ground
+truth for all components of our system.}
+
+\setRGBcolorprofile{sRGB_IEC61966-2-1_black_scaled.icc}
+{sRGB_IEC61966-2-1_black_scaled}
+{sRGB IEC61966 v2.1 with black scaling}
+{http://www.color.org}
