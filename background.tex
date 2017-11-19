@@ -517,14 +517,12 @@ b_e^* = (b_x^*, b_y^*, b_w^*, b_h^*),
 where
 \begin{equation*}
 b_x^* = \frac{x^* - x_r}{w_r},
-\end{equation*}
-\begin{equation*}
+\qquad
 b_y^* = \frac{y^* - y_r}{h_r},
 \end{equation*}
 \begin{equation*}
 b_w^* = \log \left( \frac{w^*}{w_r} \right),
-\end{equation*}
-\begin{equation*}
+\qquad
 b_h^* = \log \left( \frac{h^*}{h_r} \right),
 \end{equation*}
 which represents the regression target for the bounding box
@@ -537,14 +535,12 @@ b_e = (b_x, b_y, b_w, b_h),
 where
 \begin{equation*}
 b_x = \frac{x - x_r}{w_r},
-\end{equation*}
-\begin{equation*}
+\qquad
 b_y = \frac{y - y_r}{h_r},
 \end{equation*}
 \begin{equation*}
 b_w = \log \left( \frac{w}{w_r} \right),
-\end{equation*}
-\begin{equation*}
+\qquad
 b_h = \log \left( \frac{h}{h_r} \right).
 \end{equation*}
 
@@ -557,14 +553,12 @@ b = (x, y, w, h),
 where
 \begin{equation*}
 x = b_x \cdot w_r + x_r,
-\end{equation*}
-\begin{equation*}
+\qquad
 y = b_y \cdot b_r + y_r,
 \end{equation*}
 \begin{equation*}
 w = \exp(b_w) \cdot w_r,
-\end{equation*}
-\begin{equation*}
+\qquad
 h = \exp(b_h) \cdot h_r,
 \end{equation*}
 and thus the bounding box is obtained as the reference bounding box adjusted by

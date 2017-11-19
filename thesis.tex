@@ -64,6 +64,7 @@
 \DeclareFieldFormat*{citetitle}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
 \DeclareFieldFormat*{title}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
 
+\addbibresource{long_extended.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
 \addbibresource{bib.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
 \nocite{*} % Alle Einträge in der .bib-Datei im Literaturverzeichnis ausgeben, auch wenn sie nicht im Text zitiert werden. Gut zum Testen der .bib-Datei, sollte aber nicht generell verwendet werden. Stattdessen lieber gezielt Einträge mit Keywords ausgeben lassen (siehe \printbibliography in Zeile 224).
 
@@ -77,6 +78,9 @@
 \newcommand*{\myprof}{Prof. Stefan Roth, Ph.D.}
 \newcommand*{\myinstitute}{Visual Inference Group}
 \newcommand*{\myfaculty}{Fachbereich Informatik}
+
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
