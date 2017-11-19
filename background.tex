@@ -17,28 +17,10 @@ to estimate disparity-based depth, however monocular depth estimation with deep 
 popular \cite{DeeperDepth, UnsupPoseDepth}.
 In this preliminary work, we will assume per-pixel depth to be given.
 
-\subsection{CNNs for dense motion estimation}
-Deep convolutional neural network (CNN) architectures
-\cite{ImageNetCNN, VGGNet, ResNet}
-became widely popular through numerous successes in classification and recognition tasks.
-The general structure of a CNN consists of a convolutional encoder, which
-learns a spatially compressed, wide (in the number of channels) representation of the input image,
-and a fully-connected prediction network on top of the encoder.
-
-The compressed representations learned by CNNs of these categories do not, however, allow
-for prediction of high-resolution output, as spatial detail is lost through sequential applications
-of pooling or strides.
-Thus, networks for dense prediction introduce a convolutional decoder on top of the representation encoder,
-performing upsampling of the compressed features and resulting in a encoder-decoder pyramid.
-The most popular deep networks of this kind for end-to-end optical flow prediction
-are variants of the FlowNet family \cite{FlowNet, FlowNet2},
-which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
-Table \ref{table:flownets} shows the classical FlowNetS architecture for optical flow prediction.
-
 {
-%\begin{table}[h]
-%\centering
-\begin{longtable}{llr}
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
@@ -63,17 +45,32 @@ Table \ref{table:flownets} shows the classical FlowNetS architecture for optical
 \midrule
 flow & $\times$ 2 bilinear upsample & H $\times$ W $\times$ 2 \\
 \bottomrule
-
+\end{tabular}
 \caption {
 FlowNetS \cite{FlowNet} architecture. Transpose convolutions (deconvolutions)
 are used for refinement.
 }
 \label{table:flownets}
-\end{longtable}
-
-
-%\end{table}
+\end{table}
 }
+
+\subsection{CNNs for dense motion estimation}
+Deep convolutional neural network (CNN) architectures
+\cite{ImageNetCNN, VGGNet, ResNet}
+became widely popular through numerous successes in classification and recognition tasks.
+The general structure of a CNN consists of a convolutional encoder, which
+learns a spatially compressed, wide (in the number of channels) representation of the input image,
+and a fully-connected prediction network on top of the encoder.
+
+The compressed representations learned by CNNs of these categories do not, however, allow
+for prediction of high-resolution output, as spatial detail is lost through sequential applications
+of pooling or strides.
+Thus, networks for dense prediction introduce a convolutional decoder on top of the representation encoder,
+performing upsampling of the compressed features and resulting in a encoder-decoder pyramid.
+The most popular deep networks of this kind for end-to-end optical flow prediction
+are variants of the FlowNet family \cite{FlowNet, FlowNet2},
+which was recently extended to scene flow estimation \cite{SceneFlowDataset}.
+Table \ref{table:flownets} shows the classical FlowNetS architecture for optical flow prediction.
 
 Note that the network itself is a rather generic autoencoder and is specialized for optical flow only through being trained
 with supervision from dense optical flow ground truth.
@@ -93,9 +90,9 @@ are predicted in addition to a depth map, and a unsupervised re-projection loss 
 image brightness differences penalizes the predictions.
 
 {
-%\begin{table}[h]
-%\centering
-\begin{longtable}{llr}
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
@@ -117,6 +114,9 @@ camera motion & From FC: $\times$ 2 & H $\times$ W $\times$ 6 \\
 depth & 1 $\times$1 conv, 1  & H $\times$ W $\times$ 1 \\
 \bottomrule
 
+
+\end{tabular}
+
 \caption {
 SfM-Net \cite{SfmNet} architecture. Here, Conv-Deconv is a simple fully convolutional
 encoder-decoder network, where convolutions and deconvolutions with stride 2 are
@@ -126,10 +126,7 @@ The Conv-Deconv weights for the structure and motion networks are not shared,
 and N$_{motions} = 3$.
 }
 \label{table:sfmnet}
-\end{longtable}
-
-
-%\end{table}
+\end{table}
 }
 
 \subsection{ResNet}
@@ -158,9 +155,9 @@ to increase the bottleneck stride to 64, following FlowNetS.
 
 
 {
-%\begin{table}[h]
-%\centering
-\begin{longtable}{llr}
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
@@ -213,7 +210,7 @@ $\begin{bmatrix}
 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 
 \bottomrule
-
+\end{tabular}
 \caption {
 Backbone architecture based on ResNet-50 \cite{ResNet}.
 Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
@@ -223,10 +220,7 @@ is only applied to the first block, but not to repeated blocks.
 Batch normalization \cite{BN} is used after every residual unit.
 }
 \label{table:resnet}
-\end{longtable}
-
-
-%\end{table}
+\end{table}
 }
 
 \begin{figure}[t]
@@ -266,6 +260,57 @@ full image feature map are max-pooled to yield the output value at this cell.
 Thus, given region proposals, the per-region computation is reduced to a single pass through the complete network,
 speeding up the system by two orders of magnitude at inference time and one order of magnitude
 at training time.
+
+{
+\begin{table}[t]
+\centering
+\begin{tabular}{llr}
+\toprule
+\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
+\midrule\midrule
+& input image & H $\times$ W $\times$ C \\
+\midrule
+C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
+\midrule
+R$_0$ & From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
+& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 4 \\
+& flatten & A $\times$ 4 \\
+boxes$_{\mathrm{RPN}}$ & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 4\\
+& From R$_0$: 1 $\times$ 1 conv, 2 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 2 \\
+& flatten & A $\times$ 2 \\
+scores$_{\mathrm{RPN}}$& softmax & A $\times$ 2 \\
+ROI$_{\mathrm{RPN}}$ & sample boxes$_{\mathrm{RPN}}$ and scores$_{\mathrm{RPN}}$ & N$_{RoI}$ $\times$ 6 \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head}}\\
+\midrule
+& From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI extraction & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
+R$_1$& ResNet \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
+ave & average pool & N$_{RoI}$ $\times$ 2048 \\
+& From ave: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
+boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
+& From ave: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+\midrule
+\multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
+\midrule
+M$_0$ & From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
+masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
+
+\bottomrule
+\end{tabular}
+\caption {
+Mask R-CNN \cite{MaskRCNN} ResNet \cite{ResNet} architecture.
+Note that this is equivalent to the Faster R-CNN ResNet architecture if the mask
+head is left out. In Mask R-CNN, bilinear sampling is used for RoI extraction,
+whereas Faster R-CNN used RoI pooling.
+}
+\label{table:maskrcnn_resnet}
+\end{table}
+}
+
 
 \paragraph{Faster R-CNN}
 After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
@@ -313,56 +358,61 @@ bilinear sampling for extracting the RoI features, which is much more precise.
 In the original RoI pooling from Fast R-CNN, the bins for max-pooling are not aligned with the actual pixel
 boundary of the bounding box, and thus some detail is lost.
 
-
 {
-%\begin{table}[t]
-%\centering
-\begin{longtable}{llr}
+\begin{table}[h]
+\centering
+\begin{tabular}{llr}
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
 & input image & H $\times$ W $\times$ C \\
 \midrule
-C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
+C$_5$ & ResNet (Table \ref{table:resnet})  & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
+\midrule
+\multicolumn{3}{c}{\textbf{Feature Pyramid Network (FPN)}}\\
+\midrule
+P$_5$ & From C$_5$: 1 $\times$ 1 conv, 256 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 256 \\
+P$_4$ & $\begin{bmatrix}\textrm{skip from C$_4$}\end{bmatrix}_p$ & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 256 \\
+P$_3$ & $\begin{bmatrix}\textrm{skip from C$_3$}\end{bmatrix}_p$ & $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 256 \\
+P$_2$ & $\begin{bmatrix}\textrm{skip from C$_2$}\end{bmatrix}_p$ & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
+P$_6$ & From P$_5$: 2 $\times$ 2 subsample, 256 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 256 \\
 \midrule
 \multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
 \midrule
-R$_0$ & From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 4 \\
-& flatten & A $\times$ 4 \\
-boxes$_{\mathrm{RPN}}$ & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 4\\
-& From R$_0$: 1 $\times$ 1 conv, 2 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 2 \\
-& flatten & A $\times$ 2 \\
-scores$_{\mathrm{RPN}}$& softmax & A $\times$ 2 \\
-ROI$_{\mathrm{RPN}}$ & sample boxes$_{\mathrm{RPN}}$ and scores$_{\mathrm{RPN}}$ & N$_{RoI}$ $\times$ 6 \\
+\multicolumn{3}{c}{$\forall i \in \{2...6\}$}\\
+& From P$_i$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 512 \\
+& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ $N_a \cdot$ 6 \\
+RPN$_i$& flatten & A$_i$ $\times$ 6 \\
+\midrule
+& From \{RPN$_2$ ... RPN$_6$\}: concatenate & A $\times$ 6 \\
+& decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
+ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores & N$_{RoI}$ $\times$ 6 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head}}\\
 \midrule
-& From C$_4$ with ROI$_{\mathrm{RPN}}$: RoI extraction & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 1024 \\
-R$_1$& ResNet \{C$_5$ without stride\} (Table \ref{table:resnet})  & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 2048 \\
-ave & average pool & N$_{RoI}$ $\times$ 2048 \\
-& From ave: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
+R$_2$ & From \{P$_2$ ... P$_6$\} with ROI$_{\mathrm{RPN}}$: RoI extraction (Eq. \ref{eq:level_assignment}) & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 2 $\times$ 2 max pool & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 256 \\
+F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
+& From F$_1$: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4 \\
 boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
-& From ave: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+& From F$_1$: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
-M$_0$ & From R$_1$: 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
-& 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ N$_{cls}$ \\
+M$_1$ & From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
+& 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ 256 \\
+& 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
 masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
-
 \bottomrule
-
+\end{tabular}
 \caption {
-Mask R-CNN \cite{MaskRCNN} ResNet \cite{ResNet} architecture.
-Note that this is equivalent to the Faster R-CNN ResNet architecture if the mask
-head is left out. In Mask R-CNN, bilinear sampling is used for RoI extraction,
-whereas Faster R-CNN used RoI pooling.
+Mask R-CNN \cite{MaskRCNN} ResNet-FPN \cite{ResNet} architecture.
+Operations enclosed in a []$_p$ block make up a single FPN
+block (see Figure \ref{figure:fpn_block}).
 }
-\label{table:maskrcnn_resnet}
-\end{longtable}
-%\end{table}
+\label{table:maskrcnn_resnet_fpn}
+\end{table}
 }
 
 \paragraph{Feature Pyramid Networks}
@@ -414,64 +464,6 @@ anchor is computed. Now, for example, the smallest boxes are cropped from $P_2$,
 which is the highest resolution feature map.
 
 
-{
-%\begin{table}[t]
-%\centering
-\begin{longtable}{llr}
-\toprule
-\textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
-\midrule\midrule
-& input image & H $\times$ W $\times$ C \\
-\midrule
-C$_5$ & ResNet (Table \ref{table:resnet})  & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 1024 \\
-\midrule
-\multicolumn{3}{c}{\textbf{Feature Pyramid Network (FPN)}}\\
-\midrule
-P$_5$ & From C$_5$: 1 $\times$ 1 conv, 256 & $\tfrac{1}{32}$ H $\times$ $\tfrac{1}{32}$ W $\times$ 256 \\
-P$_4$ & $\begin{bmatrix}\textrm{skip from C$_4$}\end{bmatrix}_p$ & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 256 \\
-P$_3$ & $\begin{bmatrix}\textrm{skip from C$_3$}\end{bmatrix}_p$ & $\tfrac{1}{8}$ H $\times$ $\tfrac{1}{8}$ W $\times$ 256 \\
-P$_2$ & $\begin{bmatrix}\textrm{skip from C$_2$}\end{bmatrix}_p$ & $\tfrac{1}{4}$ H $\times$ $\tfrac{1}{4}$ W $\times$ 256 \\
-P$_6$ & From P$_5$: 2 $\times$ 2 subsample, 256 & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 256 \\
-\midrule
-\multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
-\midrule
-\multicolumn{3}{c}{$\forall i \in \{2...6\}$}\\
-& From P$_i$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ $N_a \cdot$ 6 \\
-RPN$_i$& flatten & A$_i$ $\times$ 6 \\
-\midrule
-& From \{RPN$_2$ ... RPN$_6$\}: concatenate & A $\times$ 6 \\
-& decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 6 \\
-ROI$_{\mathrm{RPN}}$ & sample bounding boxes \& scores & N$_{RoI}$ $\times$ 6 \\
-\midrule
-\multicolumn{3}{c}{\textbf{RoI Head}}\\
-\midrule
-R$_2$ & From \{P$_2$ ... P$_6$\} with ROI$_{\mathrm{RPN}}$: RoI extraction (Eq. \ref{eq:level_assignment}) & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
-& 2 $\times$ 2 max pool & N$_{RoI}$ $\times$ 7 $\times$ 7 $\times$ 256 \\
-F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
-& From F$_1$: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4 \\
-boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
-& From F$_1$: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
-classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
-\midrule
-\multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
-\midrule
-M$_1$ & From R$_2$: $\begin{bmatrix}\textrm{3 $\times$ 3 conv} \end{bmatrix}$ $\times$ 4, 256 & N$_{RoI}$ $\times$ 14 $\times$ 14 $\times$ 256 \\
-& 2 $\times$ 2 deconv, 256, stride 2 & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ 256 \\
-& 1 $\times$ 1 conv, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
-masks & sigmoid, N$_{cls}$ & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
-\bottomrule
-
-\caption {
-Mask R-CNN \cite{MaskRCNN} ResNet-FPN \cite{ResNet} architecture.
-Operations enclosed in a []$_p$ block make up a single FPN
-block (see Figure \ref{figure:fpn_block}).
-}
-\label{table:maskrcnn_resnet_fpn}
-\end{longtable}
-%\end{table}
-}
-
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.3\textwidth]{figures/fpn}
@@ -497,9 +489,16 @@ For regression, we define the smooth-$\ell_1$ regression loss as
 which provides a certain robustness to outliers and will be used
 frequently in the following chapters. For vector or tuple arguments, the sum of the componentwise scalar
 losses is computed.
-For classification we define $\ell_{cls}$ as the cross-entropy classification loss.
-
-\todo{formally define cross-entropy losses?}
+For classification with mutually exclusive classes, we define the categorical (softmax) cross-entropy loss,
+\begin{equation}
+\ell_{cls}(c, c^*) = -\log(),
+\end{equation}
+where $c^* \in \{0,N_{cls}\}$ is a label (or vector of labels) and $c \in (0,1)$ is the output of a softmax layer. % TODO label has wrong range
+Finally, for multi-label classification, we define the binary (sigmoid) cross-entropy loss,
+\begin{equation}
+\ell_{cls*}(y, y^*) = -y^* \cdot \log(y) - (1 - y^*) \cdot \log(1 - y),
+\end{equation}
+where $y^* \in \{0,1\}$ is a label (or vector of labels) and $y \in (0,1)$ is the output of a sigmoid layer.
 
 \label{ssec:rcnn_techn}
 \paragraph{Bounding box regression}
@@ -626,7 +625,7 @@ L_{box} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_
 \end{equation}
 is the average smooth-$\ell_1$ bounding box regression loss,
 \begin{equation}
-L_{mask} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_{cls}(m_i,m_i^*)
+L_{mask} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_{cls*}(m_i,m_i^*)
 \end{equation}
 is the average binary cross-entropy mask loss,
 \begin{equation}

@@ -111,7 +111,7 @@ let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}, o^{k,c_k}$ be the predicted motion for cla
 and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}, o^{gt,i_k}$ the ground truth motion for the example $i_k$.
 Then, assuming there are $N$ such detections,
 \begin{equation}
-E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{tr(\mathrm{inv}(R^{k,c_k}) \cdot R^{gt,i_k}) - 1}{2} \right\}\right\} \right)
+E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{\mathrm{tr}(\mathrm{inv}(R^{k,c_k}) \cdot R^{gt,i_k}) - 1}{2} \right\}\right\} \right)
 \end{equation}
 measures the mean angle of the error rotation between predicted and ground truth rotation,
 \begin{equation}
@@ -125,24 +125,24 @@ is the mean euclidean norm between predicted and ground truth pivot.
 Moreover, we define precision and recall measures for the detection of moving objects,
 where
 \begin{equation}
-O_{pr} = \frac{tp}{tp + fp}
+O_{pr} = \frac{\mathit{TP}}{\mathit{TP} + \mathit{FP}}
 \end{equation}
 is the fraction of objects which are actually moving among all objects classified as moving,
 and
 \begin{equation}
-O_{rc} = \frac{tp}{tp + fn}
+O_{rc} = \frac{\mathit{TP}}{\mathit{TP} + \mathit{FN}}
 \end{equation}
 is the fraction of objects correctly classified as moving among all objects which are actually moving.
 Here, we used
 \begin{equation}
-tp = \sum_k [o^{k,c_k} = 1 \land o^{gt,i_k} = 1],
+\mathit{TP} = \sum_k [o^{k,c_k} = 1 \land o^{gt,i_k} = 1],
 \end{equation}
 \begin{equation}
-fp = \sum_k [o^{k,c_k} = 1 \land o^{gt,i_k} = 0],
+\mathit{FP} = \sum_k [o^{k,c_k} = 1 \land o^{gt,i_k} = 0],
 \end{equation}
 and
 \begin{equation}
-fn = \sum_k [o^{k,c_k} = 0 \land o^{gt,i_k} = 1].
+\mathit{FN} = \sum_k [o^{k,c_k} = 0 \land o^{gt,i_k} = 1].
 \end{equation}
 Analogously, we define error metrics $E_{R}^{cam}$ and $E_{t}^{cam}$ for
 predicted camera motions.
