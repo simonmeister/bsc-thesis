@@ -7,7 +7,8 @@ In addition to instance motions, our network estimates the 3D motion of the came
 We combine all these estimates to yield a dense optical flow output from our
 end-to-end deep network.
 Our model is trained on the synthetic Virtual KITTI dataset, which provides
-us with all required ground truth data, and evaluated on the same domain.
+us with all required ground truth data, and evaluated on a validation set created
+from Virtual KITTI.
 During inference, our model does not add any significant computational overhead
 over the latest iterations of R-CNNs (Faster R-CNN, Mask R-CNN) and is therefore just as fast and interesting
 for real time scenarios.
@@ -22,7 +23,7 @@ applications.
 We only trained our models on the \emph{clone} variants of the Virtual KITTI sequences
 to make training faster.
 In the future, it would be interesting to train on all variants, as the different
-lighting conditions and angles should lead to a more general model.
+lighting conditions and viewing angles should lead to a more general model.
 
 \paragraph{Evaluation and finetuning on KITTI 2015}
 Thus far, we have evaluated our model on a subset of the Virtual KITTI dataset
@@ -40,12 +41,12 @@ KITTI 2015 test set, this makes little sense, though.
 \paragraph{Predicting depth}
 In this work, we focused on motion estimation when RGB-D frames with dense depth are available.
 However, in many applications settings, we are not provided with any depth information.
-In most cases, we want to work with raw RGB sequences from one or multiple simple cameras,
+In most cases, we instead want to work with raw RGB sequences from one or multiple simple cameras,
 from which no depth data is available.
 To do so, we could integrate depth prediction into our network by branching off a
-depth network from the backbone in parallel to the RPN (Figure \ref{table:motionrcnn_resnet_fpn_depth}).
+depth network from the backbone in parallel to the RPN (Table~\ref{table:motionrcnn_resnet_fpn_depth}).
 Alternatively, we could add a specialized network for end-to-end depth regression
-in parallel to the region-based network (or before, to provide XYZ input to the R-CNN), e.g. \cite{GCNet}.
+in parallel to the region-based network (or before, to provide XYZ input to Motion R-CNN), e.g. \cite{GCNet}.
 Although single-frame monocular depth prediction with deep networks was already done
 to some level of success,
 our two-frame input should allow the network to make use of epipolar
@@ -57,7 +58,7 @@ the R-CNN,
 this would however require using a different dataset for training it, as Virtual KITTI does not
 provide stereo images.
 If we would use a specialized depth network, we could use stereo data
-for depth prediction and still train the R-CNN independently on the monocular Virtual KITTI,
+for depth prediction and still train Motion R-CNN independently on the monocular Virtual KITTI,
 though we would loose the ability to easily train the system in an end-to-end manner.
 
 As soon as we can predict depth, we can evaluate our model on the KITTI 2015 test,
@@ -70,7 +71,7 @@ and also fine-tune on the training set as mentioned in the previous paragraph.
 \toprule
 \textbf{Layer ID} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
-& input image & H $\times$ W $\times$ C \\
+& input images $I_t$, $I_{t+1}$, and (optional) XYZ$_{t}$, XYZ$_{t+1}$ & H $\times$ W $\times$ C \\
 \midrule
 C$_6$ & ResNet (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 \midrule
@@ -108,10 +109,10 @@ Cityscapes \cite{Cityscapes}. As soon as the RPN works reliably, we could execut
 steps of training on, for example, Cityscapes and the KITTI 2015 stereo and optical flow datasets.
 On KITTI 2015 stereo and flow, we could run the instance segmentation component in testing mode and only penalize
 the motion losses (and depth prediction, if added), as no complete instance segmentation ground truth exists.
-On Cityscapes, we could continue train the instance segmentation components to
+On Cityscapes, we could continue training the instance segmentation components to
 improve detection and masks and avoid forgetting instance segmentation.
 As an alternative to this training scheme, we could investigate training on a pure
-instance segmentation dataset with unsupervised warping-based proxy losses for the motion (and depth)
+instance segmentation stereo dataset with unsupervised warping-based proxy losses for the motion (and depth)
 prediction. Unsupervised deep learning of this kind was already done to some level of success in the optical flow
 setting \cite{UnsupFlownet, UnFlow},
 and was recently also applied to monocular depth networks trained on the KITTI dataset \cite{UnsupDepth}.
@@ -131,15 +132,16 @@ To do this, one could use a re-projection loss conceptually identical to the one
 for supervising instance motions with ground truth flow. However, to adjust for the
 fact that the camera motion can only be accurately supervised with flow at positions where
 no object motion accurs, this loss would have to be masked with the ground truth
-object masks. Again, we could use this flow-based loss in an unsupervised way.
-For training on a dataset without any motion ground truth, e.g.
+object masks. Again, we could use this flow-based loss in an unsupervised way,
+as long as ground truth instance masks are available.
+For training on a single dataset without any motion ground truth, e.g.
 Cityscapes, it may be critical to add this term in addition to an unsupervised
 loss for the instance motions.
 
 \paragraph{Temporal consistency}
 A next step after the two aforementioned ones could be to extend our network to exploit more than two
 temporally consecutive frames, which has previously been shown to be beneficial in the
-context of energy-minimization based scene flow \cite{TemporalSF}.
+context of classical energy-minimization based scene flow \cite{TemporalSF}.
 In fact, by incorporating recurrent neural networks, e.g. LSTMs \cite{LSTM},
 into our architecture, we could enable temporally consistent motion estimation
 from image sequences of arbitrary length.
