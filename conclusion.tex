@@ -18,6 +18,12 @@ of our network is highly interpretable, which may also bring benefits for safety
 applications.
 
 \subsection{Future Work}
+\paragraph{Training on all Virtual KITTI sequences}
+We only trained our models on the \emph{clone} variants of the Virtual KITTI sequences
+to make training faster.
+In the future, it would be interesting to train on all variants, as the different
+lighting conditions and angles should lead to a more general model.
+
 \paragraph{Evaluation and finetuning on KITTI 2015}
 Thus far, we have evaluated our model on a subset of the Virtual KITTI dataset
 on which we do not train, but we have yet to evaluate on a real world dataset.
@@ -138,19 +144,19 @@ In fact, by incorporating recurrent neural networks, e.g. LSTMs \cite{LSTM},
 into our architecture, we could enable temporally consistent motion estimation
 from image sequences of arbitrary length.
 
-\paragraph{Masking prior to the RoI motion head}
-Currently, in the Motion R-CNN RoI motion head, the RoI features extracted from
-the backbone are integrated over the complete RoI window to yield the features
-for motion estimation.
-For example, average pooling is applied before the fully-connected layers in the variant without FPN.
-However, ideally, the motion (image matching) information from the backbone should
-
-For example, consider
-
-Additionally, we use the \emph{predicted} binarized masks for each RoI to mask the
-extracted RoI features before passing them into the motion head.
-The intuition behind that is that we want to mask out (set to zero) any positions in the
-extracted feature window which belong to the background. Then, the RoI motion
-head could aggregate the motion (image matching) information from the backbone
-over positions localized within the object only, but not over positions belonging
-to the background, which should probably not influence the final object motion estimate.
+% \paragraph{Masking prior to the RoI motion head}
+% Currently, in the Motion R-CNN RoI motion head, the RoI features extracted from
+% the backbone are integrated over the complete RoI window to yield the features
+% for motion estimation.
+% For example, average pooling is applied before the fully-connected layers in the variant without FPN.
+% However, ideally, the motion (image matching) information from the backbone should
+%
+% For example, consider
+%
+% Additionally, we use the \emph{predicted} binarized masks for each RoI to mask the
+% extracted RoI features before passing them into the motion head.
+% The intuition behind that is that we want to mask out (set to zero) any positions in the
+% extracted feature window which belong to the background. Then, the RoI motion
+% head could aggregate the motion (image matching) information from the backbone
+% over positions localized within the object only, but not over positions belonging
+% to the background, which should probably not influence the final object motion estimate.

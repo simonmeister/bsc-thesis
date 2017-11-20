@@ -1,6 +1,6 @@
 \subsection{Implementation}
-Our networks and loss functions are implemented using built-in TensorFlow \cite{TensorFlow}
-functions, enabling us to use automatic differentiation for all gradient
+Our networks and loss functions are implemented using built-in TensorFlow
+functions \cite{TensorFlow}, enabling us to use automatic differentiation for all gradient
 computations. To make our code easy to extend and flexible, we build on
 the TensorFlow Object detection API \cite{TensorFlowObjectDetection}, which provides a Faster R-CNN baseline
 implementation.
@@ -49,18 +49,18 @@ let $[R_t^{ex}|t_t^{ex}]$
 and $[R_{t+1}^{ex}|t_{t+1}^{ex}]$
 be the camera extrinsics at the two frames.
 We compute the ground truth camera motion
-$\{R_t^{gt, cam}, t_t^{gt, cam}\} \in \mathbf{SE}(3)$ as
+$\{R_{cam}^*, t_{cam}^*\} \in \mathbf{SE}(3)$ as
 
 \begin{equation}
-R_{t}^{gt, cam} = R_{t+1}^{ex}  \cdot \mathrm{inv}(R_t^{ex}),
+R_{cam}^* = R_{t+1}^{ex}  \cdot \mathrm{inv}(R_t^{ex}),
 \end{equation}
 \begin{equation}
-t_{t}^{gt, cam} = t_{t+1}^{ex}  - R_{t}^{ex} \cdot t_t^{ex}.
+t_{cam}^* = t_{t+1}^{ex}  - R_{cam}^* \cdot t_t^{ex}.
 \end{equation}
 
-Additionally, we define $o_t^{gt, cam} \in \{ 0, 1 \}$,
+Additionally, we define $o_{cam}^* \in \{ 0, 1 \}$,
 \begin{equation}
-o_t^{gt, cam} =
+o_{cam}^* =
 \begin{cases}
 1 &\text{if the camera pose changes between $t$ and $t+1$} \\
 0 &\text{otherwise,}
@@ -75,25 +75,25 @@ at $I_t$ and $I_{t+1}$.
 Note that the pose at $t$ is given with respect to the camera at $t$ and
 the pose at $t+1$ is given with respect to the camera at $t+1$.
 
-We define the ground truth pivot $p_{t}^{gt, i} \in \mathbb{R}^3$ as
+We define the ground truth pivot $p_k^* \in \mathbb{R}^3$ as
 
 \begin{equation}
-p_{t}^{gt, i} = t_t^i
+p_k^* = t_t^i
 \end{equation}
 
 and compute the ground truth object motion
-$\{R_t^{gt, i}, t_t^{gt, i}\} \in \mathbf{SE}(3)$ as
+$\{R_k^*, t_k^*\} \in \mathbf{SE}(3)$ as
 
 \begin{equation}
-R_{t}^{gt, i} = \mathrm{inv}(R_t^{gt, cam}) \cdot R_{t+1}^i \cdot \mathrm{inv}(R_t^i),
+R_k^* = \mathrm{inv}(R_{cam}^*) \cdot R_{t+1}^i \cdot \mathrm{inv}(R_t^i),
 \end{equation}
 \begin{equation}
-t_{t}^{gt, i} = t_{t+1}^{i}  - R_t^{gt, cam} \cdot t_t.
+t_k^* = t_{t+1}^{i}  - R_k^* \cdot t_t.
 \end{equation}
 
-As for the camera, we define $o_t^{gt, i} \in \{ 0, 1 \}$,
+As for the camera, we define $o_k^* \in \{ 0, 1 \}$,
 \begin{equation}
-o_t^{gt, i} =
+o_k^* =
 \begin{cases}
 1 &\text{if the position of object i changes between $t$ and $t+1$} \\
 0 &\text{otherwise,}
@@ -105,21 +105,19 @@ which specifies whether an object is moving in between the frames.
 To evaluate the 3D instance and camera motions on the Virtual KITTI validation
 set, we introduce a few error metrics.
 Given a foreground detection $k$ with an IoU of at least $0.5$ with a ground truth example,
-let $i_k$ be the index of the best matching ground truth example,
-let $c_k$ be the predicted class,
-let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}, o^{k,c_k}$ be the predicted motion for class $c_k$
-and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}, o^{gt,i_k}$ the ground truth motion for the example $i_k$.
+let $R_k, t_k, p_k, o_k$ be the predicted motion for the predicted class $c_k$
+and $R_k^*, t_k^*, p_k^*, o_k^*$ the motion ground truth for the best matching example.
 Then, assuming there are $N$ such detections,
 \begin{equation}
-E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{\mathrm{tr}(\mathrm{inv}(R^{k,c_k}) \cdot R^{gt,i_k}) - 1}{2} \right\}\right\} \right)
+E_{R} = \frac{1}{N}\sum_k \arccos\left( \min\left\{1, \max\left\{-1, \frac{\mathrm{tr}(\mathrm{inv}(R_k^*) \cdot R_k) - 1}{2} \right\}\right\} \right)
 \end{equation}
 measures the mean angle of the error rotation between predicted and ground truth rotation,
 \begin{equation}
-E_{t} = \frac{1}{N}\sum_k  \left\lVert \mathrm{inv}(R^{k,c_k}) \cdot (t^{gt,i_k} - t^{k,c_k}) \right\rVert_2,
+E_{t} = \frac{1}{N}\sum_k  \left\lVert \mathrm{inv}(R_k) \cdot (t_k^* - t_k) \right\rVert_2,
 \end{equation}
 is the mean euclidean norm between predicted and ground truth translation, and
 \begin{equation}
-E_{p} = \frac{1}{N}\sum_k \left\lVert p^{gt,i_k} - p^{k,c_k} \right\rVert_2
+E_{p} = \frac{1}{N}\sum_k \left\lVert p_k^* - p_k \right\rVert_2
 \end{equation}
 is the mean euclidean norm between predicted and ground truth pivot.
 Moreover, we define precision and recall measures for the detection of moving objects,
@@ -135,29 +133,30 @@ O_{rc} = \frac{\mathit{TP}}{\mathit{TP} + \mathit{FN}}
 is the fraction of objects correctly classified as moving among all objects which are actually moving.
 Here, we used
 \begin{equation}
-\mathit{TP} = \sum_k [o^{k,c_k} = 1 \land o^{gt,i_k} = 1],
+\mathit{TP} = \sum_k [o_k = 1 \land o_k^* = 1],
 \end{equation}
 \begin{equation}
-\mathit{FP} = \sum_k [o^{k,c_k} = 1 \land o^{gt,i_k} = 0],
+\mathit{FP} = \sum_k [o_k = 1 \land o_k^* = 0],
 \end{equation}
 and
 \begin{equation}
-\mathit{FN} = \sum_k [o^{k,c_k} = 0 \land o^{gt,i_k} = 1].
+\mathit{FN} = \sum_k [o_k = 0 \land o_k^* = 1].
 \end{equation}
 Analogously, we define error metrics $E_{R}^{cam}$ and $E_{t}^{cam}$ for
-predicted camera motions.
+the predicted camera motion.
 
 \subsection{Virtual KITTI: Training setup}
 \label{ssec:setup}
 
 For our initial experiments, we concatenate both RGB frames as
 well as the XYZ coordinates for both frames as input to the networks.
-We train both, the Motion R-CNN  and -FPN variants.
+We train both, the Motion R-CNN ResNet and ResNet-FPN variants.
 
 \paragraph{Training schedule}
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
-We train on a single Titan X (Pascal) for a total of 192K iterations on the
-Virtual KITTI training set.
+We train for a total of 192K iterations on the Virtual KITTI training set.
+For this, we use a single Titan X (Pascal) GPU and a batch size of 1,
+which results in approximately one day of training.
 As optimizer, we use stochastic gradient descent (SGD) \cite{SGD} with a
 momentum of $0.9$.
 As learning rate we use $0.25 \cdot 10^{-2}$ for the

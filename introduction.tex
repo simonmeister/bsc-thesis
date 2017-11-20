@@ -11,26 +11,30 @@ and estimates their 3D locations as well as all 3D object motions between the fr
 
 \subsection{Motivation}
 
-For moving in the real world, it is generally desirable to know which objects exists
+For moving in the real world, it is often desirable to know which objects exists
 in the proximity of the moving agent,
 where they are located relative to the agent,
-and where they will be at some point in the future.
+and where they will be at some point in the near future.
 In many cases, it would be preferable to infer such information from video data
-if technically feasible, as camera sensors are cheap and ubiquitous.
+if technically feasible, as camera sensors are cheap and ubiquitous
+(compared to, for example, Lidar).
 
-For example, in autonomous driving, it is crucial to not only know the position
+As an example, consider the autonomous driving problem.
+Here, it is crucial to not only know the position
 of each obstacle, but to also know if and where the obstacle is moving,
 and to use sensors that will not make the system too expensive for widespread use.
+At the same time, the autonomous driving system has to operate in real time to
+react quickly enough for safely controlling the vehicle.
 
-A promising approach for 3D scene understanding in situations like these are deep neural
+A promising approach for 3D scene understanding in situations such as autonomous driving are deep neural
 networks, which have recently achieved breakthroughs in object detection, instance segmentation and classification
 in still images and are more and more often being applied to video data.
-A key benefit of end-to-end deep networks is that they can, in principle,
+A key benefit of deep networks is that they can, in principle,
 enable very fast inference on real time video data and generalize
-over many training examples to resolve ambiguities inherent in image understanding
+over many training situations to resolve ambiguities inherent in image understanding
 and motion estimation.
 
-Thus, in this work, we aim to develop end-to-end deep networks which can, given
+Thus, in this work, we aim to develop deep neural networks which can, given
 sequences of images, segment the image pixels into object instances and estimate
 the location and 3D motion of each object instance relative to the camera
 (Figure \ref{figure:teaser}).
@@ -39,9 +43,12 @@ the location and 3D motion of each object instance relative to the camera
 
 Recently, SfM-Net \cite{SfmNet} introduced an end-to-end deep learning approach for predicting depth
 and dense optical flow in monocular image sequences based on estimating the 3D motion of individual objects and the camera.
-SfM-Net predicts a batch of binary full image masks specyfing the object memberships of individual pixels with a standard encoder-decoder
-network for pixel-wise prediction. A fully-connected network branching off the encoder predicts a 3D motion for each object.
-However, due to the fixed number of objects masks, the system can only predict a small number of motions and
+Using a standard encoder-decoder network for pixel-wise dense prediction,
+SfM-Net predicts a pre-determined number of binary masks ranging over the complete image,
+with each mask specifying the membership of the image pixels to one object.
+A fully-connected network branching off the encoder then predicts a 3D motion for each object,
+as well as the camera ego-motion.
+However, due to the fixed number of objects masks, the system can in practice only predict a small number of motions and
 often fails to properly segment the pixels into the correct masks or assigns background pixels to object motions (Figure \ref{figure:sfmnet_kitti}).
 \begin{figure}[t]
   \centering
@@ -64,9 +71,11 @@ deep learning approaches to motion estimation, may significantly benefit motion
 estimation by structuring the problem, creating physical constraints and reducing
 the dimensionality of the estimate.
 
-A scalable approach to instance segmentation based on region-based convolutional networks
-was recently introduced with Mask R-CNN \cite{MaskRCNN}, which inherits the ability to detect
-a large number of objects from a large number of classes at once from Faster R-CNN
+In the context of still images, a
+scalable approach to instance segmentation based on region-based convolutional networks
+was recently introduced with Mask R-CNN \cite{MaskRCNN}.
+Mask R-CNN inherits the ability to detect
+a large number of objects from a large number of classes at once from Faster R-CNN \cite{FasterRCNN}
 and predicts pixel-precise segmentation masks for each detected object (Figure \ref{figure:maskrcnn_cs}).
 
 \begin{figure}[t]
@@ -126,7 +135,7 @@ image depending on the semantics of each region or pixel, which include whether 
 pixel belongs to the background, to which object instance it belongs if it is not background,
 and the class of the object it belongs to.
 Often, failure cases of these methods include motion boundaries or regions with little texture,
-where semantics become important.
+where semantics become very important.
 Extensions of these approaches to scene flow estimate flow and depth
 with similarly generic networks \cite{SceneFlowDataset} and similar limitations.
 
@@ -171,14 +180,14 @@ These concerns restrict the applicability of the current slanted plane models in
 which often require estimations to be done in realtime and for which an end-to-end
 approach based on learning would be preferable.
 
-Futhermore, in other contexts, the move towards end-to-end deep learning has often lead
+By analogy, in other contexts, the move towards end-to-end deep learning has often lead
 to significant benefits in terms of accuracy and speed.
 As an example, consider the evolution of region-based convolutional networks, which started
 out as prohibitively slow with a CNN as a single component and
 became very fast and much more accurate over the course of their development into
 end-to-end deep networks.
 
-Thus, in the context of motion estimation, one could expect end-to-end deep learning to not only bring large improvements
+Thus, in the context of motion estimation, one may expect end-to-end deep learning to not only bring large improvements
 in speed, but also in accuracy, especially considering the inherent ambiguity of motion estimation
 and the ability of deep networks to learn to handle ambiguity from a large variety of training examples.
 
@@ -201,15 +210,15 @@ with a brightness constancy proxy loss.
 Like SfM-Net, we aim to estimate 3D motion and instance segmentation jointly with
 end-to-end deep learning.
 Unlike SfM-Net, we build on a scalable object detection and instance segmentation
-approach with R-CNNs, which provide a strong baseline.
+approach with R-CNNs, which provide us with a strong baseline for these tasks.
 
 \paragraph{End-to-end deep networks for camera pose estimation}
 Deep networks have been used for estimating the 6-DOF camera pose from
 a single RGB frame \cite{PoseNet, PoseNet2}, or for estimating depth and camera ego-motion
 from monocular video \cite{UnsupPoseDepth}.
 These works are related to
-ours in that we also need to output various rotations and translations from a deep network
-and thus need to solve similar regression problems and use similar parametrizations
+ours in that we also need to output various rotations and translations from a deep network,
+and thus need to solve similar regression problems and may be able to use similar parametrizations
 and losses.
 
 
@@ -217,8 +226,8 @@ and losses.
 First, in section \ref{sec:background}, we introduce preliminaries and building
 blocks from earlier works that serve as a foundation for our networks and losses.
 Most importantly, we re-view the ResNet CNN (\ref{ssec:resnet}) that will serve as CNN backbone
-as well as the developments in region-based CNNs onto which we build (\ref{ssec:rcnn}),
-specifically Mask R-CNN and the FPN \cite{FPN}.
+as well as the developments in region-based CNNs which we build on (\ref{ssec:rcnn}),
+specifically Mask R-CNN and the Feature Pyramid Network (FPN) \cite{FPN}.
 In section \ref{sec:approach}, we describe our technical contribution, starting
 with our motion estimation model and modifications to the Mask R-CNN backbone and head networks (\ref{ssec:model}),
 followed by our losses and supervision methods for training

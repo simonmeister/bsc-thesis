@@ -7,7 +7,7 @@ we estimate per-object motion by predicting the 3D motion of each detected objec
 For this, we extend Mask R-CNN in two straightforward ways.
 First, we modify the backbone network and provide two frames to the R-CNN system
 in order to enable image matching between the consecutive frames.
-Second, we extend the Mask R-CNN RoI head to predict a 3D motion for each
+Second, we extend the Mask R-CNN RoI head to predict a 3D motion and pivot for each
 region proposal. Tables \ref{table:motionrcnn_resnet} and \ref{table:motionrcnn_resnet_fpn}
 show our Motion R-CNN networks based on Mask R-CNN ResNet and Mask R-CNN ResNet-FPN,
 respectively.
@@ -18,7 +18,7 @@ respectively.
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
-& input images & H $\times$ W $\times$ C \\
+& input images $I_t$, $I_{t+1}$, and (optional) XYZ$_{t}$, XYZ$_{t+1}$ & H $\times$ W $\times$ C \\
 \midrule
 C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 1024 \\
 \midrule
@@ -69,7 +69,7 @@ additonally dropout with $p = 0.5$ after all fully-connected hidden layers.
 \toprule
 \textbf{Output} & \textbf{Layer Operations} & \textbf{Output Dimensions} \\
 \midrule\midrule
-& input images & H $\times$ W $\times$ C \\
+& input images $I_t$, $I_{t+1}$, and (optional) XYZ$_{t}$, XYZ$_{t+1}$  & H $\times$ W $\times$ C \\
 \midrule
 C$_6$ & ResNet (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1}{64}$ W $\times$ 2048 \\
 \midrule
@@ -121,32 +121,32 @@ Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backb
 Inspired by FlowNetS \cite{FlowNet}, we make one modification to the ResNet backbone to enable image matching,
 laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
 we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yielding a input image map with six channels.
-Alternatively, we also experiment with concatenating the camera space XYZ coordinates for each frame,
+Additionally, we also experiment with concatenating the camera space XYZ coordinates for each frame,
 XYZ$_t$ and XYZ$_{t+1}$, into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both first stage RPN and second stage feature extractor for extracting the RoI features.
-Technically, our feature encoder network will have to learn a motion representation similar to
+Technically, our feature encoder network will have to learn image matching representations similar to
 that learned by the FlowNet encoder, but the output will be computed in the
 object-centric framework of a region based convolutional network head with a 3D parametrization.
-Thus, in contrast to the dense FlowNet decoder, the estimated dense motion information
-from the encoder is integrated for specific objects via RoI cropping and
+Thus, in contrast to the dense FlowNet decoder, the estimated dense image matching information
+from the encoder is integrated for specific objects via RoI extraction and
 processed by the RoI head for each object.
 
 \paragraph{Per-RoI motion prediction}
 We use a rigid 3D motion parametrization similar to the one used in SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
-For the $k$-th object proposal, we predict the rigid transformation $\{R_t^k, t_t^k\}\in \mathbf{SE}(3)$
+For the $k$-th object proposal, we predict the rigid transformation $\{R_k, t_k\}\in \mathbf{SE}(3)$
 \footnote{$\mathbf{SE}(3)$ refers to the Special Euclidean Group representing 3D rotations
 and translations: $\{R, t|R \in \mathbf{SO}(3), t \in \mathbb{R}^3\}$}
-of the object between the two frames $I_t$ and $I_{t+1}$, as well as the object pivot $p_t^k \in \mathbb{R}^3$ at time $t$.
-We parametrize ${R_t^k}$ using an Euler angle representation,
+of the object between the two frames $I_t$ and $I_{t+1}$, as well as the object pivot $p_k \in \mathbb{R}^3$ at time $t$.
+We parametrize ${R_k}$ using an Euler angle representation,
 
 \begin{equation}
-R_t^k = R_t^{k,z}(\gamma) \cdot R_t^{k,x}(\alpha) \cdot R_t^{k,y}(\beta),
+R_k = R_k^z(\gamma) \cdot R_k^x(\alpha) \cdot R_k^y(\beta),
 \end{equation}
 
 where
 \begin{equation}
-R_t^{k,x}(\alpha) =
+R_k^x(\alpha) =
 \begin{pmatrix}
   1 & 0 & 0 \\
   0 & \cos(\alpha) & -\sin(\alpha) \\
@@ -155,7 +155,7 @@ R_t^{k,x}(\alpha) =
 \end{equation}
 
 \begin{equation}
-R_t^{k,y}(\beta) =
+R_k^y(\beta) =
 \begin{pmatrix}
   \cos(\beta) & 0 & \sin(\beta) \\
   0 & 1 & 0 \\
@@ -164,7 +164,7 @@ R_t^{k,y}(\beta) =
 \end{equation}
 
 \begin{equation}
-R_t^{k,z}(\gamma) =
+R_k^z(\gamma) =
 \begin{pmatrix}
   \cos(\gamma) & -\sin(\gamma) & 0 \\
   \sin(\gamma) & \cos(\gamma) & 0 \\
@@ -179,25 +179,26 @@ prediction in addition to the fully-connected layers for
 refined boxes and classes and the convolutional network for the masks.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
 Each instance motion is predicted as a set of nine scalar parameters,
-$\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_t^k$ and $p_t^k$,
+$\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_k$ and $p_k$,
 where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
 and that objects rotate at most 90 degrees in either direction along any axis,
-which is in general a safe assumption for image sequences from videos.
+which is in general a safe assumption for image sequences from videos,
+and enables us to obtain unique cosine values from the predicted sine values.
 All predictions are made in camera space, and translation and pivot predictions are in meters.
-We additionally predict softmax scores $o_t^k$ for classifying the objects into
-still and moving objects. As a postprocessing, for any object instance $k$ with predicted moving flag $o_t^k = 0$,
-we set $\sin(\alpha) = \sin(\beta) = \sin(\gamma) = 0$ and $t_t^k = (0,0,0)^T$,
+We additionally predict softmax scores $o_k$ for classifying the objects into
+still and moving objects. As a postprocessing, for any object instance $k$ with predicted moving flag $o_k = 0$,
+we set $\sin(\alpha) = \sin(\beta) = \sin(\gamma) = 0$ and $t_k = (0,0,0)^T$,
 and thus predict an identity motion.
 
 
 \paragraph{Camera motion prediction}
-In addition to the object transformations, we optionally predict the camera motion $\{R_t^{cam}, t_t^{cam}\}\in \mathbf{SE}(3)$
+In addition to the object transformations, we optionally predict the camera motion $\{R_{cam}, t_{cam}\}\in \mathbf{SE}(3)$
 between the two frames $I_t$ and $I_{t+1}$.
 For this, we branch off a small fully-connected network from the bottleneck output of the backbone.
-We again represent $R_t^{cam}$ using a Euler angle representation and
-predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_t^{cam}$ in the same way as for the individual objects.
-Again, we predict a softmax score $o_t^{cam}$ for differentiating between
+We again represent $R_{cam}$ using a Euler angle representation and
+predict $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$ and $t_{cam}$ in the same way as for the individual objects.
+Again, we predict a softmax score $o_{cam}$ for differentiating between
 a still and moving camera.
 
 \subsection{Network design}
@@ -207,19 +208,19 @@ a still and moving camera.
 In our ResNet variant without FPN (Table \ref{table:motionrcnn_resnet}), the underlying
 ResNet backbone is only computed up to the $C_4$ block, as otherwise the
 feature resolution prior to RoI extraction would be reduced too much.
-Therefore, in our the variant without FPN, we first pass the $C_4$ features through $C_5$
+Therefore, in our variant without FPN, we first pass the $C_4$ features through $C_5$
 and $C_6$ blocks (with weights independent from the $C_5$ block used in the RoI head in this variant)
-to increase the bottleneck stride prior to the camera network to 64.
+to increase the bottleneck stride prior to the camera motion network to 64.
 In our ResNet-FPN variant (Table \ref{table:motionrcnn_resnet_fpn}),
-the backbone makes use of all blocks through $C_6$ and
-we can simply branch of our camera network from the $C_6$ bottleneck.
+the backbone makes use of all blocks through $C_6$, and
+we can simply branch off our camera motion network from the $C_6$ bottleneck.
 Then, in both, the ResNet and ResNet-FPN variant, we apply a additional
 convolution to the $C_6$ features to reduce the number of inputs to the following
-fully-connected layers.
+fully-connected layers, and thus keep the number of weights reasonably small.
 Instead of averaging, we use bilinear resizing to bring the convolutional features
 to a fixed size without losing all spatial information,
-flatten them, and finally apply multiple fully-connected layers to compute the
-camera motion prediction.
+flatten them, and finally apply multiple fully-connected layers to predict the
+camera motion parameters.
 
 \paragraph{RoI motion head network}
 In both of our network variants
@@ -227,6 +228,15 @@ In both of our network variants
 we compute the fully-connected network for motion prediction from the
 flattened RoI features, which are also the basis for classification and
 bounding box refinement.
+Note that the features (extracted from the upsampled FPN stage appropriate to the RoI bounding box scales)
+passed to our ResNet-FPN RoI head went through the $C_6$
+bottleneck, which has a stride of 64 with respect to the original image.
+In contrast, the bottleneck for the features passed to our ResNet RoI head
+is $C_4$ (with a stride of 16). Thus, the ResNet-FPN variant can in principle estimate
+object motions based on larger displacements than the ResNet variant.
+Additionally, as smaller bounding boxes use higher resolution features, the
+motions and pivots of (especially smaller) objects can in principle be more accurately
+estimated with the FPN variant.
 
 \subsection{Supervision}
 \label{ssec:supervision}
@@ -235,42 +245,41 @@ bounding box refinement.
 The most straightforward way to supervise the object motions is by using ground truth
 motions computed from ground truth object poses, which is in general
 only practical when training on synthetic datasets.
-Given the $k$-th foreground RoI, let $i_k$ be the index of the matched ground truth example with class $c_k^*$,
-let $R^{k,c_k}, t^{k,c_k}, p^{k,c_k}, o^{k,c_k}$ be the predicted motion for class $c_k^*$
-and $R^{gt,i_k}, t^{gt,i_k}, p^{gt,i_k}, o^{gt,i_k}$ the ground truth motion for the example $i_k$.
-Note that we dropped the subscript $t$ to increase readability.
+Given the $k$-th foreground RoI (as defined for Mask R-CNN) with ground class $c_k^*$,
+let $R_k, t_k, p_k, o_k$ be the predicted motion for class $c_k^*$ as parametrized above,
+and $R_k^*, t_k^*, p_k^*, o_k^*$ the ground truth motion for the matched ground truth example.
 Similar to the camera pose regression loss in \cite{PoseNet2},
 we use a variant of the $\ell_1$-loss to penalize the differences between ground truth and predicted
 rotation, translation (and pivot, in our case). We found that the smooth $\ell_1$-loss
 performs better in our case than the standard $\ell_1$-loss.
-We then compute the RoI motion loss as
+We thus compute the RoI motion loss as
 
 \begin{equation}
-L_{motion} = \frac{1}{N_{RoI}^{fg}} \sum_k^{N_{RoI}} l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o^{gt,i_k} + l_o^k,
+L_{motion} = \frac{1}{N_{RoI}^{fg}} \sum_k^{N_{RoI}} l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o_k^* + l_o^k,
 \end{equation}
 where
 \begin{equation}
-l_{R}^k = \ell_{reg} (R^{gt,i_k} - R^{k,c_k}),
+l_{R}^k = \ell_{reg} (R_k^* - R_k),
 \end{equation}
 \begin{equation}
-l_{t}^k = \ell_{reg} (t^{gt,i_k} - t^{k,c_k}),
+l_{t}^k = \ell_{reg} (t_k^* - t_k),
 \end{equation}
 \begin{equation}
-l_{p}^k = \ell_{reg} (p^{gt,i_k} - p^{k,c_k}).
+l_{p}^k = \ell_{reg} (p_k^* - p_k).
 \end{equation}
-are the smooth $\ell_1$-loss terms for the predicted rotation, translation and pivot,
+are the smooth-$\ell_1$ losses for the predicted rotation, translation and pivot,
 respectively and
 \begin{equation}
-l_o^k = \ell_{cls}(o_t^k, o^{gt,i_k}).
+l_o^k = \ell_{cls}(o_k, o_k^*).
 \end{equation}
 is the cross-entropy loss for the predicted classification into moving and non-moving objects.
 
 Note that we do not penalize the rotation and translation for objects with
-$o^{gt,i_k} = 0$, which do not move between $t$ and $t+1$. We found that the network
+$o_k^* = 0$, which do not move between $t$ and $t+1$. We found that the network
 may not reliably predict exact identity motions for still objects, which is
 numerically more difficult to optimize than performing classification between
 moving and non-moving objects and discarding the regression for the non-moving
-ones. Also, analogous to masks and bounding boxes, the estimates for classes
+ones. Also, analogously to masks and bounding boxes, the estimates for classes
 other than $c_k^*$ are not penalized.
 
 Now, our modified RoI loss is
@@ -281,10 +290,10 @@ L_{RoI} = L_{cls} + L_{box} + L_{mask} + L_{motion}.
 \paragraph{Camera motion supervision}
 We supervise the camera motion with ground truth analogously to the
 object motions, with the only difference being that we only have
-a rotation and translation, but no pivot term for the camera motion.
+a rotation and translation, but no pivot loss for the camera motion.
 If the ground truth shows that the camera is not moving, we again do not
-penalize rotation and translation. For the camera, the loss is reduced to the
-classification term in this case.
+penalize rotation and translation. In this case, the camera motion loss is reduced to the
+classification loss.
 
 \paragraph{Per-RoI instance motion supervision \emph{without} 3D instance motion ground truth}
 \begin{figure}[t]
@@ -310,19 +319,20 @@ In this case, for any RoI,
 we generate a uniform $m \times m$ 2D grid of points inside the RPN proposal bounding box
 with the same resolution as the predicted mask.
 We use the same bounding box
-to crop the corresponding region from the dense, full image depth map
+to crop the corresponding region from the dense, full-image depth map
 and bilinearly resize the depth crop to the same resolution as the mask and point
 grid.
-We then compute the optical flow at each of the grid points by creating
-a 3D point cloud from the point grid and depth crop. To this point cloud, we
-apply the RoI's predicted motion, masked by the predicted mask.
+Next, we create a 3D point cloud from the point grid and depth crop. To this point cloud, we
+apply the object motion predicted for the RoI, masked by the predicted mask.
 Then, we apply the camera motion to the points, project them back to 2D
 and finally compute the optical flow at each point as the difference of the initial and re-projected 2D grids.
 Note that we batch this computation over all RoIs, so that we only perform
-it once per forward pass. Figure \ref{figure:flow_loss} illustrates the approach.
+it once per forward pass.
+Figure \ref{figure:flow_loss} illustrates the approach.
+
 The mathematical details for the 3D transformations and mappings between 2D and 3D are analogous to the
-dense, full image flow composition in the following subsection, so we will not
-include them here. The only differences are that there is no sum over objects during
+dense, full-image flow composition in the following subsection, so we will not
+duplicate them here. The only differences are that there is no sum over objects during
 the point transformation based on instance motion, as we consider the single object
 corresponding to an RoI in isolation, and that the masks are not resized to the
 full image resolution, as
@@ -333,21 +343,22 @@ For each RoI, we can now compute $L_{RoI}$ and thus supervise the object motion
 by penalizing the $m \times m$ optical flow grid.
 If there is optical flow ground truth available, we can use the RoI bounding box to
 crop and resize a region from the ground truth optical flow to match the RoI's
-optical flow grid and penalize the difference between the flow grids with an $\ell_1$-loss.
+optical flow grid and penalize the difference between the flow grids with a (smooth) $\ell_1$-loss.
 
 However, we can also use the re-projection loss without optical flow ground truth
 to train the motion prediction in an unsupervised manner, similar to \cite{SfmNet}.
-In this case, we use the bounding box to crop and resize a corresponding region
+In this case, we can use the bounding box to crop and resize a corresponding region
 from the first image $I_t$ and bilinearly sample a region from the second image $I_{t+1}$
-using the 2D grid displaced with the predicted flow grid. Then, we can penalize the difference
+using the 2D grid displaced with the predicted flow grid (the latter is often called \emph{backward warping}).
+Then, we can penalize the difference
 between the resulting image crops, for example, with a census loss \cite{CensusTerm,UnFlow}.
 For more details on differentiable bilinear sampling for deep learning, we refer the reader to
 \cite{STN}.
 
-When compared to supervision with motion ground truth, a re-projection
+When compared to supervision with 3D instance motion ground truth, a re-projection
 loss could benefit motion regression by removing any loss balancing issues between the
-rotation, translation and pivot terms \cite{PoseNet2},
-which can make it interesting even when 3D motion ground truth is available.
+rotation, translation and pivot losses \cite{PoseNet2},
+which could make it interesting even when 3D motion ground truth is available.
 
 \subsection{Training and inference}
 \label{ssec:training_inference}
@@ -368,7 +379,7 @@ highest scoring class.
 
 \subsection{Dense flow from motion}
 \label{ssec:postprocessing}
-As a postprocessing, we compose a dense optical flow map from the outputs of our Motion R-CNN network.
+As a postprocessing, we compose the dense optical flow between $I_t$ and $I_{t+1}$ from the outputs of our Motion R-CNN network.
 Given the depth map $d_t$ for frame $I_t$, we first create a 3D point cloud in camera space at time $t$,
 where
 \begin{equation}
@@ -383,33 +394,34 @@ x_t - c_0 \\ y_t - c_1 \\ f
 \end{pmatrix},
 \end{equation}
 is the 3D coordinate at $t$ corresponding to the point with pixel coordinates $x_t, y_t$,
-which range over all coordinates in $I_t$.
+which range over all coordinates in $I_t$,
+and $(c_0, c_1, f)$ are the camera intrinsics.
 For now, the depth map is always assumed to come from ground truth.
 
 Given $k$ detections with predicted motions as above, we transform all points within the bounding
 box of a detected object according to the predicted motion of the object.
 
-We first define the \emph{full image} mask $M_t^k$ for object k,
-which can be computed from the predicted box mask $m_t^k$ by bilinearly resizing
-$m_t^k$ to the width and height of the predicted bounding box and then copying the values
+We first define the \emph{full image} mask $M_k$ for object k,
+which can be computed from the predicted box mask $m_k$ (for the predicted class) by bilinearly resizing
+it to the width and height of the predicted bounding box and then copying the values
 of the resized mask into a full resolution mask initialized with zeros,
 starting at the top-left coordinate of the predicted bounding box.
-Then, given the predicted motions $(R_t^k, t_t^k)$ as well as $p_t^k$ for all objects,
+Then, given the predicted motions $(R_k, t_k)$, as well as $p_k$ for all objects,
 \begin{equation}
 P'_{t+1} =
-P_t + \sum_1^{k} M_t^k\left\{ R_t^k \cdot (P_t - p_t^k) + p_t^k + t_t^k - P_t \right\}
+P_t + \sum_1^{k} M_k\left\{ R_k \cdot (P_t - p_k) + p_k + t_k - P_t \right\}
 \end{equation}
 These motion predictions are understood to have already taken into account
 the classification into moving and still objects,
-and we thus, as described above, have identity motions for all objects with $o_t^k = 0$.
+and we thus, as described above, have identity motions for all objects with $o_k = 0$.
 
-Next, we transform all points given the camera transformation $\{R_t^c, t_t^c\} \in \mathbf{SE}(3)$,
+Next, we transform all points given the camera transformation $\{R_{cam}, t_{cam}\} \in \mathbf{SE}(3)$,
 
 \begin{equation}
 \begin{pmatrix}
 X_{t+1} \\ Y_{t+1} \\ Z_{t+1}
 \end{pmatrix}
-= P_{t+1} = R_t^c \cdot P'_{t+1} + t_t^c
+= P_{t+1} = R_{cam} \cdot P'_{t+1} + t_{cam}
 \end{equation}.
 
 Note that in our experiments, we either use the ground truth camera motion to focus
