@@ -7,18 +7,37 @@ In addition to instance motions, our network estimates the 3D motion of the came
 We combine all these estimates to yield a dense optical flow output from our
 end-to-end deep network.
 Our model is trained on the synthetic Virtual KITTI dataset, which provides
-us with all required ground truth data, and evaluated on a validation set created
-from Virtual KITTI.
+us with bounding box, instance mask, depth, and 3D motion ground truth,
+and evaluated on a validation set created from Virtual KITTI.
 During inference, our model does not add any significant computational overhead
 over the latest iterations of R-CNNs (Faster R-CNN, Mask R-CNN) and is therefore just as fast and interesting
 for real time scenarios.
-We thus presented a step towards real time 3D motion estimation based on a
+
+Although our system gives first reasonable instance motion predictions,
+estimates the camera ego-motion reasonably well,
+and achieves high accuracy in classifying between moving and non-moving objects,
+the accuracy of the motion predictions is still not convincing.
+More work will be thus required to bring the system (closer) to competetive accuracy,
+which includes trying penalization with the flow loss instead of 3D motion ground truth,
+and improvements to the network architecture and training process.
+We thus presented a partial step towards real time 3D motion estimation based on a
 physically sound scene decomposition. Thanks to instance-level reasoning, in contrast
 to previous end-to-end deep networks for dense motion estimation, the output
 of our network is highly interpretable, which may also bring benefits for safety-critical
 applications.
 
 \subsection{Future Work}
+\paragraph{Mask R-CNN baseline}
+As our Mask R-CNN re-implementation is still not as accurate as reported in the
+original paper, working on the implementation details of this baseline would be
+a critical, direct next step. Recently, a highly accurate, third-party implementation of Mask
+R-CNN in TensorFlow was released, which should be studied to this end.
+
+\paragraph{Instance motion supervision with the optical flow re-projection loss}
+We developed and implemented a loss for penalizing instance motions with optical flow ground truth,
+but could not yet train a network with it due to time constraints. The second
+next step will be conducting experiments with this loss.
+
 \paragraph{Training on all Virtual KITTI sequences}
 We only trained our models on the \emph{clone} variants of the Virtual KITTI sequences
 to make training faster.

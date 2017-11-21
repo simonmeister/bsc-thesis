@@ -214,8 +214,8 @@ $\begin{bmatrix}
 \end{tabular}
 \caption {
 Backbone architecture based on ResNet-50 \cite{ResNet}.
-Operations enclosed in a []$_b$ block make up a single ResNet \enquote{bottleneck}
-block (see Figure \ref{figure:bottleneck}). If the block is denoted as []$_b/2$,
+Operations enclosed in a $[\cdot]_b$ block make up a single ResNet \enquote{bottleneck}
+block (see Figure \ref{figure:bottleneck}). If the block is denoted as $[\cdot]_b/2$,
 the first convolution operation in the block has a stride of 2. Note that the stride
 is only applied to the first block, but not to repeated blocks.
 Batch normalization \cite{BN} is used after every residual unit.
@@ -415,7 +415,7 @@ masks & sigmoid & N$_{RoI}$ $\times$ 28 $\times$ 28 $\times$ N$_{cls}$ \\
 \end{tabular}
 \caption {
 Mask R-CNN \cite{MaskRCNN} ResNet-50-FPN \cite{ResNet} architecture.
-Operations enclosed in a []$_p$ block make up a single FPN
+Operations enclosed in a $[\cdot]_p$ block make up a single FPN
 block (see Figure \ref{figure:fpn_block}).
 }
 \label{table:maskrcnn_resnet_fpn}
