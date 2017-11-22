@@ -66,29 +66,26 @@ o_{cam}^* =
 0 &\text{otherwise,}
 \end{cases}
 \end{equation}
-which specifies the camera is moving in between the frames.
+which specifies whether the camera is moving in between the frames.
 
-For any object $i$ visible in both frames, let
-$(R_t^i, t_t^i)$ and $(R_{t+1}^i, t_{t+1}^i)$
+For any object $k$ visible in both frames, let
+$(R_t^k, t_t^k)$ and $(R_{t+1}^k, t_{t+1}^k)$
 be its orientation and position in camera space
-at $I_t$ and $I_{t+1}$.
+at $I_t$ and $I_{t+1}$, respectively.
 Note that the pose at $t$ is given with respect to the camera at $t$ and
 the pose at $t+1$ is given with respect to the camera at $t+1$.
 
 We define the ground truth pivot $p_k^* \in \mathbb{R}^3$ as
-
 \begin{equation}
-p_k^* = t_t^i
+p_k^* = t_t^k
 \end{equation}
-
 and compute the ground truth object motion
 $\{R_k^*, t_k^*\} \in \mathbf{SE}(3)$ as
-
 \begin{equation}
-R_k^* = \mathrm{inv}(R_{cam}^*) \cdot R_{t+1}^i \cdot \mathrm{inv}(R_t^i),
+R_k^* = \mathrm{inv}(R_{cam}^*) \cdot R_{t+1}^k \cdot \mathrm{inv}(R_t^k),
 \end{equation}
 \begin{equation}
-t_k^* = t_{t+1}^{i}  - R_k^* \cdot t_t.
+t_k^* = t_{t+1}^{k}  - R_k^* \cdot t_t.
 \end{equation}
 
 As for the camera, we define $o_k^* \in \{ 0, 1 \}$,
@@ -105,7 +102,7 @@ which specifies whether an object is moving in between the frames.
 To evaluate the 3D instance and camera motions on the Virtual KITTI validation
 set, we introduce a few error metrics.
 Given a foreground detection $k$ with an IoU of at least $0.5$ with a ground truth example,
-let $R_k, t_k, p_k, o_k$ be the predicted motion for the predicted class $c_k$
+let $R_k, t_k, p_k, o_k$ be the predicted (and postprocessed) motion for the predicted class $c_k$
 and $R_k^*, t_k^*, p_k^*, o_k^*$ the motion ground truth for the best matching example.
 Then, assuming there are $N$ such detections,
 \begin{equation}
@@ -120,6 +117,7 @@ is the mean euclidean norm between predicted and ground truth translation, and
 E_{p} = \frac{1}{N}\sum_k \left\lVert p_k^* - p_k \right\rVert_2
 \end{equation}
 is the mean euclidean norm between predicted and ground truth pivot.
+
 Moreover, we define precision and recall measures for the detection of moving objects,
 where
 \begin{equation}
@@ -152,7 +150,7 @@ the predicted camera motion.
 Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{MaskRCNN}.
 We train for a total of 192K iterations on the Virtual KITTI training set.
 For this, we use a single Titan X (Pascal) GPU and a batch size of 1,
-which results in approximately one day of training.
+which results in approximately one day of training for a complete run.
 As optimizer, we use stochastic gradient descent (SGD) \cite{SGD} with a
 momentum of $0.9$.
 As learning rate we use $0.25 \cdot 10^{-2}$ for the

@@ -5,7 +5,7 @@
 Building on Mask R-CNN \cite{MaskRCNN},
 we estimate per-object motion by predicting the 3D motion of each detected object.
 For this, we extend Mask R-CNN in two straightforward ways.
-First, we modify the backbone network and provide two frames to the R-CNN system
+First, we modify the backbone network and provide it with two frames
 in order to enable image matching between the consecutive frames.
 Second, we extend the Mask R-CNN RoI head to predict a 3D motion and pivot for each
 region proposal. Tables \ref{table:motionrcnn_resnet} and \ref{table:motionrcnn_resnet_fpn}
@@ -32,10 +32,10 @@ C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet}) & $\tfrac{1}{16}$ H $\
 & flatten & 1 $\times$ 7 $\cdot$ 7 $\cdot$ 512 \\
 T$_0$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
 
-$R_t^{cam}$& From T$_0$: fully connected, 3 & 1 $\times$ 3 \\
-$t_t^{cam}$& From T$_0$: fully connected, 3 & 1 $\times$ 3 \\
+$R_{cam}$& From T$_0$: fully connected, 3 & 1 $\times$ 3 \\
+$t_{cam}$& From T$_0$: fully connected, 3 & 1 $\times$ 3 \\
 & From T$_0$: fully connected, 2 & 1 $\times$ 2 \\
-$o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
+$o_{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet})}\\
 \midrule
@@ -43,11 +43,11 @@ $o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 %& From M$_0$: flatten & N$_{RoI}$ $\times$ 7 $\cdot$ 7 $\cdot$ 256 \\
 T$_1$ & From ave: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
-$\forall k: R_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
-$\forall k: t_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
-$\forall k: p_t^k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: R_k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: t_k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: p_k$ & From T$_1$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
 & From T$_1$: fully connected, 2 & N$_{RoI}$ $\times$ 2 \\
-$\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
+$\forall k: o_k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 
 \bottomrule
 \end{tabular}
@@ -81,10 +81,10 @@ C$_6$ & ResNet (Table \ref{table:resnet}) & $\tfrac{1}{64}$ H $\times$ $\tfrac{1
 & bilinear resize, 7 $\times$ 7 & 7 $\times$ 7 $\times$ 512 \\
 & flatten & 1 $\times$ 7 $\cdot$ 7 $\cdot$ 512 \\
 T$_2$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2  & 1 $\times$ 1024 \\
-$R_t^{cam}$& From T$_2$: fully connected, 3 & 1 $\times$ 3 \\
-$t_t^{cam}$& From T$_2$: fully connected, 3 & 1 $\times$ 3 \\
+$R_{cam}$& From T$_2$: fully connected, 3 & 1 $\times$ 3 \\
+$t_{cam}$& From T$_2$: fully connected, 3 & 1 $\times$ 3 \\
 & From T$_2$: fully connected, 2 & 1 $\times$ 2 \\
-$o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
+$o_{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head \& RoI Head: Masks} (Table \ref{table:maskrcnn_resnet_fpn})} \\
 \midrule
@@ -92,11 +92,11 @@ $o_t^{cam}$& softmax, 2 & 1 $\times$ 2 \\
 \midrule
 %& From M$_1$: flatten & N$_{RoI}$ $\times$ 14 $\cdot$ 14 $\cdot$ 256 \\
 T$_3$ & From F$_1$: $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 & N$_{RoI}$ $\times$ 1024 \\
-$\forall k: R_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
-$\forall k: t_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
-$\forall k: p_t^k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: R_k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: t_k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
+$\forall k: p_k$ & From T$_3$: fully connected, 3 & N$_{RoI}$ $\times$ 3 \\
 & From T$_2$: fully connected, 2 & N$_{RoI}$ $\times$ 2 \\
-$\forall k: o_t^k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
+$\forall k: o_k$ & softmax, 2 & N$_{RoI}$ $\times$ 2 \\
 
 \bottomrule
 \end{tabular}
@@ -124,7 +124,7 @@ we depth-concatenate two temporally consecutive frames $I_t$ and $I_{t+1}$, yiel
 Additionally, we also experiment with concatenating the camera space XYZ coordinates for each frame,
 XYZ$_t$ and XYZ$_{t+1}$, into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
-as both first stage RPN and second stage feature extractor for extracting the RoI features.
+as both RPN and for extracting the RoI features.
 Technically, our feature encoder network will have to learn image matching representations similar to
 that learned by the FlowNet encoder, but the output will be computed in the
 object-centric framework of a region based convolutional network head with a 3D parametrization.
@@ -133,7 +133,7 @@ from the encoder is integrated for specific objects via RoI extraction and
 processed by the RoI head for each object.
 
 \paragraph{Per-RoI motion prediction}
-We use a rigid 3D motion parametrization similar to the one used in SfM-Net and SE3-Nets \cite{SfmNet,SE3Nets}.
+We use a rigid 3D motion parametrization similar to the one used in SE3-Nets and SfM-Net \cite{SE3Nets, SfmNet}.
 For the $k$-th object proposal, we predict the rigid transformation $\{R_k, t_k\}\in \mathbf{SE}(3)$
 \footnote{$\mathbf{SE}(3)$ refers to the Special Euclidean Group representing 3D rotations
 and translations: $\{R, t|R \in \mathbf{SO}(3), t \in \mathbb{R}^3\}$}
@@ -214,7 +214,7 @@ to increase the bottleneck stride prior to the camera motion network to 64.
 In our ResNet-FPN variant (Table \ref{table:motionrcnn_resnet_fpn}),
 the backbone makes use of all blocks through $C_6$, and
 we can simply branch off our camera motion network from the $C_6$ bottleneck.
-Then, in both, the ResNet and ResNet-FPN variant, we apply a additional
+Then, in both, the ResNet and ResNet-FPN variant, we apply one additional
 convolution to the $C_6$ features to reduce the number of inputs to the following
 fully-connected layers, and thus keep the number of weights reasonably small.
 Instead of averaging, we use bilinear resizing to bring the convolutional features
@@ -255,7 +255,7 @@ performs better in our case than the standard $\ell_1$-loss.
 We thus compute the RoI motion loss as
 
 \begin{equation}
-L_{motion} = \frac{1}{\text{N}_{RoI}^{\mathit{fg}}} \sum_k^{\text{N}_{RoI}} l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o_k^* + l_o^k,
+L_{motion} = \frac{1}{\text{N}_{RoI}^{\mathit{fg}}} \sum_k^{\text{N}_{RoI}} (l_{R}^k + l_{t}^k) \cdot o_k^* + l_{p}^k + l_o^k,
 \end{equation}
 where
 \begin{equation}
@@ -272,7 +272,7 @@ respectively and
 \begin{equation}
 l_o^k = \ell_{cls}(o_k, o_k^*).
 \end{equation}
-is the cross-entropy loss for the predicted classification into moving and non-moving objects.
+is the (categorical) cross-entropy loss for the predicted classification into moving and non-moving objects.
 
 Note that we do not penalize the rotation and translation for objects with
 $o_k^* = 0$, which do not move between $t$ and $t+1$. We found that the network
@@ -300,7 +300,7 @@ classification loss.
   \centering
   \includegraphics[width=\textwidth]{figures/flow_loss}
 \caption{
-Overview of the alternative, optical flow based loss for instance motion
+Overview of the alternative, flow-based loss for instance motion
 supervision without 3D instance motion ground truth.
 In contrast to SfM-Net \cite{SfmNet}, where a single optical flow field is
 composed and penalized to supervise the motion prediction, our loss considers
@@ -316,15 +316,16 @@ which we can apply to coordinates within the object bounding boxes,
 and which does not require ground truth 3D object motions.
 
 In this case, for any RoI,
-we generate a uniform $m \times m$ 2D grid of points inside the RPN proposal bounding box
+we generate a uniform $m \times m$ grid of 2D points inside the RPN proposal bounding box
 with the same resolution as the predicted mask.
+Note that the predicted mask we use here was binarized at a threshold of $0.5$.
 We use the same bounding box
 to crop the corresponding region from the dense, full-image depth map
 and bilinearly resize the depth crop to the same resolution as the mask and point
 grid.
-Next, we create a 3D point cloud from the point grid and depth crop. To this point cloud, we
+Next, we create a grid of 3D points (point cloud) from the grid of 2D points and depth crop. To this point cloud, we
 apply the object motion predicted for the RoI, masked by the predicted mask.
-Then, we apply the camera motion to the points, project them back to 2D
+Then, we apply the camera motion to the 3D points, project them back to 2D
 and finally compute the optical flow at each point as the difference of the initial and re-projected 2D grids.
 Note that we batch this computation over all RoIs, so that we only perform
 it once per forward pass.
@@ -336,7 +337,7 @@ duplicate them here. The only differences are that there is no sum over objects 
 the point transformation based on instance motion, as we consider the single object
 corresponding to an RoI in isolation, and that the masks are not resized to the
 full image resolution, as
-the depth crops and 2D point grid are at the same resolution as the predicted
+the depth crop and the grid of 2D points are at the same resolution as the predicted
 $m \times m$ mask.
 
 For each RoI, we can now compute $L_{RoI}$ and thus supervise the object motion
@@ -345,12 +346,12 @@ If there is optical flow ground truth available, we can use the RoI bounding box
 crop and resize a region from the ground truth optical flow to match the RoI's
 optical flow grid and penalize the difference between the flow grids with a (smooth) $\ell_1$-loss.
 
-However, we can also use the re-projection loss without optical flow ground truth
+However, we could also use the re-projection loss without optical flow ground truth
 to train the motion prediction in an unsupervised manner, similar to \cite{SfmNet}.
-In this case, we can use the bounding box to crop and resize a corresponding region
-from the first image $I_t$ and bilinearly sample a region from the second image $I_{t+1}$
-using the 2D grid displaced with the predicted flow grid (the latter is often called \emph{backward warping}).
-Then, we can penalize the difference
+In this case, we could use the bounding box to crop and bilinearly resize the corresponding region
+from the first image $I_t$ and bilinearly sample the corresponding region from the second image $I_{t+1}$,
+using the 2D point grid displaced with the predicted flow grid (which is often called \emph{backward warping}).
+Then, we could penalize the difference
 between the resulting image crops, for example, with a census loss \cite{CensusTerm,UnFlow}.
 For more details on differentiable bilinear sampling for deep learning, we refer the reader to
 \cite{STN}.
@@ -364,8 +365,8 @@ which could make it interesting even when 3D motion ground truth is available.
 \label{ssec:training_inference}
 \paragraph{Training}
 We train the Motion R-CNN RPN and RoI heads in the exact same way as described for Mask R-CNN.
-We additionally compute the camera and instance motion losses and concatenate additional
-information into the network input, but otherwise do not modify the training procedure
+We additionally compute the camera and instance motion losses and concatenate the additional
+frame (and, optionally, XYZ coordinates) into the network input, but otherwise do not modify the training procedure
 and sample proposals and RoIs in the exact same way.
 
 \paragraph{Inference}
@@ -374,7 +375,7 @@ In the same way as the RoI mask head, at test time, we compute the RoI motion he
 from the features extracted with refined bounding boxes.
 
 Again, as for masks and bounding boxes in Mask R-CNN,
-the predicted output object motions are the predicted object motions for the
+the predicted output object motion is the predicted object motion for the
 highest scoring class.
 
 \subsection{Dense flow from 3D motion}
@@ -406,29 +407,32 @@ which can be computed from the predicted box mask $m_k$ (for the predicted class
 it to the width and height of the predicted bounding box and then copying the values
 of the resized mask into a full resolution mask initialized with zeros,
 starting at the top-left coordinate of the predicted bounding box.
-Then, given the predicted motions $(R_k, t_k)$, as well as $p_k$ for all objects,
+Again we binarize masks at a threshold of $0.5$.
+
+Then, given the predicted motions $(R_k, t_k)$ and pivots $p_k$ for all objects,
 \begin{equation}
 P'_{t+1} =
-P_t + \sum_1^{k} M_k\left\{ R_k \cdot (P_t - p_k) + p_k + t_k - P_t \right\}
+P_t + \sum_1^{\text{N}} M_k\left\{ R_k \cdot (P_t - p_k) + p_k + t_k - P_t \right\},
 \end{equation}
-These motion predictions are understood to have already taken into account
+where N is the number of detections.
+The motion predictions are understood to have already taken into account
 the classification into moving and still objects,
-and we thus, as described above, have identity motions for all objects with $o_k = 0$.
+and we thus have, as described above, identity motions for all objects with $o_k = 0$.
 
-Next, we transform all points given the camera transformation $\{R_{cam}, t_{cam}\} \in \mathbf{SE}(3)$,
+Next, we transform points given the camera transformation $\{R_{cam}, t_{cam}\} \in \mathbf{SE}(3)$,
 
 \begin{equation}
 \begin{pmatrix}
 X_{t+1} \\ Y_{t+1} \\ Z_{t+1}
 \end{pmatrix}
-= P_{t+1} = R_{cam} \cdot P'_{t+1} + t_{cam}
-\end{equation}.
+= P_{t+1} = R_{cam} \cdot P'_{t+1} + t_{cam}.
+\end{equation}
 
-Note that in our experiments, we either use the ground truth camera motion to focus
-on evaluating the object motion predictions or the predicted camera motion to evaluate
-the complete motion estimates. We will always state which variant we use in the experimental section.
+%Note that in our experiments, we either use the ground truth camera motion to focus
+%on evaluating the object motion predictions or the predicted camera motion to evaluate
+%the complete motion estimates. We will always state which variant we use in the experimental section.
 
-Finally, we project the transformed 3D points at time $t+1$ to pixel coordinates again,
+Finally, we project the transformed 3D points at time $t+1$ to 2D pixel coordinates again,
 \begin{equation}
 \begin{pmatrix}
 x_{t+1} \\ y_{t+1}
@@ -443,7 +447,7 @@ X_{t+1} \\ Y_{t+1}
 c_0 \\ c_1
 \end{pmatrix}.
 \end{equation}
-We can now obtain the optical flow between $I_t$ and $I_{t+1}$ at each point as
+We now obtain the optical flow between $I_t$ and $I_{t+1}$ at each point as
 \begin{equation}
 \begin{pmatrix}
 u \\ v

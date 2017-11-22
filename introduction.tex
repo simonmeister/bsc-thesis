@@ -15,7 +15,7 @@ For moving in the real world, it is often desirable to know which objects exists
 in the proximity of the moving agent,
 where they are located relative to the agent,
 and where they will be at some point in the near future.
-In many cases, it would be preferable to infer such information from video data
+In many cases, it would be preferable to infer such information from video data,
 if technically feasible, as camera sensors are cheap and ubiquitous
 (compared to, for example, Lidar).
 
@@ -27,28 +27,29 @@ At the same time, the autonomous driving system has to operate in real time to
 react quickly enough for safely controlling the vehicle.
 
 A promising approach for 3D scene understanding in situations such as autonomous driving are deep neural
-networks, which have recently achieved breakthroughs in object detection, instance segmentation and classification
-in still images and are more and more often being applied to video data.
+networks, which have recently achieved breakthroughs in object detection, instance segmentation, and classification
+in still images, and are more and more often being applied to video data.
 A key benefit of deep networks is that they can, in principle,
 enable very fast inference on real time video data and generalize
 over many training situations to resolve ambiguities inherent in image understanding
 and motion estimation.
 
 Thus, in this work, we aim to develop deep neural networks which can, given
-sequences of images, segment the image pixels into object instances and estimate
+sequences of images, segment the image pixels into object instances, and estimate
 the location and 3D motion of each object instance relative to the camera
 (Figure \ref{figure:teaser}).
 
 \subsection{Technical goals}
 
-Recently, SfM-Net \cite{SfmNet} introduced an end-to-end deep learning approach for predicting depth
-and dense optical flow in monocular image sequences based on estimating the 3D motion of individual objects and the camera.
+Recently, SfM-Net \cite{SfmNet} introduced an end-to-end deep learning approach for predicting dense depth
+and dense optical flow from monocular image sequences,
+based on estimating the 3D motion of individual objects and the camera.
 Using a standard encoder-decoder network for pixel-wise dense prediction,
 SfM-Net predicts a pre-determined number of binary masks ranging over the complete image,
 with each mask specifying the membership of the image pixels to one object.
-A fully-connected network branching off the encoder then predicts a 3D motion for each object,
-as well as the camera ego-motion.
-However, due to the fixed number of objects masks, the system can in practice only predict a small number of motions and
+A fully-connected network branching off the encoder then predicts a 3D motion for each object
+and the camera ego-motion.
+However, due to the fixed number of objects masks, the system can in practice only predict a small number of motions, and
 often fails to properly segment the pixels into the correct masks or assigns background pixels to object motions (Figure \ref{figure:sfmnet_kitti}).
 \begin{figure}[t]
   \centering
@@ -56,19 +57,21 @@ often fails to properly segment the pixels into the correct masks or assigns bac
 \caption{
 Results of SfM-Net \cite{SfmNet} on KITTI \cite{KITTI2015}.
 From left to right, we show their instance segmentation into up to 3 independent objects,
-ground truth instance masks for the segmented objects, composed optical flow and ground truth optical flow.
+ground truth instance masks for the segmented objects, composed optical flow,
+and ground truth optical flow.
 Figure taken from \cite{SfmNet}.
 }
 \label{figure:sfmnet_kitti}
 \end{figure}
-Thus, this approach is very unlikely to scale to dynamic scenes with a potentially
-large number of diverse objects due to the inflexible nature of their instance segmentation technique.
+Thus, due to the inflexible nature of their instance segmentation technique,
+their approach is very unlikely to scale to dynamic scenes with a potentially
+large number of diverse objects.
 
 Still, we think that the general idea of estimating object-level motion with
 end-to-end deep networks instead
 of directly predicting a dense flow field, as is common in current end-to-end
 deep learning approaches to motion estimation, may significantly benefit motion
-estimation by structuring the problem, creating physical constraints and reducing
+estimation by structuring the problem, creating physical constraints, and reducing
 the dimensionality of the estimate.
 
 In the context of still images, a
@@ -102,7 +105,7 @@ as to the number or variety of object instances (Figure \ref{figure:net_intro}).
 
 Eventually, we want to extend our method to include depth prediction,
 yielding the first end-to-end deep network to perform 3D scene flow estimation
-in a principled way from the consideration of individual objects.
+in a principled and scalable way from the consideration of individual objects.
 For now, we will assume that RGB-D frames are given to break down the problem into
 manageable pieces.
 
@@ -110,9 +113,9 @@ manageable pieces.
   \centering
   \includegraphics[width=\textwidth]{figures/net_intro}
 \caption{
-Overview of our network based on Mask R-CNN. For each region of interest (RoI), we predict the instance motion
+Overview of our network based on Mask R-CNN. For each region of interest (RoI), we predict the 3D instance motion
 in parallel to the class, bounding box and mask. Additionally, we branch off a
-small network for predicting the camera motion from the bottleneck.
+small network from the bottleneck for predicting the 3D camera ego-motion.
 Novel components in addition to Mask R-CNN are shown in red.
 }
 \label{figure:net_intro}
@@ -128,7 +131,7 @@ at inference time as \emph{end-to-end} deep learning systems.
 
 End-to-end deep networks for optical flow were recently introduced
 based on encoder-decoder networks or CNN pyramids \cite{FlowNet, FlowNet2, SPyNet},
-which pose optical flow as generic, homogenous pixel-wise estimation problem without making any assumptions
+which pose optical flow as generic (and homogeneous) pixel-wise estimation problem without making any assumptions
 about the regularity and structure of the estimated flow.
 Specifically, such methods ignore that the optical flow varies across an
 image depending on the semantics of each region or pixel, which include whether a
@@ -136,10 +139,10 @@ pixel belongs to the background, to which object instance it belongs if it is no
 and the class of the object it belongs to.
 Often, failure cases of these methods include motion boundaries or regions with little texture,
 where semantics become very important.
-Extensions of these approaches to scene flow estimate flow and depth
+Extensions of these approaches to scene flow estimate dense flow and dense depth
 with similarly generic networks \cite{SceneFlowDataset} and similar limitations.
 
-Other works \cite{FlowLayers, ESI, MRFlow} make use of semantic segmentation to structure % TODO cite jun's paper?
+Other works \cite{ESI, JOF, FlowLayers, MRFlow} make use of semantic segmentation to structure
 the optical flow estimation problem and introduce reasoning at the object level,
 but still require expensive energy minimization for each
 new input, as CNNs are only used for some of the components and numerical
@@ -153,7 +156,8 @@ The slanted plane model for scene flow \cite{PRSF, PRSM} models a 3D scene as be
 composed of planar segments. Pixels are assigned to one of the planar segments,
 each of which undergoes a independent 3D rigid motion.
 This model simplifies the motion estimation problem significantly by reducing the dimensionality
-of the estimate, and thus leads to accurate results.
+of the estimate, and thus can lead to more accurate results than the direct estimation
+of a homogenous motion field.
 In contrast to \cite{PRSF, PRSM}, the Object Scene Flow method \cite{KITTI2015}
 assigns each slanted plane to one rigidly moving object instance, thus
 reducing the number of independently moving segments by allowing multiple
@@ -164,23 +168,23 @@ without the use of (deep) learning.
 
 In a more recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
 a CNN is used to compute 2D bounding boxes and instance masks for all objects in the scene, which are then combined
-with depth obtained from a non-learned stereo algorithm to be used as pre-computed
+with depth obtained from a non-learned stereo algorithm, to be used as pre-computed
 inputs to a slanted plane scene flow model based on \cite{KITTI2015}.
 Most likely due to their use of deep learning for instance segmentation and for some other components, this
 approach outperforms the previous related scene flow methods on public benchmarks.
-Still, the method uses a energy-minimization formulation for the scene flow estimation
+Still, the method uses a energy-minimization formulation for the scene flow estimation itself
 and takes minutes to make a prediction.
 
 Interestingly, the slanted plane methods achieve the current state-of-the-art
 in scene flow \emph{and} optical flow estimation on the challenging KITTI benchmarks \cite{KITTI2012, KITTI2015},
-outperforming end-to-end deep networks like \cite{FlowNet2, SceneFlowDataset}.
+outperforming end-to-end deep networks like \cite{SceneFlowDataset, FlowNet2}.
 However, the end-to-end deep networks are significantly faster than their energy-minimization counterparts,
 generally taking a fraction of a second instead of minutes for prediction and can often be made to run in realtime.
 These concerns restrict the applicability of the current slanted plane models in practical settings,
-which often require estimations to be done in realtime and for which an end-to-end
+which often require estimations to be done in realtime (or close to realtime) and for which an end-to-end
 approach based on learning would be preferable.
 
-By analogy, in other contexts, the move towards end-to-end deep learning has often lead
+Also, by analogy, in other contexts, the move towards end-to-end deep learning has often lead
 to significant benefits in terms of accuracy and speed.
 As an example, consider the evolution of region-based convolutional networks, which started
 out as prohibitively slow with a CNN as a single component and
@@ -188,7 +192,7 @@ became very fast and much more accurate over the course of their development int
 end-to-end deep networks.
 
 Thus, in the context of motion estimation, one may expect end-to-end deep learning to not only bring large improvements
-in speed, but also in accuracy, especially considering the inherent ambiguity of motion estimation
+in speed, but also in accuracy, especially considering the inherent ambiguity of motion estimation,
 and the ability of deep networks to learn to handle ambiguity from a large variety of training examples.
 
 However, we think that the current end-to-end deep learning approaches to motion
@@ -200,10 +204,10 @@ with the promise of end-to-end deep learning.
 \paragraph{End-to-end deep networks for 3D rigid motion estimation}
 End-to-end deep learning for predicting rigid 3D object motions was first introduced with
 SE3-Nets \cite{SE3Nets}, which take raw 3D point clouds as input and produce a segmentation
-of the points into objects together with the 3D motion of each object.
+of the points into objects together with 3D motions for each object.
 Bringing this idea to the context of image sequences, SfM-Net \cite{SfmNet} takes two consecutive frames and
 estimates a segmentation of pixels into objects together with their 3D motions between the frames.
-In addition, SfM-Net predicts dense depth and camera ego-motion to obtain full 3D scene flow from end-to-end deep learning.
+In addition, SfM-Net predicts dense depth and camera ego-motion to obtain full 3D scene flow with end-to-end deep learning.
 For supervision, SfM-Net penalizes the dense optical flow composed from all 3D motions and the depth estimate
 with a brightness constancy proxy loss.
 
@@ -218,8 +222,8 @@ a single RGB frame \cite{PoseNet, PoseNet2}, or for estimating depth and camera 
 from monocular video \cite{UnsupPoseDepth}.
 These works are related to
 ours in that we also need to output various rotations and translations from a deep network,
-and thus need to solve similar regression problems and may be able to use similar parametrizations
-and losses.
+and thus need to solve similar regression problems,
+and may be able to use similar parametrizations and losses.
 
 
 \subsection{Outline}
