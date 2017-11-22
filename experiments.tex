@@ -160,11 +160,12 @@ first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 For training the RPN and RoI heads and during inference,
 we use the exact same number of proposals and RoIs as Mask R-CNN in
 the ResNet and ResNet-FPN variants, respectively.
-All losses are added up without additional weighting between the loss terms,
+All losses (the original ones and our new motion losses)
+are added up without additional weighting between the loss terms,
 as in Mask R-CNN.
 
 \paragraph{Initialization}
-For initializing the  C$_1$ to C$_5$ weights, we use a pre-trained
+For initializing the  C$_1$ to C$_5$ (see Table~\ref{table:resnet}) weights, we use a pre-trained
 ImageNet \cite{ImageNet} checkpoint from the official TensorFlow repository.
 Following the pre-existing TensorFlow implementation of Faster R-CNN,
 we initialize all other hidden layers with He initialization \cite{He}.
@@ -185,7 +186,7 @@ are in general expected to output.
 Visualization of results on Virtual KITTI with XYZ input, camera motion prediction and 3D motion supervision.
 For each example, we show the results with Motion R-CNN ResNet and ResNet-FPN
 in the upper and lower row, respectively.
-From left to right, we show the input image with instance segmentation results as overlay,
+From left to right, we show the first input frame with instance segmentation results as overlay,
 the estimated flow, as well as the flow error map.
 The flow error map depicts correct estimates ($\leq 3$ px or $\leq 5\%$ error) in blue and wrong estimates in red tones.
 }
@@ -200,7 +201,7 @@ We visually compare a Motion R-CNN ResNet trained without (upper row) and
 with (lower row) classifying the objects into moving and non-moving objects.
 Note that in the selected example, all cars are parking, and thus the predicted
 motion in the first row is an error.
-From left to right, we show the input image with instance segmentation results as overlay,
+From left to right, we show the first input frame with instance segmentation results as overlay,
 the estimated flow, as well as the flow error map.
 The flow error map depicts correct estimates ($\leq 3$ px or $\leq 5\%$ error) in blue and wrong estimates in red tones.
 }
@@ -215,7 +216,7 @@ The flow error map depicts correct estimates ($\leq 3$ px or $\leq 5\%$ error) i
 \multicolumn{1}{c}{Network} & \multicolumn{5}{c}{Instance Motion} & \multicolumn{2}{c}{Camera Motion} &\multicolumn{2}{c}{Flow Error} \\
   \cmidrule(lr){1-1}\cmidrule(lr){2-6}\cmidrule(l){7-8}\cmidrule(l){9-10}
 FPN        & $E_{R} [deg]$ & $E_{t} [m]$ & $E_{p} [m] $ & $O_{pr}$ & $O_{rc}$  & $E_{R}^{cam} [deg]$ & $E_{t}^{cam} [m]$ & AEE   & Fl-all \\\midrule
--          & (0.279)       & (0.442)     & -            & -        & -           & (0.220)             & (0.684)           & -     &     -\%    \\\midrule
+-          & (0.279)       & (0.442)     & -            & -        & -           & (0.220)             & (0.684)           & -     &     -    \\\midrule
 $\times$   & 0.301         & 0.237       & 3.331        & 0.790    & 0.916       & 0.087               & 0.053             & 11.17 & 24.91\%    \\
 \checkmark & 0.293         & 0.210       & 1.958        & 0.844    & 0.914       & 0.169               & 0.050             & 8.29  & 45.22\%    \\
   \bottomrule
@@ -237,14 +238,15 @@ to the average rotation angle in the ground truth camera motions.
 
 For our initial experiments, we concatenate both RGB frames as
 well as the XYZ coordinates for both frames as input to the networks.
-We train both, the Motion R-CNN ResNet and ResNet-FPN variants and supervise
+We train both, the Motion R-CNN ResNet and ResNet-FPN variants, and supervise
 camera and instance motions with 3D motion ground truth.
 
 In Figure \ref{figure:vkitti}, we visualize instance segmentation and optical flow
 results on the Virtual KITTI validation set.
 In Figure \ref{figure:moving}, we visually justify the addition of the classifier
 that decides between a moving and still object.
-In Table \ref{table:vkitti}, we compare the performance of different network variants
+In Table \ref{table:vkitti}, we compare various metrics for the Motion R-CNN
+ResNet and ResNet-FPN network variants
 on the Virtual KITTI validation set.
 
 \paragraph{Camera motion}
@@ -264,8 +266,8 @@ helpful.
 
 \paragraph{Instance motion}
 The object pivots are estimated with relatively (given that the scenes are in a realistic scale)
-high precision in both variants, although the FPN variant is significantly more
-precise, which we ascribe to the higher resolution features used in this variant.
+high accuracy in both variants, although the FPN variant is significantly more
+accurate, which we ascribe to the higher resolution features used in this variant.
 
 The predicted 3D object translations and rotations still have a relatively high
 error, compared to the average actual (ground truth) translations and rotations,

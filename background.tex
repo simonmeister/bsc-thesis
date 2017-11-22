@@ -17,6 +17,8 @@ to estimate disparity-based depth, however monocular depth estimation with deep 
 popular \cite{DeeperDepth, UnsupPoseDepth}.
 In this preliminary work, we will assume per-pixel depth to be given.
 
+\subsection{CNNs for dense motion estimation}
+
 {
 \begin{table}[h]
 \centering
@@ -54,7 +56,6 @@ are used for refinement.
 \end{table}
 }
 
-\subsection{CNNs for dense motion estimation}
 Deep convolutional neural network (CNN) architectures
 \cite{ImageNetCNN, VGGNet, ResNet}
 became widely popular through numerous successes in classification and recognition tasks.
@@ -134,30 +135,17 @@ and N$_{motions} = 3$.
 
 \subsection{ResNet}
 \label{ssec:resnet}
-ResNet (Residual Network) \cite{ResNet} was initially introduced as a CNN for image classification, but
-became popular as basic building block of many deep network architectures for a variety
-of different tasks. Figure \ref{figure:bottleneck}
-shows the fundamental building block of ResNet. The additive \emph{residual unit} enables the training
-of very deep networks without the gradients becoming too small as the distance
-from the output layer increases.
 
-In Table \ref{table:resnet}, we show the ResNet variant
-that will serve as the basic CNN backbone of our networks, and
-is also used in many other region-based convolutional networks.
-The initial image data is always passed through the ResNet backbone as a first step to
-bootstrap the complete deep network.
-Note that for the Mask R-CNN architectures we describe below, the architecture shown is equivalent
-to the standard ResNet-50 backbone.
-
-We additionally introduce one small extension that
-will be useful for our Motion R-CNN network.
-In ResNet-50, the C$_5$ bottleneck has a stride of 32 with respect to the
-input image resolution. In FlowNetS \cite{FlowNet}, their bottleneck stride is 64.
-For accurately estimating motions corresponding to larger pixel displacements, a larger
-stride may be important.
-Thus, we add a additional C$_6$ block to be used in the Motion R-CNN ResNet variants
-to increase the bottleneck stride to 64, following FlowNetS.
-
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.3\textwidth]{figures/bottleneck}
+\caption{
+ResNet \cite{ResNet} \enquote{bottleneck} convolutional block introduced to reduce computational
+complexity in deeper network variants, shown here with 256 input and output channels.
+Figure taken from \cite{ResNet}.
+}
+\label{figure:bottleneck}
+\end{figure}
 
 {
 \begin{table}[h]
@@ -228,16 +216,29 @@ Batch normalization \cite{BN} is used after every residual unit.
 \end{table}
 }
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.3\textwidth]{figures/bottleneck}
-\caption{
-ResNet \cite{ResNet} \enquote{bottleneck} convolutional block introduced to reduce computational
-complexity in deeper network variants, shown here with 256 input and output channels.
-Figure taken from \cite{ResNet}.
-}
-\label{figure:bottleneck}
-\end{figure}
+ResNet (Residual Network) \cite{ResNet} was initially introduced as a CNN for image classification, but
+became popular as basic building block of many deep network architectures for a variety
+of different tasks. Figure \ref{figure:bottleneck}
+shows the fundamental building block of ResNet. The additive \emph{residual unit} enables the training
+of very deep networks without the gradients becoming too small as the distance
+from the output layer increases.
+
+In Table \ref{table:resnet}, we show the ResNet variant
+that will serve as the basic CNN backbone of our networks, and
+is also used in many other region-based convolutional networks.
+The initial image data is always passed through the ResNet backbone as a first step to
+bootstrap the complete deep network.
+Note that for the Mask R-CNN architectures we describe below, the architecture shown is equivalent
+to the standard ResNet-50 backbone.
+
+We additionally introduce one small extension that
+will be useful for our Motion R-CNN network.
+In ResNet-50, the C$_5$ bottleneck has a stride of 32 with respect to the
+input image resolution. In FlowNetS \cite{FlowNet}, their bottleneck stride is 64.
+For accurately estimating motions corresponding to larger pixel displacements, a larger
+stride may be important.
+Thus, we add a additional C$_6$ block to be used in the Motion R-CNN ResNet variants
+to increase the bottleneck stride to 64, following FlowNetS.
 
 \subsection{Region-based CNNs}
 \label{ssec:rcnn}
@@ -265,6 +266,39 @@ feature map are max-pooled to yield the output value at the cell.
 Thus, given region proposals, all computation is reduced to a single pass through the complete network,
 speeding up the system by two orders of magnitude at inference time and one order of magnitude
 at training time.
+
+
+\paragraph{Faster R-CNN}
+After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
+algorithm, which has to be run prior to the network passes and makes up a large portion of the total
+processing time.
+The Faster R-CNN object detection system \cite{FasterRCNN} unifies the generation of region proposals and subsequent box refinement and
+classification into a single deep network, leading to faster test-time processing when compared to Fast R-CNN
+and again, improved accuracy.
+This unified network operates in two stages.
+In the \emph{first stage}, one forward pass is performed on the \emph{backbone} network,
+which is a deep feature encoder CNN with the original image as input.
+Next, the \emph{backbone} output features are passed into a small, fully-convolutional \emph{Region Proposal Network (RPN)} head, which
+predicts objectness scores and regresses bounding boxes at each of its output positions.
+At any of the $h \times w$ output positions of the RPN head,
+$\text{N}_a$ bounding boxes with their objectness scores are predicted as offsets relative to a fixed set of $\text{N}_a$ \emph{anchors} with different
+aspect ratios and scales. Thus, there are $\text{N}_a \times h \times w$ reference anchors in total.
+In Faster R-CNN, $\text{N}_a = 9$, with 3 scales, corresponding
+to anchor boxes of areas of $\{128^2, 256^2, 512^2\}$ pixels and 3 aspect ratios,
+$\{1:2, 1:1, 2:1\}$. For the ResNet Faster R-CNN backbone, we generally have a stride of 16
+with respect to the input image at the RPN output (Table \ref{table:maskrcnn_resnet}).
+
+For each RPN prediction at a given position, the objectness score tells us how likely it is to correspond to a detection.
+The region proposals can then be obtained as the N highest scoring RPN predictions.
+
+Then, the \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
+and bounding box refinement for each of the region proposals, which are now obtained
+from the RPN instead of being pre-computed by an external algorithm.
+As in Fast R-CNN, RoI pooling is used to extract one fixed size feature map for each of the region proposals,
+and the refined bounding boxes are predicted separately for each object class.
+
+Table~\ref{table:maskrcnn_resnet} includes an overview of the Faster R-CNN ResNet network architecture
+(for Faster R-CNN, the mask head is ignored).
 
 {
 \begin{table}[t]
@@ -315,39 +349,6 @@ whereas Faster R-CNN uses RoI pooling.
 \label{table:maskrcnn_resnet}
 \end{table}
 }
-
-
-\paragraph{Faster R-CNN}
-After streamlining the CNN components, Fast R-CNN is limited by the speed of the region proposal
-algorithm, which has to be run prior to the network passes and makes up a large portion of the total
-processing time.
-The Faster R-CNN object detection system \cite{FasterRCNN} unifies the generation of region proposals and subsequent box refinement and
-classification into a single deep network, leading to faster test-time processing when compared to Fast R-CNN
-and again, improved accuracy.
-This unified network operates in two stages.
-In the \emph{first stage}, one forward pass is performed on the \emph{backbone} network,
-which is a deep feature encoder CNN with the original image as input.
-Next, the \emph{backbone} output features are passed into a small, fully-convolutional \emph{Region Proposal Network (RPN)} head, which
-predicts objectness scores and regresses bounding boxes at each of its output positions.
-At any of the $h \times w$ output positions of the RPN head,
-$\text{N}_a$ bounding boxes with their objectness scores are predicted as offsets relative to a fixed set of $\text{N}_a$ \emph{anchors} with different
-aspect ratios and scales. Thus, there are $\text{N}_a \times h \times w$ reference anchors in total.
-In Faster R-CNN, $\text{N}_a = 9$, with 3 scales, corresponding
-to anchor boxes of areas of $\{128^2, 256^2, 512^2\}$ pixels and 3 aspect ratios,
-$\{1:2, 1:1, 2:1\}$. For the ResNet Faster R-CNN backbone, we generally have a stride of 16
-with respect to the input image at the RPN output (Table \ref{table:maskrcnn_resnet}).
-
-For each RPN prediction at a given position, the objectness score tells us how likely it is to correspond to a detection.
-The region proposals can then be obtained as the N highest scoring RPN predictions.
-
-Then, the \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
-and bounding box refinement for each of the region proposals, which are now obtained
-from the RPN instead of being pre-computed by an external algorithm.
-As in Fast R-CNN, RoI pooling is used to extract one fixed size feature map for each of the region proposals,
-and the refined bounding boxes are predicted separately for each object class.
-
-Table~\ref{table:maskrcnn_resnet} includes an overview of the Faster R-CNN ResNet network architecture
-(for Faster R-CNN, the mask head is ignored).
 
 \paragraph{Mask R-CNN}
 Faster R-CNN and the earlier systems detect and classify objects at bounding box granularity.
