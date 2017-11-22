@@ -65,6 +65,8 @@
 \DeclareFieldFormat*{title}{\mkbibemph{#1\isdot}} % zitierte Titel kursiv formatieren
 
 \addbibresource{long_extended.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
+%\addbibresource{external.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
+%\addbibresource{papers.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
 \addbibresource{bib.bib} % Hier Pfad zu deiner .bib-Datei hineinschreiben
 \nocite{*} % Alle Einträge in der .bib-Datei im Literaturverzeichnis ausgeben, auch wenn sie nicht im Text zitiert werden. Gut zum Testen der .bib-Datei, sollte aber nicht generell verwendet werden. Stattdessen lieber gezielt Einträge mit Keywords ausgeben lassen (siehe \printbibliography in Zeile 224).
 
@@ -94,19 +96,19 @@
 \author{\myname}
 \thesistitle{\mytitleen}{\mytitlede}
 \birthplace{Erbach}
-\date{21.11.2017}
+\date{22.11.2017}
 \referee{\myprof}{M.Sc. Junhwa Hur}
 \department{\myinstitute}
 \group{\myfaculty}
-\dateofexam{23.11.2017}{23.11.2017}
+\dateofexam{23.11.2017}{22.11.2017}
 \makethesistitle
 
 % Eigenständigkeitserklärung: muss nach \makethesistitle erscheinen, sonst wird sie als erste Seite des Dokuments gesetzt.
-\affidavit[23.11.2017]{\myname}
+\affidavit[22.11.2017]{\myname}
 %\affidavit{\myname}
 
 \pagestyle{myheadings} % Seitenstil umschalten
-\mymarkright{Version: \today} % Inhalt der Fußzeile
+%\mymarkright{Version: \today} % Inhalt der Fußzeile
 
 
 \input{abstract}

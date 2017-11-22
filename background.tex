@@ -105,7 +105,7 @@ image brightness differences penalizes the predictions.
  & Conv-Deconv & H $\times$ W $\times$ 32 \\
 masks & 1 $\times$1 conv, N$_{motions}$ & H $\times$ W $\times$ N$_{motions}$ \\
 FC & From bottleneck: $\begin{bmatrix}\textrm{fully connected}, 512\end{bmatrix}$ $\times$ 2 & 1 $\times$ 512 \\
-object motions & fully connected, $N_{motions} \cdot$ 9 & H $\times$ W $\times$ $N_{motions} \cdot$ 9 \\
+object motions & fully connected, $\text{N}_{motions} \cdot$ 9 & H $\times$ W $\times$ $\text{N}_{motions} \cdot$ 9 \\
 camera motion & From FC: $\times$ 2 & H $\times$ W $\times$ 6 \\
 \midrule
 \multicolumn{3}{c}{\textbf{Structure Network}}\\
@@ -276,10 +276,10 @@ C$_4$ & ResNet \{up to C$_4$\} (Table \ref{table:resnet})  & $\tfrac{1}{16}$ H $
 \multicolumn{3}{c}{\textbf{Region Proposal Network (RPN)}}\\
 \midrule
 R$_0$ & From C$_4$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 4 \\
+& 1 $\times$ 1 conv, 4 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $\text{N}_a \cdot$ 4 \\
 & flatten & A $\times$ 4 \\
 boxes$_{\mathrm{RPN}}$ & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & A $\times$ 4\\
-& From R$_0$: 1 $\times$ 1 conv, 2 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $N_a \cdot$ 2 \\
+& From R$_0$: 1 $\times$ 1 conv, 2 & $\tfrac{1}{16}$ H $\times$ $\tfrac{1}{16}$ W $\times$ $\text{N}_a \cdot$ 2 \\
 & flatten & A $\times$ 2 \\
 scores$_{\mathrm{RPN}}$& softmax & A $\times$ 2 \\
 ROI$_{\mathrm{RPN}}$ & sample boxes$_{\mathrm{RPN}}$ and scores$_{\mathrm{RPN}}$ & N$_{RoI}$ $\times$ 6 \\
@@ -326,9 +326,9 @@ which is a deep feature encoder CNN with the original image as input.
 Next, the \emph{backbone} output features are passed into a small, fully-convolutional \emph{Region Proposal Network (RPN)} head, which
 predicts objectness scores and regresses bounding boxes at each of its output positions.
 At any of the $h \times w$ output positions of the RPN head,
-$N_a$ bounding boxes with their objectness scores are predicted as offsets relative to a fixed set of $N_a$ \emph{anchors} with different
-aspect ratios and scales. Thus, there are $N_a \times h \times w$ reference anchors in total.
-In Faster R-CNN, $N_a = 9$, with 3 scales, corresponding
+$\text{N}_a$ bounding boxes with their objectness scores are predicted as offsets relative to a fixed set of $\text{N}_a$ \emph{anchors} with different
+aspect ratios and scales. Thus, there are $\text{N}_a \times h \times w$ reference anchors in total.
+In Faster R-CNN, $\text{N}_a = 9$, with 3 scales, corresponding
 to anchor boxes of areas of $\{128^2, 256^2, 512^2\}$ pixels and 3 aspect ratios,
 $\{1:2, 1:1, 2:1\}$. For the ResNet Faster R-CNN backbone, we generally have a stride of 16
 with respect to the input image at the RPN output (Table \ref{table:maskrcnn_resnet}).
@@ -388,7 +388,7 @@ P$_6$ & From P$_5$: 2 $\times$ 2 subsample, 256 & $\tfrac{1}{64}$ H $\times$ $\t
 \midrule
 \multicolumn{3}{c}{$\forall i \in \{2...6\}$}\\
 & From P$_i$: 1 $\times$ 1 conv, 512 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ 512 \\
-& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ $N_a \cdot$ 6 \\
+& 1 $\times$ 1 conv, 6 & $\tfrac{1}{2^i}$ H $\times$ $\tfrac{1}{2^i}$ W $\times$ $\text{N}_a \cdot$ 6 \\
 RPN$_i$& flatten & A$_i$ $\times$ 6 \\
 \midrule
 & From \{RPN$_2$ ... RPN$_6$\}: concatenate & A $\times$ 6 \\
@@ -440,7 +440,7 @@ from the bottleneck.
 Instead of a single RPN head with anchors at 3 scales and 3 aspect ratios,
 the FPN variant has one RPN head after each of the pyramid levels P$_2$ ... P$_6$ (see Table \ref{table:maskrcnn_resnet_fpn}).
 At each output position of the resulting RPN pyramid, bounding boxes are predicted
-with respect to 3 anchor aspect ratios $\{1:2, 1:1, 2:1\}$ and a single scale ($N_a = 3$).
+with respect to 3 anchor aspect ratios $\{1:2, 1:1, 2:1\}$ and a single scale ($\text{N}_a = 3$).
 For P$_2$, P$_3$, P$_4$, P$_5$, P$_6$,
 the scale corresponds to anchor bounding boxes of areas $32^2, 64^2, 128^2, 256^2, 512^2$,
 respectively.
@@ -501,14 +501,21 @@ frequently in the following chapters. For vector or tuple arguments, the sum of 
 losses is computed.
 For classification with mutually exclusive classes, we define the categorical (softmax) cross-entropy loss,
 \begin{equation}
-\ell_{cls}(c, c^*) = -\log(),
+\ell_{cls}(c, c^*) = -\log(c_{c^*}),
 \end{equation}
-where $c^* \in \{0,N_{cls}\}$ is a label (or vector of labels) and $c \in (0,1)$ is the output of a softmax layer. % TODO label has wrong range
+where $c^* \in \{0,\text{C}\}$ is a ground truth label,
+$c$ is the output vector from a softmax layer,
+$c_{c^*} \in (0,1)$ is the output probability for class $c^*$,
+and $\text{C}$ is the number of classes.
+Note that for the object category classifier, $\text{C} = \text{N}_{cls} + 1$,
+as $\text{N}_{cls}$ does not include the background class.
 Finally, for multi-label classification, we define the binary (sigmoid) cross-entropy loss,
 \begin{equation}
 \ell_{cls*}(y, y^*) = -y^* \cdot \log(y) - (1 - y^*) \cdot \log(1 - y),
 \end{equation}
-where $y^* \in \{0,1\}$ is a label (or vector of labels) and $y \in (0,1)$ is the output of a sigmoid layer.
+where $y^* \in \{0,1\}$ is a label and $y \in (0,1)$ is the output from a sigmoid layer.
+Note that for the mask loss that will be introduced below, $\ell_{cls*}$ is
+the sum of the $\ell_{cls*}$-losses for all 2D positions in the mask.
 
 \label{ssec:rcnn_techn}
 \paragraph{Bounding box regression}
@@ -575,7 +582,7 @@ the predicted relative offsets and scales encoded in $b_e$.
 
 \paragraph{Supervision of the RPN}
 A positive RPN proposal is defined as one with a IoU of at least $0.7$ with
-a ground truth bounding box. For training the RPN, $N_{RPN} = 256$  positive and negative
+a ground truth bounding box. For training the RPN, $\text{N}_{RPN} = 256$  positive and negative
 examples are randomly sampled from the set of all RPN proposals,
 with at most $50\%$ positive examples (if there are less positive examples,
 more negative examples are used instead).
@@ -587,18 +594,18 @@ it is negative, let $s_i$ be the predicted objectness score and $b_i$, $b_i^*$ t
 predicted and ground truth bounding box encodings.
 Then, the RPN loss is computed as
 \begin{equation}
-L_{RPN} = L_{obj} + L_{box}^{RPN},
+\text{L}_{RPN} = \text{L}_{obj} + \text{L}_{box}^{RPN},
 \end{equation}
 where
 \begin{equation}
-L_{obj} = \frac{1}{N_{RPN}} \sum_{i=1}^{N_{RPN}} \ell_{cls}(s_i, s_i^*),
+\text{L}_{obj} = \frac{1}{\text{N}_{RPN}} \sum_{i=1}^{\text{N}_{RPN}} \ell_{cls}(s_i, s_i^*),
 \end{equation}
 \begin{equation}
-L_{box}^{RPN} = \frac{1}{N_{RPN}^{pos}} \sum_{i=1}^{N_{RPN}} s_i^* \cdot \ell_{reg}(b_i^* - b_i),
+\text{L}_{box}^{RPN} = \frac{1}{\text{N}_{RPN}^{pos}} \sum_{i=1}^{\text{N}_{RPN}} s_i^* \cdot \ell_{reg}(b_i^* - b_i),
 \end{equation}
 and
 \begin{equation}
-N_{RPN}^{pos} = \sum_{i=1}^{N_{RPN}} s_i^*
+\text{N}_{RPN}^{pos} = \sum_{i=1}^{\text{N}_{RPN}} s_i^*
 \end{equation}
 is the number of positive examples. Note that the bounding box loss is only
 active for positive examples, and that the classification loss is computed
@@ -612,7 +619,7 @@ one with a maximum IoU in $[0.1, 0.5)$.
 A total of 64 (without FPN) or 512 (with FPN) RoIs are sampled, with
 at most $25\%$ foreground examples.
 Now, let $c_i^*$ be the ground truth object class, where $c_i = 0$
-for background examples and $c_i \in \{1, ..., N_{cls}\}$ for foreground examples,
+for background examples and $c_i \in \{1, ..., \text{N}_{cls}\}$ for foreground examples,
 and let $c_i$ be the class prediction.
 Then, for any foreground RoI, let $b_i^*$ be the ground truth bounding box encoding and $b_i$
 the predicted refined box encoding for class $c_i^*$.
@@ -623,23 +630,23 @@ In our implementation, we use nearest neighbour resizing for resizing the mask
 targets.
 Then, the ROI loss is computed as
 \begin{equation}
-L_{RoI} = L_{cls} + L_{box} + L_{mask}
+\text{L}_{RoI} = \text{L}_{cls} + \text{L}_{box} + \text{L}_{mask}
 \end{equation}
 where
 \begin{equation}
-L_{cls} = \frac{1}{N_{RoI}} \sum_{i=1}^{N_{RoI}} \ell_{cls}(c_i, c_i^*),
+\text{L}_{cls} = \frac{1}{\text{N}_{RoI}} \sum_{i=1}^{\text{N}_{RoI}} \ell_{cls}(c_i, c_i^*),
 \end{equation}
 is the average cross-entropy classification loss,
 \begin{equation}
-L_{box} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_{reg}(b_i^* - b_i)
+\text{L}_{box} = \frac{1}{\text{N}_{RoI}^{\mathit{fg}}} \sum_{i=1}^{\text{N}_{RoI}} [c_i^* \geq 1] \cdot \ell_{reg}(b_i^* - b_i)
 \end{equation}
 is the average smooth-$\ell_1$ bounding box regression loss,
 \begin{equation}
-L_{mask} = \frac{1}{N_{RoI}^{fg}} \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1] \cdot \ell_{cls*}(m_i,m_i^*)
+\text{L}_{mask} = \frac{1}{\text{N}_{RoI}^{\mathit{fg}}} \sum_{i=1}^{\text{N}_{RoI}} [c_i^* \geq 1] \cdot \ell_{cls*}(m_i,m_i^*)
 \end{equation}
 is the average binary cross-entropy mask loss,
 \begin{equation}
-N_{RoI}^{fg} = \sum_{i=1}^{N_{RoI}} [c_i^* \geq 1]
+\text{N}_{RoI}^{\mathit{fg}} = \sum_{i=1}^{\text{N}_{RoI}} [c_i^* \geq 1]
 \end{equation}
 is the number of foreground examples, and
 \begin{equation}

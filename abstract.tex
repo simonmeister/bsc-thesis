@@ -28,8 +28,8 @@ we integrate motion estimation with instance segmentation.
 Given two consecutive frames from a monocular RGB-D camera,
 our resulting end-to-end deep network detects objects with precise per-pixel
 object masks and estimates the 3D motion of each detected object between the frames.
-By additionally estimating the camera ego-motion in the same network,
-we compose a dense optical flow field based on instance-level and global motion
+Additionally, we estimate the camera ego-motion in the same network,
+and compose a dense optical flow field based on instance-level and global motion
 predictions. We train our network on the synthetic Virtual KITTI dataset,
 which provides ground truth for all components of our system.
 
@@ -62,8 +62,8 @@ Networks (R-CNNs) auf und integrieren Bewegungsschätzung mit Instanzsegmentieru
 Bei Eingabe von zwei aufeinanderfolgenden Frames aus einer monokularen RGB-D
 Kamera erkennt unser end-to-end Deep Network Objekte mit pixelgenauen Objektmasken
 und schätzt die 3D-Bewegung jedes erkannten Objekts zwischen den Frames ab.
-Indem wir zusätzlich im selben Netzwerk die Eigenbewerung der Kamera schätzen,
-setzen wir aus den instanzbasierten und globalen Bewegungsschätzungen ein dichtes
+Zusätzlich schätzen wir im selben Netzwerk die Eigenbewegung der Kamera,
+und setzen aus den instanzbasierten und globalen Bewegungsschätzungen ein dichtes
 optisches Flussfeld zusammen.
 Wir trainieren unser Netzwerk auf dem synthetischen Virtual KITTI Datensatz,
 der Ground Truth für alle Komponenten unseres Systems bereitstellt.
