@@ -3,14 +3,15 @@
   11pt, % Schriftgröße
   bibliography=totoc, % Bibliografie automatisch im Inhaltsverzeichnis generieren
   parskip=off, % Absatzabstand: off, half, full
-  oneside, % einseitiges Layout
-%  twoside, % zweiseitiges Layout
+%  oneside, % einseitiges Layout
+  twoside, % zweiseitiges Layout
   article, % verwendet KOMA-Klasse scrartcl
 %  longdoc=true,
-  accentcolor=tud2b,
+  accentcolor=tud1b,
 %  colorbacktitle, % Hintergrund des Titels einfärben
   colorback, % Hintergrund unter dem Titel einfärben
-  type=bsc, % für Bachelorarbeit
+  type=bsc, % für Bachelorarbeit,
+  openright=true
 ]{tudthesis}
 
 \usepackage[a-1b]{pdfx}
@@ -37,7 +38,11 @@
 % Leider funktioniert hyperref nicht 100%-ig einwandfrei mit tudstyle; bei Problemen damit lieber aus dem Dokument entfernen!
 % Einstellungen für hyperref
 \hypersetup{%
-    pdftitle=Motion R-CNN,
+    pdfinfo={
+    Title={Motion R-CNN: Instance-level 3D Motion Estimation with Region-based CNNs},
+    Author={Simon Meister},
+    }
+    pdftitle=Motion R-CNN: Instance-level 3D Motion Estimation with Region-based CNNs,
     pdfauthor=Simon Meister,
     pdfsubject=B.Sc. Thesis,
     unicode=true, % benötigt, damit Umlaute im pdftitle richtig dargestellt werden
@@ -46,6 +51,11 @@
     %% linkcolor=NavyBlue,
     %% urlcolor=NavyBlue,%Green4,
     %% citecolor=NavyBlue%DeepPink3
+}
+
+\pdfinfo{
+/Title (Motion R-CNN: Instance-level 3D Motion Estimation with Region-based CNNs)
+/Author (Simon Meister)
 }
 
 \usepackage[
@@ -108,23 +118,26 @@
 %\affidavit{\myname}
 
 \pagestyle{myheadings} % Seitenstil umschalten
+\pagenumbering{gobble}
+%\pagenumbering{Roman} % Seitennummerierung auf römische Zahlen ändern
+%\setcounter{page}{1}
 %\mymarkright{Version: \today} % Inhalt der Fußzeile
 
 
 \input{abstract}
 \clearpage
 
-%\pagenumbering{Roman} % Seitennummerierung auf römische Zahlen ändern
+\setcounter{page}{1}
+\pagenumbering{arabic} % Arabische Seitenzahlen
 
 \setcounter{tocdepth}{3}
 \tableofcontents
-\setcounter{page}{1}
 \clearpage
 
 % Aktuelle Seitenzahl speichern, da Wechsel auf arabische Zahlen die Zählung zurücksetzt
 %% \newcounter{savedromanpagenumber}
 %% \setcounter{savedromanpagenumber}{\value{page}}
-%\pagenumbering{arabic} % Arabische Seitenzahlen
+
 
 \section{Introduction}
 \label{sec:introduction}

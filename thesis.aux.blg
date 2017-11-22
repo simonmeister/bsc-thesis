@@ -1,5 +1,0 @@
-[0] Config.pm:343> INFO - This is Biber 2.5
-[0] Config.pm:346> INFO - Logfile is 'thesis.aux.blg'
-[36] biber:290> INFO - === So Okt 29, 2017, 10:29:33
-[108] Utils.pm:165> ERROR - Cannot find control file 'thesis.aux.bcf'! - did you pass the "backend=biber" option to BibLaTeX?
-[108] Biber.pm:113> INFO - ERRORS: 1

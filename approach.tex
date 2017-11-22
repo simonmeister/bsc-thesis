@@ -255,7 +255,7 @@ performs better in our case than the standard $\ell_1$-loss.
 We thus compute the RoI motion loss as
 
 \begin{equation}
-\text{L}_{motion} = \frac{1}{\text{N}_{RoI}^{\mathit{fg}}} \sum_k^{\text{N}_{RoI}} l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o_k^* + l_o^k,
+L_{motion} = \frac{1}{\text{N}_{RoI}^{\mathit{fg}}} \sum_k^{\text{N}_{RoI}} l_{p}^k + (l_{R}^k + l_{t}^k) \cdot o_k^* + l_o^k,
 \end{equation}
 where
 \begin{equation}
@@ -284,7 +284,7 @@ other than $c_k^*$ are not penalized.
 
 Now, our modified RoI loss is
 \begin{equation}
-\text{L}_{RoI} = \text{L}_{cls} + \text{L}_{box} + \text{L}_{mask} + \text{L}_{motion}.
+L_{RoI} = L_{cls} + L_{box} + L_{mask} + L_{motion}.
 \end{equation}
 
 \paragraph{Camera motion supervision}
@@ -339,7 +339,7 @@ full image resolution, as
 the depth crops and 2D point grid are at the same resolution as the predicted
 $m \times m$ mask.
 
-For each RoI, we can now compute $\text{L}_{RoI}$ and thus supervise the object motion
+For each RoI, we can now compute $L_{RoI}$ and thus supervise the object motion
 by penalizing the $m \times m$ optical flow grid.
 If there is optical flow ground truth available, we can use the RoI bounding box to
 crop and resize a region from the ground truth optical flow to match the RoI's
@@ -377,7 +377,7 @@ Again, as for masks and bounding boxes in Mask R-CNN,
 the predicted output object motions are the predicted object motions for the
 highest scoring class.
 
-\subsection{Dense flow from motion}
+\subsection{Dense flow from 3D motion}
 \label{ssec:postprocessing}
 As a postprocessing, we compose the dense optical flow between $I_t$ and $I_{t+1}$ from the outputs of our Motion R-CNN network.
 Given the depth map $d_t$ for frame $I_t$, we first create a 3D point cloud in camera space at time $t$,
