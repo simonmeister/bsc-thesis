@@ -116,7 +116,7 @@ additonally dropout with $p = 0.5$ after all fully-connected hidden layers.
 }
 
 \paragraph{Motion R-CNN backbone}
-Like Faster R-CNN and Mask R-CNN, we use a ResNet \cite{ResNet} variant as backbone network to compute feature maps from input imagery.
+Like Faster R-CNN and Mask R-CNN, we use a ResNet variant \cite{ResNet} as backbone network to compute feature maps from input imagery.
 
 Inspired by FlowNetS \cite{FlowNet}, we make one modification to the ResNet backbone to enable image matching,
 laying the foundation for our motion estimation. Instead of taking a single image as input to the backbone,
@@ -125,15 +125,16 @@ Additionally, we also experiment with concatenating the camera space XYZ coordin
 XYZ$_t$ and XYZ$_{t+1}$, into the input as well.
 We do not introduce a separate network for computing region proposals and use our modified backbone network
 as both RPN and for extracting the RoI features.
+
 Technically, our feature encoder network will have to learn image matching representations similar to
-that learned by the FlowNet encoder, but the output will be computed in the
-object-centric framework of a region based convolutional network head with a 3D parametrization.
+those learned by the FlowNet encoder, but the output will be computed in the
+object-centric framework of a region-based convolutional network head with a 3D parametrization.
 Thus, in contrast to the dense FlowNet decoder, the estimated dense image matching information
-from the encoder is integrated for specific objects via RoI extraction and
+from the encoder is integrated for specific objects via RoI extraction and subsequently
 processed by the RoI head for each object.
 
 \paragraph{Per-RoI motion prediction}
-We use a rigid 3D motion parametrization similar to the one used in SE3-Nets and SfM-Net \cite{SE3Nets, SfmNet}.
+We use a 3D rigid motion parametrization similar to the one used in SE3-Nets and SfM-Net \cite{SE3Nets, SfmNet}.
 For the $k$-th object proposal, we predict the rigid transformation $\{R_k, t_k\}\in \mathbf{SE}(3)$
 \footnote{$\mathbf{SE}(3)$ refers to the Special Euclidean Group representing 3D rotations
 and translations: $\{R, t|R \in \mathbf{SO}(3), t \in \mathbb{R}^3\}$}
@@ -178,7 +179,7 @@ We then extend the Mask R-CNN head by adding a small fully-connected network for
 prediction in addition to the fully-connected layers for
 refined boxes and classes and the convolutional network for the masks.
 Like for refined boxes and masks, we make one separate motion prediction for each class.
-Each instance motion is predicted as a set of nine scalar parameters,
+Each instance motion is predicted as a set of nine values,
 $\sin(\alpha)$, $\sin(\beta)$, $\sin(\gamma)$, $t_k$ and $p_k$,
 where $\sin(\alpha)$, $\sin(\beta)$ and $\sin(\gamma)$ are clipped to $[-1, 1]$.
 Here, we assume that motions between frames are relatively small
@@ -400,12 +401,12 @@ and $(c_0, c_1, f)$ are the camera intrinsics.
 For now, the depth map is always assumed to come from ground truth.
 
 Given $k$ detections with predicted motions as above, we transform all points within the bounding
-box of a detected object according to the predicted motion of the object.
+box and mask of a detected object according to the predicted motion of the object.
 
-We first define the \emph{full image} mask $M_k$ for object k,
+For this, we first define the \emph{full image} mask $M_k$ for object k,
 which can be computed from the predicted box mask $m_k$ (for the predicted class) by bilinearly resizing
 it to the width and height of the predicted bounding box and then copying the values
-of the resized mask into a full resolution mask initialized with zeros,
+of the resized mask into a full (image) resolution mask initialized with zeros,
 starting at the top-left coordinate of the predicted bounding box.
 Again we binarize masks at a threshold of $0.5$.
 

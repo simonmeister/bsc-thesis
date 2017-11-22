@@ -8,7 +8,7 @@ The optical flow
 $\mathbf{w} = (u, v)^T$ from $I_t$ to $I_{t+1}$
 maps pixel coordinates in the first frame $I_t$ to pixel coordinates of the
 visually corresponding pixel in the second frame $I_{t+1}$,
-and can be interpreted as the apparent movement of brightness patterns between the two frames.
+and can be interpreted as the (apparent) movement of brightness patterns between the two frames.
 Optical flow can be regarded as two-dimensional motion estimation.
 
 Scene flow is the generalization of optical flow to three-dimensional space and additionally
@@ -64,7 +64,7 @@ learns a spatially compressed, wide (in the number of channels) representation o
 and a fully-connected prediction network on top of the encoder.
 
 The compressed representations learned by CNNs of these categories do not, however, allow
-for prediction of high-resolution output, as spatial detail is lost through sequential applications
+for prediction of high-resolution output, as spatial detail is lost through sequential application
 of pooling or strides.
 Thus, networks for dense, high-resolution, prediction introduce a convolutional decoder on top of the representation encoder,
 performing upsampling of the compressed features and resulting in a encoder-decoder pyramid.
@@ -87,7 +87,7 @@ Recently, other, similarly generic,
 encoder-decoder CNNs have been applied to optical flow prediction as well \cite{DenseNetDenseFlow}.
 
 \subsection{SfM-Net}
-Table \ref{table:sfmnet} shows the SfM-Net \cite{SfmNet} architecture we described
+Table \ref{table:sfmnet} shows the SfM-Net architecture \cite{SfmNet} we described
 in the introduction.
 Motions and full-image masks for a fixed number N$_{motions}$ of independent objects
 are predicted in addition to a depth map, and a unsupervised re-projection loss based on
@@ -237,7 +237,7 @@ In ResNet-50, the C$_5$ bottleneck has a stride of 32 with respect to the
 input image resolution. In FlowNetS \cite{FlowNet}, their bottleneck stride is 64.
 For accurately estimating motions corresponding to larger pixel displacements, a larger
 stride may be important.
-Thus, we add a additional C$_6$ block to be used in the Motion R-CNN ResNet variants
+Thus, we add an additional C$_6$ block to be used in the Motion R-CNN ResNet variants
 to increase the bottleneck stride to 64, following FlowNetS.
 
 \subsection{Region-based CNNs}
@@ -246,14 +246,14 @@ We now give an overview of region-based convolutional networks, which are curren
 most popular deep networks for object detection, and have recently also been applied to instance segmentation.
 
 \paragraph{R-CNN}
-Region-based convolutional networks (R-CNNs) \cite{RCNN} use a non-learned algorithm external to a standard encoder CNN
+The very first region-based convolutional networks (R-CNNs) \cite{RCNN} used a non-learned algorithm external to a standard encoder CNN
 for computing \emph{region proposals} in the shape of 2D bounding boxes, which represent regions that may contain an object.
 For each of the region proposals, the input image is cropped using the region bounding box and the crop is
 passed through the CNN, which performs classification of the object (or non-object, if the region shows background).
 
 \paragraph{Fast R-CNN}
 The original R-CNN involves computing one forward pass of the CNN for each of the region proposals,
-which is costly, as there is generally a large number of proposals.
+which is costly, as there generally is a large number of proposals.
 Fast R-CNN \cite{FastRCNN} significantly reduces computation by performing only a single forward pass with the whole image
 as input to the CNN (compared to the sequential input of crops in the case of R-CNN).
 Then, fixed size (H $\times$ W) feature maps are extracted from the compressed feature map of the image,
@@ -273,31 +273,31 @@ After streamlining the CNN components, Fast R-CNN is limited by the speed of the
 algorithm, which has to be run prior to the network passes and makes up a large portion of the total
 processing time.
 The Faster R-CNN object detection system \cite{FasterRCNN} unifies the generation of region proposals and subsequent box refinement and
-classification into a single deep network, leading to faster test-time processing when compared to Fast R-CNN
+classification into a single deep network, leading to faster training and test-time processing when compared to Fast R-CNN
 and again, improved accuracy.
 This unified network operates in two stages.
 In the \emph{first stage}, one forward pass is performed on the \emph{backbone} network,
 which is a deep feature encoder CNN with the original image as input.
-Next, the \emph{backbone} output features are passed into a small, fully-convolutional \emph{Region Proposal Network (RPN)} head, which
+Next, the output features from the backbone are passed into a small, fully-convolutional \emph{Region Proposal Network} network (RPN), which
 predicts objectness scores and regresses bounding boxes at each of its output positions.
-At any of the $h \times w$ output positions of the RPN head,
-$\text{N}_a$ bounding boxes with their objectness scores are predicted as offsets relative to a fixed set of $\text{N}_a$ \emph{anchors} with different
+At any of the $h \times w$ output positions of the RPN,
+$\text{N}_a$ bounding boxes with their \emph{objectness} scores are predicted as offsets relative to a fixed set of $\text{N}_a$ \emph{anchors} with different
 aspect ratios and scales. Thus, there are $\text{N}_a \times h \times w$ reference anchors in total.
 In Faster R-CNN, $\text{N}_a = 9$, with 3 scales, corresponding
-to anchor boxes of areas of $\{128^2, 256^2, 512^2\}$ pixels and 3 aspect ratios,
+to anchor boxes of areas of $\{128^2, 256^2, 512^2\}$ pixels, and 3 aspect ratios,
 $\{1:2, 1:1, 2:1\}$. For the ResNet Faster R-CNN backbone, we generally have a stride of 16
 with respect to the input image at the RPN output (Table \ref{table:maskrcnn_resnet}).
 
 For each RPN prediction at a given position, the objectness score tells us how likely it is to correspond to a detection.
 The region proposals can then be obtained as the N highest scoring RPN predictions.
 
-Then, the \emph{second stage} corresponds to the original Fast R-CNN head network, performing classification
+Then, the \emph{second stage} corresponds to the original Fast R-CNN head, performing classification
 and bounding box refinement for each of the region proposals, which are now obtained
 from the RPN instead of being pre-computed by an external algorithm.
 As in Fast R-CNN, RoI pooling is used to extract one fixed size feature map for each of the region proposals,
 and the refined bounding boxes are predicted separately for each object class.
 
-Table~\ref{table:maskrcnn_resnet} includes an overview of the Faster R-CNN ResNet network architecture
+Table~\ref{table:maskrcnn_resnet} includes an overview of the Faster R-CNN ResNet architecture
 (for Faster R-CNN, the mask head is ignored).
 
 {
@@ -330,7 +330,7 @@ ave & average pool & N$_{RoI}$ $\times$ 2048 \\
 & From ave: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
 boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
 & From ave: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
-classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls} + 1$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
@@ -352,21 +352,21 @@ whereas Faster R-CNN uses RoI pooling.
 
 \paragraph{Mask R-CNN}
 Faster R-CNN and the earlier systems detect and classify objects at bounding box granularity.
-However, it can be helpful to know class and object (instance) membership of all individual pixels,
+However, it can be helpful to know class and object (instance) membership of individual pixels,
 which generally involves computing a binary image mask for each object instance specifying which pixels belong
 to that object. This problem is called \emph{instance segmentation}.
-Mask R-CNN \cite{MaskRCNN} extends the Faster R-CNN system to instance segmentation by predicting
+Mask R-CNN \cite{MaskRCNN} extends Faster R-CNN to instance segmentation by predicting
 fixed resolution instance masks within the bounding boxes of each detected object,
 which are, at test-time, bilinearly resized to fit inside the respective bounding boxes.
 For this, Mask R-CNN simply extends the Faster R-CNN head with multiple convolutions, which
 compute a pixel-precise binary mask for each instance.
-Note that the per-class masks logits are put through a sigmoid layer, and thus there is no
+Note that the per-class masks \emph{logits} (raw network outputs) are put through a sigmoid layer, and thus there is no
 comptetition between classes in the mask prediction branch.
 
 Additionally, an important technical aspect of Mask R-CNN is the replacement of RoI pooling with
 bilinear sampling for extracting the RoI features, which is much more precise.
-In the original RoI pooling from Fast R-CNN, the bins for max-pooling are not aligned with the actual pixel
-boundary of the bounding box, and thus some detail is lost.
+In the original RoI pooling adopted from Fast R-CNN, the bins for max-pooling are not aligned with the actual pixel
+boundaries of the bounding boxes, and thus some detail is lost.
 
 The basic Mask R-CNN ResNet architecture is shown in Table \ref{table:maskrcnn_resnet}.
 
@@ -408,7 +408,7 @@ F$_1$ & $\begin{bmatrix}\textrm{fully connected}, 1024\end{bmatrix}$ $\times$ 2 
 & From F$_1$: fully connected, N$_{cls}$ $\cdot$ 4 & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4 \\
 boxes & decode bounding boxes (Eq. \ref{eq:pred_bounding_box}) & N$_{RoI}$ $\times$ N$_{cls}$ $\cdot$ 4\\
 & From F$_1$: fully connected, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
-classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls}$ \\
+classes& softmax, N$_{cls}$ & N$_{RoI}$ $\times$ N$_{cls} + 1$ \\
 \midrule
 \multicolumn{3}{c}{\textbf{RoI Head: Masks}}\\
 \midrule
@@ -429,12 +429,12 @@ block (see Figure \ref{figure:fpn_block}).
 
 \paragraph{Feature Pyramid Networks}
 In Faster R-CNN, a single feature map is used as the source of all RoI features during RoI extraction, independent
-of the size of the bounding box of each RoI.
+of the size of the bounding box of any specific RoI.
 However, for small objects, the C$_4$ (see Table \ref{table:resnet}) features
 might have lost too much spatial information to allow properly predicting the exact bounding
 box and a high resolution mask.
 As a solution to this, the Feature Pyramid Network (FPN) \cite{FPN} enables features
-of an appropriate scale to be used for RoI extraction, depending of the size of the bounding box of an RoI.
+of an appropriate scale to be used for RoI extraction, depending on the size of the bounding box of the RoI.
 For this, a pyramid of feature maps is created on top of the ResNet \cite{ResNet}
 encoder by combining bilinearly upsampled feature maps coming from the bottleneck
 with lateral skip connections from the encoder (Figure~\ref{figure:fpn_block}).
@@ -454,17 +454,16 @@ as the RPN heads themselves correspond to different scales.
 Now, in the RPN, higher resolution feature maps can be used for regressing smaller
 bounding boxes. For example, boxes of area close to $32^2$ are predicted using P$_2$,
 which has a stride of $4$ with respect to the input image.
-Most importantly, the RoI features can now be extracted at the pyramid level P$_j$ appropriate for a
-RoI bounding box with size $h \times w$,
+Most importantly, the RoI features can now be extracted from the pyramid level P$_j$ appropriate for a
+RoI bounding box with size $h \times w$, where
 \begin{equation}
 j = 2 + j_a,
 \end{equation}
-where
 \begin{equation}
 j_a = \mathrm{clip}\left(\left[\log_2\left(\frac{\sqrt{w \cdot h}}{s_0}\right)\right], 0, 4\right)
 \label{eq:level_assignment}
 \end{equation}
-is the index (from small anchor to large anchor) of the corresponding anchor box and
+is the index (from small anchor to large anchor) of the corresponding anchor box, and
 \begin{equation}
 s_0 = 256 \cdot 0.125
 \label{eq:level_assignment}
@@ -513,12 +512,12 @@ $c$ is the output vector from a softmax layer,
 $c_{c^*} \in (0,1)$ is the output probability for class $c^*$,
 and $\text{C}$ is the number of classes.
 Note that for the object category classifier, $\text{C} = \text{N}_{cls} + 1$,
-as in $\text{N}_{cls}$, we do not count the background class.
+as $\text{N}_{cls}$ does not include the background class.
 Finally, for multi-label classification, we define the binary (sigmoid) cross-entropy loss,
 \begin{equation}
 \ell_{cls*}(y, y^*) = -y^* \cdot \log(y) - (1 - y^*) \cdot \log(1 - y),
 \end{equation}
-where $y^* \in \{0,1\}$ is a label and $y \in (0,1)$ is the output from a sigmoid layer.
+where $y^* \in \{0,1\}$ is a ground truth label and $y \in (0,1)$ is the output of a sigmoid layer.
 Note that for the mask loss that will be introduced below, $\ell_{cls*}$ is
 the sum of the $\ell_{cls*}$-losses for all 2D positions over the mask.
 
@@ -549,7 +548,7 @@ b_h^* = \log \left( \frac{h^*}{h_r} \right),
 which represents the regression target for the bounding box
 outputs of the network.
 
-Thus, for each bounding box prediction, the network predicts the box encoding $b_e$,
+Thus, for bounding box regression, the network predicts the box encoding $b_e$,
 \begin{equation}
 b_e = (b_x, b_y, b_w, b_h),
 \end{equation}
@@ -565,7 +564,7 @@ b_w = \log \left( \frac{w}{w_r} \right),
 b_h = \log \left( \frac{h}{h_r} \right).
 \end{equation*}
 
-At test time, to get from a predicted box encoding $b_e$ to the predicted bounding box $b$,
+At test time, to convert from a predicted box encoding $b_e$ to the predicted bounding box $b$,
 the definitions above can be inverted,
 \begin{equation}
 b = (x, y, w, h),
@@ -631,14 +630,14 @@ the predicted refined RoI box encoding for class $c_i^*$.
 Additionally, for any foreground RoI, let $m_i$ be the predicted $m \times m$ mask for class $c_i^*$
 and $m_i^*$ the $m \times m$ mask target with values in $\{0,1\}$, where the mask target is cropped and resized from
 the binary ground truth mask using the RPN proposal bounding box.
-In our implementation, we use nearest neighbour resizing for resizing the mask
+In our implementation, we use nearest neighbour resizing for resizing the cropped mask
 targets.
 Note that values in $m_i$ and $c_i$ are already normalized probabilities from
 sigmoid and softmax layers, respectively.
 
 Then, the ROI loss is computed as
 \begin{equation}
-L_{RoI} = L_{cls} + L_{box} + L_{mask}
+L_{RoI} = L_{cls} + L_{box} + L_{mask},
 \end{equation}
 where
 \begin{equation}
@@ -669,7 +668,7 @@ losses are only enabled for the foreground RoIs. Note that the bounding box and 
 for all classes other than $c_i^*$ are not penalized.
 
 \paragraph{Inference}
-During inference, the 300 (without FPN) or 1000 (with FPN) highest scoring region proposals
+During inference, the 300 (ResNet) or 1000 (ResNet-FPN) highest scoring region proposals
 from the RPN are selected. The corresponding features are extracted from the backbone, as during training, by using the RPN bounding boxes,
 and passed through the RoI bounding box refinement and classification heads
 (but not through the mask head).

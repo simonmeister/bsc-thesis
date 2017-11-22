@@ -4,7 +4,7 @@ We introduced Motion R-CNN, which enables 3D object motion estimation in paralle
 to instance segmentation in the framework of region-based convolutional networks,
 given an input of two consecutive frames (and XYZ point coordinates) from a monocular camera.
 In addition to instance motions, our network estimates the 3D ego-motion of the camera.
-We combine all these estimates to yield a dense optical flow output from our
+We combine all these estimates to obtain a dense optical flow output from our
 end-to-end deep network.
 Our model is trained on the synthetic Virtual KITTI dataset, which provides
 us with bounding box, instance mask, depth, and 3D motion ground truth,
@@ -75,8 +75,8 @@ geometry for making a more reliable depth estimate, at least when the camera
 is moving. We could also extend our method to stereo input data easily by concatenating
 all of the frames into the input image.
 In case we choose the option of integrating the depth prediction directly into
-the R-CNN,
-this would however require using a different dataset for training it, as Virtual KITTI does not
+the current backbone,
+this would however require using a different dataset for training Motion R-CNN, as Virtual KITTI does not
 provide stereo images.
 If we would use a specialized depth network, we could use stereo data
 for depth prediction and still train Motion R-CNN independently on the monocular Virtual KITTI dataset,
@@ -149,8 +149,9 @@ RoI instance motion loss. Still, to use all available information from
 ground truth optical flow and obtain more accurate supervision,
 it would likely be beneficial to add a global, flow-based camera motion loss
 independent of the RoI supervision.
-To do this, one could use a re-projection loss conceptually identical to the one
-for supervising instance motions with ground truth flow. However, to adjust for the
+To do this, one could use a re-projection loss conceptually similar to the one
+for supervising instance motions with ground truth flow,
+but computed on the full image instead of for individual RoIs. However, to adjust for the
 fact that the camera motion can only be accurately supervised with flow at positions where
 no object motion accurs, this loss would have to be masked with the ground truth
 object masks. Again, we could use this flow-based loss in an unsupervised way,

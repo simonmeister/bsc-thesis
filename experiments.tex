@@ -27,7 +27,7 @@ from different viewing angles, resulting in a total of 10 variants per sequence.
 In addition to the RGB frames, a variety of ground truth is supplied.
 For each frame, we are given a dense depth and optical flow map and the camera
 extrinsics matrix. There are two annotated object classes, cars, and vans (N$_{cls}$ = 2).
-For all cars and vans in the each frame, we are given 2D and 3D object bounding
+For all cars and vans in each frame, we are given 2D and 3D object bounding
 boxes, instance masks, 3D poses, and various other labels.
 
 This makes the Virtual KITTI dataset ideally suited for developing our joint
@@ -85,7 +85,7 @@ $\{R_k^*, t_k^*\} \in \mathbf{SE}(3)$ as
 R_k^* = \mathrm{inv}(R_{cam}^*) \cdot R_{t+1}^k \cdot \mathrm{inv}(R_t^k),
 \end{equation}
 \begin{equation}
-t_k^* = t_{t+1}^{k}  - R_k^* \cdot t_t.
+t_k^* = t_{t+1}^{k}  - R_k^* \cdot t_t^k.
 \end{equation}
 
 As for the camera, we define $o_k^* \in \{ 0, 1 \}$,
@@ -112,11 +112,11 @@ measures the mean angle of the error rotation between predicted and ground truth
 \begin{equation}
 E_{t} = \frac{1}{N}\sum_k  \left\lVert \mathrm{inv}(R_k) \cdot (t_k^* - t_k) \right\rVert_2,
 \end{equation}
-is the mean euclidean norm between predicted and ground truth translation, and
+is the mean Euclidean distance between predicted and ground truth translation, and
 \begin{equation}
 E_{p} = \frac{1}{N}\sum_k \left\lVert p_k^* - p_k \right\rVert_2
 \end{equation}
-is the mean euclidean norm between predicted and ground truth pivot.
+is the mean Euclidean distance between predicted and ground truth pivot.
 
 Moreover, we define precision and recall measures for the detection of moving objects,
 where
@@ -151,8 +151,8 @@ Our training schedule is similar to the Mask R-CNN Cityscapes schedule \cite{Mas
 We train for a total of 192K iterations on the Virtual KITTI training set.
 For this, we use a single Titan X (Pascal) GPU and a batch size of 1,
 which results in approximately one day of training for a complete run.
-As optimizer, we use stochastic gradient descent (SGD) \cite{SGD} with a
-momentum of $0.9$.
+As optimizer, we use stochastic gradient descent (SGD) \cite{SGD} with
+momentum set to $0.9$.
 As learning rate we use $0.25 \cdot 10^{-2}$ for the
 first 144K iterations and $0.25 \cdot 10^{-3}$ for all remaining iterations.
 
@@ -255,7 +255,7 @@ the average ground truth camera translation. The camera rotation angle error
 is still relatively high, compared to the small average ground truth camera rotation.
 Although both variants use the exact same network for predicting the camera motion,
 the FPN variant performs worse here, with the error in rotation angle twice as high.
-One possible explanations that should be investigated in futher work is
+One possible explanations that should be investigated in future work is
 that in the FPN variant, all blocks in the backbone are shared between the camera
 motion branch and the feature pyramid. In the variant without FPN, the C$5$ and
 C$6$ blocks are only used in the camera branch, and thus only experience weight
@@ -265,8 +265,9 @@ As a remedy, increasing the loss weighting of the camera motion loss may be
 helpful.
 
 \paragraph{Instance motion}
-The object pivots are estimated with relatively (given that the scenes are in a realistic scale)
-high accuracy in both variants, although the FPN variant is significantly more
+The object pivots are estimated with relatively
+high accuracy in both variants (given that the scenes are in a realistic scale),
+although the FPN variant is significantly more
 accurate, which we ascribe to the higher resolution features used in this variant.
 
 The predicted 3D object translations and rotations still have a relatively high

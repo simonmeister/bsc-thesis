@@ -113,7 +113,7 @@ manageable pieces.
   \centering
   \includegraphics[width=\textwidth]{figures/net_intro}
 \caption{
-Overview of our network based on Mask R-CNN. For each region of interest (RoI), we predict the 3D instance motion
+Overview of our network based on Mask R-CNN \cite{MaskRCNN}. For each region of interest (RoI), we predict the 3D instance motion
 in parallel to the class, bounding box and mask. Additionally, we branch off a
 small network from the bottleneck for predicting the 3D camera ego-motion.
 Novel components in addition to Mask R-CNN are shown in red.
@@ -124,8 +124,8 @@ Novel components in addition to Mask R-CNN are shown in red.
 \subsection{Related work}
 
 In the following, we will refer to systems which use deep networks for all
-optimization and do not perform time-critical side computation (e.g. numerical optimization)
-at inference time as \emph{end-to-end} deep learning systems.
+optimization and do not perform time-critical side computation
+at inference time (e.g. numerical optimization) as \emph{end-to-end} deep learning systems.
 
 \paragraph{Deep networks in optical flow estimation}
 
@@ -142,8 +142,9 @@ where semantics become very important.
 Extensions of these approaches to scene flow estimate dense flow and dense depth
 with similarly generic networks \cite{SceneFlowDataset} and similar limitations.
 
-Other works \cite{ESI, JOF, FlowLayers, MRFlow} make use of semantic segmentation to structure
-the optical flow estimation problem and introduce reasoning at the object level,
+Other works make use of semantic segmentation to structure
+the optical flow estimation problem and introduce reasoning at the object level
+\cite{ESI, JOF, FlowLayers, MRFlow},
 but still require expensive energy minimization for each
 new input, as CNNs are only used for some of the components and numerical
 optimization is central to their inference.
@@ -168,20 +169,20 @@ without the use of (deep) learning.
 
 In a more recent approach termed Instance Scene Flow \cite{InstanceSceneFlow},
 a CNN is used to compute 2D bounding boxes and instance masks for all objects in the scene, which are then combined
-with depth obtained from a non-learned stereo algorithm, to be used as pre-computed
+with depth obtained from a non-learned stereo algorithm to be used as pre-computed
 inputs to a slanted plane scene flow model based on \cite{KITTI2015}.
 Most likely due to their use of deep learning for instance segmentation and for some other components, this
-approach outperforms the previous related scene flow methods on public benchmarks.
+approach outperforms the previous related scene flow methods on relevant public benchmarks \cite{KITTI2012, KITTI2015}.
 Still, the method uses a energy-minimization formulation for the scene flow estimation itself
 and takes minutes to make a prediction.
 
 Interestingly, the slanted plane methods achieve the current state-of-the-art
 in scene flow \emph{and} optical flow estimation on the challenging KITTI benchmarks \cite{KITTI2012, KITTI2015},
-outperforming end-to-end deep networks like \cite{SceneFlowDataset, FlowNet2}.
+outperforming end-to-end deep networks like \cite{SceneFlowDataset, FlowNet, FlowNet2}.
 However, the end-to-end deep networks are significantly faster than their energy-minimization counterparts,
 generally taking a fraction of a second instead of minutes for prediction and can often be made to run in realtime.
 These concerns restrict the applicability of the current slanted plane models in practical settings,
-which often require estimations to be done in realtime (or close to realtime) and for which an end-to-end
+which often require estimations to be done in real time (or close to real time) and for which an end-to-end
 approach based on learning would be preferable.
 
 Also, by analogy, in other contexts, the move towards end-to-end deep learning has often lead
