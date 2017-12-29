@@ -82,11 +82,16 @@ p_k^* = t_t^k
 and compute the ground truth object motion
 $\{R_k^*, t_k^*\} \in \mathbf{SE}(3)$ as
 \begin{equation}
-R_k^* = \mathrm{inv}(R_{cam}^*) \cdot R_{t+1}^k \cdot \mathrm{inv}(R_t^k),
+R_k^* = R_{t+1}^k \cdot R_{cam}^* \cdot \mathrm{inv}(R_t^k),
 \end{equation}
 \begin{equation}
-t_k^* = t_{t+1}^{k}  - R_k^* \cdot t_t^k.
+t_k^* = \mathrm{inv}(R_{cam}^*) \cdot t_{t+1}^{k} + t_{cam^{-1}}^* - R_k^* \cdot t_t^k,
 \end{equation}
+where
+\begin{equation}
+t_{cam^{-1}}^* = t_{t}^{ex}  - inv(R_{cam}^*) \cdot t_{t+1}^{ex}.
+\end{equation}
+
 
 As for the camera, we define $o_k^* \in \{ 0, 1 \}$,
 \begin{equation}
